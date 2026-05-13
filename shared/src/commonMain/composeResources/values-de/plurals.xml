@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- Medication Dosage Plurals (for displaying with quantities like "1 pill" or "2 pills") -->
+
+	<plurals name="dosage_capsule">
+		<item quantity="one">%1$d Kapsel</item>
+		<item quantity="other">%1$d Kapseln</item>
+	</plurals>
+
+	<plurals name="dosage_tablet">
+		<item quantity="one">%1$d Tablette</item>
+		<item quantity="other">%1$d Tabletten</item>
+	</plurals>
+
+	<plurals name="dosage_liquid">
+		<item quantity="one">%1$d mL</item>
+		<item quantity="other">%1$d mL</item>
+	</plurals>
+
+	<plurals name="dosage_topical">
+		<item quantity="one">%1$d Anwendung</item>
+		<item quantity="other">%1$d Anwendungen</item>
+	</plurals>
+
+	<plurals name="dosage_cream">
+		<item quantity="one">%1$d Anwendung</item>
+		<item quantity="other">%1$d Anwendungen</item>
+	</plurals>
+
+	<plurals name="dosage_device">
+		<item quantity="one">%1$d Gerät</item>
+		<item quantity="other">%1$d Geräte</item>
+	</plurals>
+
+	<plurals name="dosage_drops">
+		<item quantity="one">%1$d Tropfen</item>
+		<item quantity="other">%1$d Tropfen</item>
+	</plurals>
+
+	<plurals name="dosage_foam">
+		<item quantity="one">%1$d Anwendung</item>
+		<item quantity="other">%1$d Anwendungen</item>
+	</plurals>
+
+	<plurals name="dosage_gel">
+		<item quantity="one">%1$d Anwendung</item>
+		<item quantity="other">%1$d Anwendungen</item>
+	</plurals>
+
+	<plurals name="dosage_inhaler">
+		<item quantity="one">%1$d Inhalation</item>
+		<item quantity="other">%1$d Inhalationen</item>
+	</plurals>
+
+	<plurals name="dosage_injection">
+		<item quantity="one">%1$d Injektion</item>
+		<item quantity="other">%1$d Injektionen</item>
+	</plurals>
+
+	<plurals name="dosage_lotion">
+		<item quantity="one">%1$d Anwendung</item>
+		<item quantity="other">%1$d Anwendungen</item>
+	</plurals>
+
+	<plurals name="dosage_ointment">
+		<item quantity="one">%1$d Anwendung</item>
+		<item quantity="other">%1$d Anwendungen</item>
+	</plurals>
+
+	<plurals name="dosage_patch">
+		<item quantity="one">%1$d Pflaster</item>
+		<item quantity="other">%1$d Pflaster</item>
+	</plurals>
+
+	<plurals name="dosage_powder">
+		<item quantity="one">%1$d Messlöffel</item>
+		<item quantity="other">%1$d Messlöffel</item>
+	</plurals>
+
+	<plurals name="dosage_spray">
+		<item quantity="one">%1$d Sprühstoß</item>
+		<item quantity="other">%1$d Sprühstöße</item>
+	</plurals>
+
+	<plurals name="dosage_suppository">
+		<item quantity="one">%1$d Zäpfchen</item>
+		<item quantity="other">%1$d Zäpfchen</item>
+	</plurals>
+
+	<!-- Dose Unit Plurals (for display without quantity, e.g., "capsules", "injections") -->
+
+	<plurals name="dose_unit_capsule">
+		<item quantity="one">Kapsel</item>
+		<item quantity="other">Kapseln</item>
+	</plurals>
+
+	<plurals name="dose_unit_tablet">
+		<item quantity="one">Tablette</item>
+		<item quantity="other">Tabletten</item>
+	</plurals>
+
+	<plurals name="dose_unit_liquid">
+		<item quantity="one">mL</item>
+		<item quantity="other">mL</item>
+	</plurals>
+
+	<plurals name="dose_unit_topical">
+		<item quantity="one">Anwendung</item>
+		<item quantity="other">Anwendungen</item>
+	</plurals>
+
+	<plurals name="dose_unit_cream">
+		<item quantity="one">Anwendung</item>
+		<item quantity="other">Anwendungen</item>
+	</plurals>
+
+	<plurals name="dose_unit_device">
+		<item quantity="one">Gerät</item>
+		<item quantity="other">Geräte</item>
+	</plurals>
+
+	<plurals name="dose_unit_drops">
+		<item quantity="one">Tropfen</item>
+		<item quantity="other">Tropfen</item>
+	</plurals>
+
+	<plurals name="dose_unit_foam">
+		<item quantity="one">Anwendung</item>
+		<item quantity="other">Anwendungen</item>
+	</plurals>
+
+	<plurals name="dose_unit_gel">
+		<item quantity="one">Anwendung</item>
+		<item quantity="other">Anwendungen</item>
+	</plurals>
+
+	<plurals name="dose_unit_inhaler">
+		<item quantity="one">Inhalation</item>
+		<item quantity="other">Inhalationen</item>
+	</plurals>
+
+	<plurals name="dose_unit_injection">
+		<item quantity="one">Injektion</item>
+		<item quantity="other">Injektionen</item>
+	</plurals>
+
+	<plurals name="dose_unit_lotion">
+		<item quantity="one">Anwendung</item>
+		<item quantity="other">Anwendungen</item>
+	</plurals>
+
+	<plurals name="dose_unit_ointment">
+		<item quantity="one">Anwendung</item>
+		<item quantity="other">Anwendungen</item>
+	</plurals>
+
+	<plurals name="dose_unit_patch">
+		<item quantity="one">Pflaster</item>
+		<item quantity="other">Pflaster</item>
+	</plurals>
+
+	<plurals name="dose_unit_powder">
+		<item quantity="one">Messlöffel</item>
+		<item quantity="other">Messlöffel</item>
+	</plurals>
+
+	<plurals name="dose_unit_spray">
+		<item quantity="one">Sprühstoß</item>
+		<item quantity="other">Sprühstöße</item>
+	</plurals>
+
+	<plurals name="dose_unit_suppository">
+		<item quantity="one">Zäpfchen</item>
+		<item quantity="other">Zäpfchen</item>
+	</plurals>
+
+	<!-- Medication Container Plurals -->
+
+	<plurals name="container_package">
+		<item quantity="one">%1$d Packung</item>
+		<item quantity="other">%1$d Packungen</item>
+	</plurals>
+
+	<plurals name="container_bottle">
+		<item quantity="one">%1$d Flasche</item>
+		<item quantity="other">%1$d Flaschen</item>
+	</plurals>
+
+	<plurals name="container_dispenser">
+		<item quantity="one">%1$d Spender</item>
+		<item quantity="other">%1$d Spender</item>
+	</plurals>
+
+	<plurals name="container_blister_pack">
+		<item quantity="one">%1$d Blisterpackung</item>
+		<item quantity="other">%1$d Blisterpackungen</item>
+	</plurals>
+
+	<plurals name="container_tube">
+		<item quantity="one">%1$d Tube</item>
+		<item quantity="other">%1$d Tuben</item>
+	</plurals>
+
+	<plurals name="container_vial">
+		<item quantity="one">%1$d Fläschchen</item>
+		<item quantity="other">%1$d Fläschchen</item>
+	</plurals>
+
+	<plurals name="container_inhaler">
+		<item quantity="one">%1$d Inhalator</item>
+		<item quantity="other">%1$d Inhalatoren</item>
+	</plurals>
+
+	<plurals name="container_pen">
+		<item quantity="one">%1$d Pen</item>
+		<item quantity="other">%1$d Pens</item>
+	</plurals>
+
+	<plurals name="container_ampoule">
+		<item quantity="one">%1$d Ampulle</item>
+		<item quantity="other">%1$d Ampullen</item>
+	</plurals>
+
+	<plurals name="container_canister">
+		<item quantity="one">%1$d Dose</item>
+		<item quantity="other">%1$d Dosen</item>
+	</plurals>
+
+	<plurals name="container_jar">
+		<item quantity="one">%1$d Behälter</item>
+		<item quantity="other">%1$d Behälter</item>
+	</plurals>
+
+	<!-- Container Label Plurals (standalone, without quantity number) -->
+
+	<plurals name="container_label_package">
+		<item quantity="one">Packung</item>
+		<item quantity="other">Packungen</item>
+	</plurals>
+
+	<plurals name="container_label_bottle">
+		<item quantity="one">Flasche</item>
+		<item quantity="other">Flaschen</item>
+	</plurals>
+
+	<plurals name="container_label_dispenser">
+		<item quantity="one">Spender</item>
+		<item quantity="other">Spender</item>
+	</plurals>
+
+	<plurals name="container_label_blister_pack">
+		<item quantity="one">Blisterpackung</item>
+		<item quantity="other">Blisterpackungen</item>
+	</plurals>
+
+	<plurals name="container_label_tube">
+		<item quantity="one">Tube</item>
+		<item quantity="other">Tuben</item>
+	</plurals>
+
+	<plurals name="container_label_vial">
+		<item quantity="one">Fläschchen</item>
+		<item quantity="other">Fläschchen</item>
+	</plurals>
+
+	<plurals name="container_label_inhaler">
+		<item quantity="one">Inhalator</item>
+		<item quantity="other">Inhalatoren</item>
+	</plurals>
+
+	<plurals name="container_label_pen">
+		<item quantity="one">Pen</item>
+		<item quantity="other">Pens</item>
+	</plurals>
+
+	<plurals name="container_label_ampoule">
+		<item quantity="one">Ampulle</item>
+		<item quantity="other">Ampullen</item>
+	</plurals>
+
+	<plurals name="container_label_canister">
+		<item quantity="one">Dose</item>
+		<item quantity="other">Dosen</item>
+	</plurals>
+
+	<plurals name="container_label_jar">
+		<item quantity="one">Behälter</item>
+		<item quantity="other">Behälter</item>
+	</plurals>
+
+	<!-- Stock Display: Days/Weeks/Months Remaining -->
+	<plurals name="stock_days_remaining">
+		<item quantity="one">~%1$d Tag</item>
+		<item quantity="other">~%1$d Tage</item>
+	</plurals>
+	<plurals name="stock_weeks_remaining">
+		<item quantity="one">~%1$d Woche</item>
+		<item quantity="other">~%1$d Wochen</item>
+	</plurals>
+	<plurals name="stock_months_remaining">
+		<item quantity="one">~%1$d Monat</item>
+		<item quantity="other">~%1$d Monate</item>
+	</plurals>
+
+	<!-- Stock Display: Container Info -->
+	<plurals name="stock_sealed_containers">
+		<item quantity="one">%1$d versiegelt</item>
+		<item quantity="other">%1$d versiegelt</item>
+	</plurals>
+	<plurals name="stock_containers_generic">
+		<item quantity="one">%1$d Behälter</item>
+		<item quantity="other">%1$d Behälter</item>
+	</plurals>
+	<plurals name="stock_packages_generic">
+		<item quantity="one">%1$d Packung</item>
+		<item quantity="other">%1$d Packungen</item>
+	</plurals>
+	<plurals name="stock_units_generic">
+		<item quantity="one">Einheit</item>
+		<item quantity="other">Einheiten</item>
+	</plurals>
+
+	<!-- Stock Rationale -->
+	<plurals name="stock_rationale_exact_total">
+		<item quantity="one">%1$d Dosis</item>
+		<item quantity="other">%1$d Dosen</item>
+	</plurals>
+
+	<!-- Stock Events -->
+	<plurals name="stock_event_took_doses">
+		<item quantity="one">Eine Dosis eingenommen</item>
+		<item quantity="other">%1$d Dosen eingenommen</item>
+	</plurals>
+
+	<!-- Backup Plurals (replace "(s)" pattern) -->
+	<plurals name="backup_export_count">
+		<item quantity="one">%1$d Medikament exportieren</item>
+		<item quantity="other">%1$d Medikamente exportieren</item>
+	</plurals>
+	<plurals name="backup_export_success_count">
+		<item quantity="one">%1$d Medikament erfolgreich exportiert</item>
+		<item quantity="other">%1$d Medikamente erfolgreich exportiert</item>
+	</plurals>
+	<plurals name="backup_import_count">
+		<item quantity="one">%1$d Medikament importieren</item>
+		<item quantity="other">%1$d Medikamente importieren</item>
+	</plurals>
+	<plurals name="backup_medications_count">
+		<item quantity="one">%1$d Medikament</item>
+		<item quantity="other">%1$d Medikamente</item>
+	</plurals>
+	<plurals name="backup_schedules_count">
+		<item quantity="one">%1$d Zeitplan</item>
+		<item quantity="other">%1$d Zeitpläne</item>
+	</plurals>
+	<plurals name="backup_labels_count">
+		<item quantity="one">%1$d Prioritätsstufe</item>
+		<item quantity="other">%1$d Prioritätsstufen</item>
+	</plurals>
+
+	<!-- Schedule Plurals (replace string versions) -->
+	<plurals name="schedule_times_per_day_plural">
+		<item quantity="one">%1$d-mal täglich</item>
+		<item quantity="other">%1$d-mal täglich</item>
+	</plurals>
+	<plurals name="schedule_every_n_days_plural">
+		<item quantity="one">Täglich</item>
+		<item quantity="other">Alle %1$d Tage</item>
+	</plurals>
+	<plurals name="schedule_every_n_hours_plural">
+		<item quantity="one">Stündlich</item>
+		<item quantity="other">Alle %1$d Stunden</item>
+	</plurals>
+	<plurals name="schedule_count_plural">
+		<item quantity="one">%1$d Zeitplan</item>
+		<item quantity="other">%1$d Zeitpläne</item>
+	</plurals>
+	<plurals name="importance_label_follow_ups_plural">
+		<item quantity="one">Erinnert mit %1$d Folgeerinnerung</item>
+		<item quantity="other">Erinnert mit %1$d Folgeerinnerungen</item>
+	</plurals>
+
+	<!-- Notification Plurals (replace separate one/two/three/many strings) -->
+	<plurals name="notification_text_time_log_named">
+		<item quantity="one">Zeit zur Protokollierung des %1$s Medikaments: %2$s</item>
+		<item quantity="other">Zeit zur Protokollierung der %1$s Medikamente: %2$s</item>
+	</plurals>
+	<plurals name="notification_text_time_log_generic">
+		<item quantity="one">Zeit zur Protokollierung des %1$s Medikaments</item>
+		<item quantity="other">Zeit zur Protokollierung der %2$d %1$s Medikamente</item>
+	</plurals>
+
+	<!-- Stock Graph -->
+	<plurals name="stock_graph_changes">
+		<item quantity="one">%1$d Änderung</item>
+		<item quantity="other">%1$d Änderungen</item>
+	</plurals>
+
+	<!-- Auto Backup -->
+	<plurals name="auto_backup_retention_count">
+		<item quantity="one">%1$d Sicherung</item>
+		<item quantity="other">%1$d Sicherungen</item>
+	</plurals>
+
+	<!-- Notification Titles -->
+	<plurals name="notification_title_reminder">
+		<item quantity="one">Medikamentenerinnerung</item>
+		<item quantity="other">Medikamentenerinnerungen</item>
+	</plurals>
+	<plurals name="notification_title_snoozed">
+		<item quantity="one">Snooze-Medikamentenerinnerung</item>
+		<item quantity="other">Snooze-Medikamentenerinnerungen</item>
+	</plurals>
+	<plurals name="notification_title_followup">
+		<item quantity="one">Folgeerinnerung Medikament</item>
+		<item quantity="other">Folgeerinnerung Medikamente</item>
+	</plurals>
+	<plurals name="notification_title_followup_numbered">
+		<item quantity="one">Folgeerinnerung Medikament Nr. %1$d</item>
+		<item quantity="other">Folgeerinnerung Medikamente Nr. %1$d</item>
+	</plurals>
+	<plurals name="stock_prediction_preview_days">
+		<item quantity="one">~%1$d Tag verbleibend</item>
+		<item quantity="other">~%1$d Tage verbleibend</item>
+	</plurals>
+	<plurals name="stock_prediction_container_days">
+		<item quantity="one">~%1$d Tag in diesem Behälter verbleibend</item>
+		<item quantity="other">~%1$d Tage in diesem Behälter verbleibend</item>
+	</plurals>
+	<plurals name="stock_prediction_per_container_days">
+		<item quantity="one">~%1$d Tag pro Behälter</item>
+		<item quantity="other">~%1$d Tage pro Behälter</item>
+	</plurals>
+</resources>

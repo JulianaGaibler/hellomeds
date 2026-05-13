@@ -1,0 +1,25 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 HelloMeds Contributors
+
+package me.juliana.hellomeds.ui.compat
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import me.juliana.hellomeds.data.model.enums.MedicationBackgroundShape
+import me.juliana.hellomeds.data.model.enums.MedicationForegroundShape
+import me.juliana.hellomeds.ui.theme.MedicationColor
+
+/**
+ * Platform-specific medication icon preview for settings screens.
+ * Android: uses TransitioningMedicationIcon with morph animation.
+ * iOS: uses static MedicationShapeIcon (morph sizing is inconsistent on iOS).
+ */
+@Composable
+expect fun MedicationIconPreviewContent(
+    foregroundShape: MedicationForegroundShape,
+    backgroundShape: MedicationBackgroundShape,
+    color1: MedicationColor?,
+    size: Dp,
+    modifier: Modifier = Modifier,
+)

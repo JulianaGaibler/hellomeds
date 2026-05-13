@@ -1,0 +1,10 @@
+/* AlarmKit button labels */
+"alarm_button_taken" = "Taken";
+"alarm_button_snooze" = "Snooze";
+"alarm_button_skipped" = "Skipped";
+
+/* AlarmKit intent titles */
+"intent_take_title" = "Take Medication";
+"intent_snooze_title" = "Snooze Medication";
+"intent_skip_title" = "Skip Medication";
+"intent_open_title" = "Open App";

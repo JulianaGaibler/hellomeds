@@ -1,0 +1,1133 @@
+<resources>
+
+    <!-- Screen Names -->
+    <string name="screen_tracking">Tracking</string>
+    <string name="screen_medication">Medication</string>
+    <string name="screen_stock">Stock</string>
+
+    <!-- Alarm Screen -->
+    <string name="alarm_action_taken">Taken</string>
+    <string name="alarm_action_snooze">Snooze</string>
+    <string name="alarm_action_skip">Skip</string>
+    <string name="alarm_action_dismiss">Dismiss</string>
+    <string name="alarm_action_take_all">Take All</string>
+    <string name="alarm_action_skip_all">Skip All</string>
+    <string name="alarm_discreet_label">Medication reminder</string>
+    <string name="alarm_discreet_label_count">Medication reminder (%1$d)</string>
+
+    <string name="screen_settings">Settings</string>
+    <string name="screen_add_medication">Add medication</string>
+    <string name="screen_edit_base_data">Edit base data</string>
+    <string name="screen_medication_details">Medication Details</string>
+    <string name="screen_importance_labels">Importance labels</string>
+
+    <!-- Common Actions -->
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+    <string name="importance_label_reset_to_default">Reset to default</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
+    <string name="action_back">Back</string>
+    <string name="action_next">Next</string>
+    <string name="action_finish">Finish</string>
+    <string name="action_discard">Discard</string>
+    <string name="action_keep_editing">Keep editing</string>
+    <string name="action_close">Close</string>
+
+    <!-- Medication Added Dialog -->
+    <string name="medication_added_title">%1$s added</string>
+
+    <!-- Content Descriptions -->
+    <string name="content_description_back">Back</string>
+    <string name="content_description_menu">Menu</string>
+    <string name="content_description_edit_schedule">Edit schedule</string>
+    <string name="content_description_edit_medication">Edit medication</string>
+    <string name="content_description_edit_label">Edit label</string>
+    <string name="content_description_clear_display_name">Clear display name</string>
+
+    <!-- Accessibility -->
+    <string name="accessibility_expanded">Expanded</string>
+    <string name="accessibility_collapsed">Collapsed</string>
+    <string name="accessibility_toggle_menu">Toggle menu</string>
+    <string name="accessibility_close_menu">Close menu</string>
+    <string name="accessibility_selected">Selected</string>
+    <string name="accessibility_not_selected">Not selected</string>
+    <string name="accessibility_action_mark_taken">Mark as taken</string>
+    <string name="accessibility_action_mark_skipped">Mark as skipped</string>
+    <string name="accessibility_action_expand">Expand</string>
+    <string name="accessibility_action_collapse">Collapse</string>
+    <string name="accessibility_move_up">Move up</string>
+    <string name="accessibility_move_down">Move down</string>
+    <string name="content_description_dropdown">Dropdown</string>
+    <string name="accessibility_error_invalid_input">Invalid input</string>
+    <string name="content_description_medication_icon">%1$s medication icon</string>
+    <string name="content_description_stock_graph">Stock level graph showing medication inventory over time</string>
+    <string name="content_description_stock_graph_detail">Stock level graph showing %1$d medications over time</string>
+    <string name="accessibility_pager_state">Step %1$d of %2$d</string>
+    <string name="accessibility_loading">Loading, please wait</string>
+    <string name="accessibility_next_data_point">Next data point</string>
+    <string name="accessibility_previous_data_point">Previous data point</string>
+    <string name="stock_preview_bubble">Stock preview: %1$d of %2$d remaining</string>
+    <string name="stock_preview_fill">Stock container: %1$d percent full</string>
+    <string name="permission_granted">Permission granted</string>
+
+    <!-- Shape Names (for accessibility) — Common pills -->
+    <string name="shape_capsule_pill">Capsule pill</string>
+    <string name="shape_tablet_pill">Tablet pill</string>
+    <string name="shape_tablet_pill_notch">Tablet pill with notch</string>
+    <string name="shape_round_pill">Round pill</string>
+    <string name="shape_round_pill_notch">Round pill with notch</string>
+    <string name="shape_oval_pill">Oval pill</string>
+    <string name="shape_oval_pill_notch">Oval pill with notch</string>
+    <string name="shape_rectangle_pill">Rectangle pill</string>
+    <string name="shape_rectangle_pill_notch">Rectangle pill with notch</string>
+    <string name="shape_square_pill">Square pill</string>
+    <string name="shape_diamond_pill">Diamond pill</string>
+    <string name="shape_diamond_pill_notch">Diamond pill with notch</string>
+    <string name="shape_diamond_pill_tall">Tall diamond pill</string>
+    <string name="shape_diamond_pill_tall_notch">Tall diamond pill with notch</string>
+    <string name="shape_pentagon_pill">Pentagon pill</string>
+    <string name="shape_triangle_pill">Triangle pill</string>
+    <string name="shape_double_circle_pill">Double circle pill</string>
+    <string name="shape_effervescent_tablet">Effervescent tablet</string>
+    <!-- Shape Names — Containers & packaging -->
+    <string name="shape_pill_bottle">Pill bottle</string>
+    <string name="shape_jar">Jar</string>
+    <string name="shape_blister_pack_grid">Blister pack</string>
+    <string name="shape_tube">Tube</string>
+    <string name="shape_dropper_bottle">Dropper bottle</string>
+    <string name="shape_dispenser">Dispenser</string>
+    <!-- Shape Names — Liquids & powders -->
+    <string name="shape_liquid">Liquid</string>
+    <string name="shape_measurement_cup">Measurement cup</string>
+    <string name="shape_powder_sachet">Powder sachet</string>
+    <!-- Shape Names — Delivery devices & equipment -->
+    <string name="shape_syringe">Syringe</string>
+    <string name="shape_injection_pen">Injection pen</string>
+    <string name="shape_inhaler">Inhaler</string>
+    <string name="shape_patch">Patch</string>
+    <string name="shape_suppository">Suppository</string>
+    <string name="shape_contraceptive_ring">Contraceptive ring</string>
+    <string name="shape_iud_t_shape">IUD</string>
+
+    <!-- Medication Types (Plural forms for UI labels/placeholders) -->
+    <string name="medication_type_capsule_plural">capsules</string>
+    <string name="medication_type_tablet_plural">tablets</string>
+    <string name="medication_type_liquid_plural">mL</string>
+    <string name="medication_type_topical_plural">applications</string>
+    <string name="medication_type_cream_plural">applications</string>
+    <string name="medication_type_device_plural">devices</string>
+    <string name="medication_type_drops_plural">drops</string>
+    <string name="medication_type_foam_plural">applications</string>
+    <string name="medication_type_gel_plural">applications</string>
+    <string name="medication_type_inhaler_plural">inhalations</string>
+    <string name="medication_type_injection_plural">injections</string>
+    <string name="medication_type_lotion_plural">applications</string>
+    <string name="medication_type_ointment_plural">applications</string>
+    <string name="medication_type_patch_plural">patches</string>
+    <string name="medication_type_powder_plural">scoops</string>
+    <string name="medication_type_spray_plural">sprays</string>
+    <string name="medication_type_suppository_plural">units</string>
+
+    <!-- Medication Type Display Names -->
+    <string name="medication_type_capsule">Capsule</string>
+    <string name="medication_type_tablet">Tablet</string>
+    <string name="medication_type_liquid">Liquid</string>
+    <string name="medication_type_topical">Topical</string>
+    <string name="medication_type_cream">Cream</string>
+    <string name="medication_type_device">Device</string>
+    <string name="medication_type_drops">Drops</string>
+    <string name="medication_type_foam">Foam</string>
+    <string name="medication_type_gel">Gel</string>
+    <string name="medication_type_inhaler">Inhaler</string>
+    <string name="medication_type_injection">Injection</string>
+    <string name="medication_type_lotion">Lotion</string>
+    <string name="medication_type_ointment">Ointment</string>
+    <string name="medication_type_patch">Patch</string>
+    <string name="medication_type_powder">Powder</string>
+    <string name="medication_type_spray">Spray</string>
+    <string name="medication_type_suppository">Suppository</string>
+
+    <!-- Medication Formatting -->
+    <string name="medication_type_strength_format">%1$s, %2$s</string>
+
+    <!-- Medication Strength Units -->
+    <string name="unit_mg" translatable="false">mg</string>
+    <string name="unit_mcg" translatable="false">mcg</string>
+    <string name="unit_g" translatable="false">g</string>
+    <string name="unit_ml" translatable="false">mL</string>
+    <string name="unit_iu">IU</string>
+    <string name="unit_meq" translatable="false">mEq</string>
+    <string name="unit_percent" translatable="false">%</string>
+
+    <!-- Medication Container Types -->
+    <string name="container_package">Package</string>
+    <string name="container_bottle">Bottle</string>
+    <string name="container_dispenser">Dispenser</string>
+    <string name="container_blister_pack">Blister pack</string>
+    <string name="container_tube">Tube</string>
+    <string name="container_vial">Vial</string>
+    <string name="container_inhaler">Inhaler</string>
+    <string name="container_pen">Pen</string>
+    <string name="container_ampoule">Ampoule</string>
+    <string name="container_canister">Canister</string>
+    <string name="container_jar">Jar</string>
+
+    <!-- Medication Container Types (lowercase for sentence embedding) -->
+    <string name="container_package_lower">package</string>
+    <string name="container_bottle_lower">bottle</string>
+    <string name="container_dispenser_lower">dispenser</string>
+    <string name="container_blister_pack_lower">blister pack</string>
+    <string name="container_tube_lower">tube</string>
+    <string name="container_vial_lower">vial</string>
+    <string name="container_inhaler_lower">inhaler</string>
+    <string name="container_pen_lower">pen</string>
+    <string name="container_ampoule_lower">ampoule</string>
+    <string name="container_canister_lower">canister</string>
+    <string name="container_jar_lower">jar</string>
+
+    <!-- Container Selection UI Labels -->
+    <string name="stock_container_type_label">Container Type</string>
+
+    <!-- Days of Week -->
+    <string name="day_monday">Monday</string>
+    <string name="day_tuesday">Tuesday</string>
+    <string name="day_wednesday">Wednesday</string>
+    <string name="day_thursday">Thursday</string>
+    <string name="day_friday">Friday</string>
+    <string name="day_saturday">Saturday</string>
+    <string name="day_sunday">Sunday</string>
+    <string name="day_monday_short">M</string>
+    <string name="day_tuesday_short">T</string>
+    <string name="day_wednesday_short">W</string>
+    <string name="day_thursday_short">T</string>
+    <string name="day_friday_short">F</string>
+    <string name="day_saturday_short">S</string>
+    <string name="day_sunday_short">S</string>
+
+    <!-- Medication Actions -->
+    <string name="medication_action_schedule">Schedule</string>
+    <string name="medication_action_label">Label</string>
+    <string name="medication_action_add_stock">Add Stock</string>
+    <string name="medication_action_manage_stock">Manage</string>
+
+    <string name="medication_archived">Archived</string>
+    <string name="medication_empty_state">Add your first medication</string>
+
+    <!-- Medication Form Labels -->
+    <string name="medication_display_name_label">Display name (optional)</string>
+    <string name="medication_display_name_description">The medication name should be accurate to what you see on your label for your own reference. You can set a display name that will take precedence over the label name throughout the app.</string>
+    <string name="medication_name_section">Name</string>
+    <string name="medication_name_label">Medication name</string>
+    <string name="medication_has_strength">Has strength information</string>
+    <string name="medication_strength_value">Strength value</string>
+    <string name="medication_strength_unit">Strength unit</string>
+    <string name="medication_type_label">Type</string>
+    <string name="medication_icon_label">Icon</string>
+    <string name="medication_notes_label">Notes</string>
+    <string name="medication_edit_base_data">Edit base data</string>
+    <string name="medication_edit_title_format">Edit %1$s</string>
+
+    <!-- Edit Base Data Dialog -->
+    <string name="edit_base_data_dialog_title">Edit base data?</string>
+    <string name="edit_base_data_dialog_message">Editing your medication name, strength or type also affects your history.\n\nIf you changed medication or dose add a new medication entry and archive this one.</string>
+    <string name="edit_base_data_dialog_understand">I understand</string>
+    <string name="edit_base_data_dialog_confirm">Edit base data</string>
+
+    <!-- Color Names -->
+    <string name="color_rose">Rose</string>
+    <string name="color_pink">Pink</string>
+    <string name="color_red">Red</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_yellow">Yellow</string>
+    <string name="color_chartreuse">Chartreuse</string>
+    <string name="color_green">Green</string>
+    <string name="color_teal">Teal</string>
+    <string name="color_cyan">Cyan</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_indigo">Indigo</string>
+    <string name="color_purple">Purple</string>
+    <string name="color_monochrome">Monochrome</string>
+    <string name="color_none">No color</string>
+
+    <string name="medication_shape_foreground">Foreground shape</string>
+    <string name="medication_shape_background">Background shape</string>
+    <string name="medication_color_primary">Primary color</string>
+    <string name="medication_strength_placeholder">Enter strength value</string>
+    <string name="medication_skip_step">Skip</string>
+    <string name="medication_completion_status">%1$d of %2$d medications taken</string>
+    <string name="medication_all_taken">All medications taken</string>
+
+    <!-- Importance Label -->
+    <string name="importance_label_title">Importance label</string>
+    <string name="importance_label_description">Labels determine how you will get notified about your schedule.</string>
+    <string name="importance_label_settings_note">You can edit these labels or add new ones later in settings.</string>
+    <string name="importance_label_edit_labels">Edit importance labels</string>
+    <string name="importance_labels_section_title">Importance labels</string>
+    <string name="importance_labels_section_description">Control how you're notified for each medication</string>
+    <string name="importance_labels_screen_description">Each medication has an importance label associated with it, that determines how you are notified about your schedule.</string>
+    <string name="importance_labels_add_label">Add label</string>
+
+    <!-- Importance Label Details -->
+    <string name="importance_label_no_reminders">No reminders</string>
+    <string name="importance_label_critical">Critical</string>
+    <string name="importance_label_reminds_once">Reminds once, no follow ups</string>
+    <string name="importance_label_becomes_critical">becomes critical on follow-up %1$d</string>
+    <string name="importance_label_alarm_status">Alarm</string>
+    <string name="importance_label_becomes_alarm">becomes alarm on follow-up %1$d</string>
+
+    <!-- Default Importance Label Names (localized until user renames) -->
+    <string name="default_label_silent">Silent</string>
+    <string name="default_label_once">Once</string>
+    <string name="default_label_follow_ups">Follow ups</string>
+    <string name="default_label_critical_follow_ups">Critical follow ups</string>
+    <string name="default_label_alarm">Alarm</string>
+
+    <!-- Importance Label Form -->
+    <string name="importance_label_name">Name</string>
+    <string name="importance_label_send_reminders">Send reminders</string>
+    <string name="importance_label_follow_up_notifications">Follow-up reminders</string>
+    <string name="importance_label_number_of_follow_ups">Number of follow ups</string>
+    <string name="importance_label_interval">Time between follow-ups</string>
+    <string name="importance_label_become_critical">Make follow-ups critical</string>
+    <string name="importance_label_become_critical_description">Turn a follow-up reminder into a critical alert if you still haven't logged your medication.</string>
+    <string name="importance_label_critical_after">Make critical on</string>
+    <string name="importance_label_critical_after_suffix">reminder</string>
+    <string name="importance_label_notification_type">Notification type</string>
+    <string name="importance_label_type_regular">Regular</string>
+    <string name="importance_label_type_critical">Critical</string>
+    <string name="importance_label_type_alarm">Alarm</string>
+    <string name="importance_label_type_regular_description">Standard notification that follows your device's notification settings.</string>
+    <string name="importance_label_type_critical_description">Breaks through Do Not Disturb to ensure you never miss important medication.</string>
+    <string name="importance_label_type_alarm_description">Fullscreen alarm with looping sound and vibration. The strongest reminder type.</string>
+    <string name="importance_label_alarm_limited_warning">Alarm-level reminders use enhanced notifications on this device. For full alarm behavior (screen wake, Focus bypass, continuous sound), update to iOS 26 or later.</string>
+    <string name="importance_label_become_alarm">Make follow-ups alarm</string>
+    <string name="importance_label_become_alarm_description">Escalate a follow-up reminder to a fullscreen alarm if you still haven't logged your medication.</string>
+    <string name="importance_label_alarm_after">Make alarm on</string>
+    <string name="importance_label_alarm_after_suffix">reminder</string>
+    <string name="importance_label_escalation_range_hint">Between 1 and %1$d</string>
+    <string name="importance_label_alarm_after_critical_hint">Must be after critical (follow-up %1$d)</string>
+
+    <!-- Importance Label FSI Permission Dialog -->
+    <string name="importance_label_fsi_dialog_title">Permission needed</string>
+    <string name="importance_label_fsi_dialog_message">Alarm notifications need permission to show over your lock screen. Please grant the fullscreen intent permission in settings.</string>
+    <string name="importance_label_fsi_dialog_open_settings">Open settings</string>
+
+    <!-- Importance Label Validation Errors -->
+
+    <!-- Importance Label Dialogs -->
+    <string name="importance_label_dialog_discard_title">Discard changes?</string>
+    <string name="importance_label_dialog_discard_message">Some fields have invalid values. Do you want to discard these changes or continue editing?</string>
+    <string name="importance_label_dialog_delete_title">Delete label?</string>
+    <string name="importance_label_dialog_delete_message">Are you sure you want to delete this importance label? This action cannot be undone.</string>
+    <string name="importance_label_dialog_delete_blocked_title">Cannot delete label</string>
+    <plurals name="importance_label_dialog_delete_blocked_message">
+        <item quantity="one">This label is used by %1$d active medication. Please change its importance label first:</item>
+        <item quantity="other">This label is used by %1$d active medications. Please change their importance label first:</item>
+    </plurals>
+    <string name="importance_label_dialog_delete_message_safe">Archived medications using this label will be reassigned to the default label. This action cannot be undone.</string>
+
+    <!-- Medication Dialogs -->
+    <string name="medication_dialog_delete_title">Delete medication?</string>
+    <string name="medication_dialog_delete_message">Are you sure you want to delete %1$s? This action cannot be undone.</string>
+    <string name="medication_dialog_archive_title">Archive medication?</string>
+    <string name="medication_dialog_archive_message">Are you sure you want to archive %1$s? You can restore it later from archived medications.</string>
+    <string name="medication_dialog_unarchive_title">Unarchive medication?</string>
+    <string name="medication_dialog_unarchive_message">Are you sure you want to unarchive %1$s? It will be restored to your active medications.</string>
+
+    <!-- Schedule Labels -->
+    <string name="schedule_every_day">Every day</string>
+    <string name="schedule_as_needed">As needed</string>
+    <string name="schedule_weekly">Weekly</string>
+
+    <!-- Stock Display -->
+    <string name="stock_quantity_remaining">%1$d remaining</string>
+
+    <!-- Schedule Formatting -->
+    <string name="schedule_frequency_at_time">%1$s at %2$s</string>
+    <string name="schedule_days_separator">, </string>
+
+    <!-- Schedule Screen -->
+    <string name="schedule_screen_title">Schedules</string>
+    <string name="schedule_screen_description">Schedules determine when you should take this medication.</string>
+    <string name="schedule_add">Add schedule</string>
+    <string name="schedule_new">New schedule</string>
+    <string name="schedule_edit">Edit schedule</string>
+    <string name="schedule_section_past">Past</string>
+    <string name="schedule_section_archived">Archived</string>
+
+    <!-- Schedule Bottom Sheet -->
+    <string name="schedule_frequency_regular">Regular intervals</string>
+    <string name="schedule_frequency_days_of_week">Specific days of the week</string>
+    <string name="schedule_interval_every">Every</string>
+    <string name="schedule_interval_day">day</string>
+    <string name="schedule_interval_days">days</string>
+    <string name="schedule_select_days">Select days</string>
+    <string name="schedule_time">Time</string>
+    <string name="schedule_start_date">Start date</string>
+    <string name="schedule_end_date">End date</string>
+    <string name="schedule_end_date_unset">Unset</string>
+    <string name="schedule_end_date_clear">Clear end date</string>
+    <string name="schedule_ended_on">Ended on %1$s</string>
+    <string name="schedule_ends_on">Ends on %1$s</string>
+
+    <!-- Schedule Actions -->
+    <string name="schedule_action_archive">Archive</string>
+    <string name="schedule_action_unarchive">Unarchive</string>
+    <string name="schedule_action_keep_editing">Keep editing</string>
+
+    <!-- Schedule Dialogs -->
+    <string name="schedule_dialog_discard_title">Discard changes?</string>
+    <string name="schedule_dialog_discard_message">Some fields have invalid values. Do you want to discard these changes or continue editing?</string>
+    <string name="schedule_dialog_discard_confirm">Discard</string>
+    <string name="schedule_dialog_delete_title">Delete schedule?</string>
+    <string name="schedule_dialog_delete_message">Are you sure you want to delete this schedule? This action cannot be undone.</string>
+    <string name="schedule_dialog_archive_title">Archive schedule?</string>
+    <string name="schedule_dialog_archive_message">Are you sure you want to archive this schedule? You can restore it later.</string>
+    <string name="schedule_dialog_unarchive_title">Unarchive schedule?</string>
+    <string name="schedule_dialog_unarchive_message">Are you sure you want to restore this schedule?</string>
+
+    <!-- Common UI -->
+    <string name="action_ok">OK</string>
+
+    <!-- Date Picker -->
+    <string name="date_picker_today">Today</string>
+    <string name="date_picker_tomorrow">Tomorrow</string>
+    <string name="date_picker_yesterday">Yesterday</string>
+    <string name="date_picker_today_with_date">Today, %1$s</string>
+
+    <!-- Menu and Navigation -->
+    <string name="menu_content_description">Menu</string>
+    <string name="action_hide_archived">Hide archived</string>
+    <string name="action_show_archived">Show archived</string>
+    <string name="add_medication_content_description">Add medication</string>
+    <string name="medication_add_manually">Add manually</string>
+    <string name="medication_add_with_camera">Add with camera</string>
+
+    <!-- Tracking Screen -->
+    <string name="tracking_section_scheduled">Scheduled</string>
+    <string name="tracking_section_taken">Taken</string>
+    <string name="tracking_section_skipped">Skipped</string>
+    <string name="tracking_empty_state">No medications for this day</string>
+    <string name="tracking_log_scheduled">Log scheduled</string>
+    <string name="tracking_log_as_needed">Log as needed</string>
+    <string name="tracking_fab_tooltip">Log medication</string>
+
+    <!-- Log Medication Bottom Sheet -->
+    <string name="log_medication_title">Log medication</string>
+    <string name="log_medication_edit_title">Edit logged medication</string>
+    <string name="log_medication_scheduled">Scheduled</string>
+    <string name="log_medication_as_needed">As-needed</string>
+    <string name="log_medication_status_skipped">Skipped</string>
+    <string name="log_medication_status_not_yet">Not yet</string>
+    <string name="log_medication_status_taken">Taken</string>
+    <string name="log_medication_action_log">Log</string>
+    <string name="log_medication_time">Time</string>
+
+    <!-- Date Formatting -->
+    <string name="date_format_weekday_date">%1$s, %2$s</string>
+    <string name="date_today">Today</string>
+    <string name="date_yesterday">Yesterday</string>
+    <string name="date_tomorrow">Tomorrow</string>
+
+    <!-- Time Formatting -->
+    <string name="time_unit_minutes">minutes</string>
+
+    <!-- Placeholder Messages -->
+
+    <!-- Camera Detection Screen -->
+    <string name="camera_detection_title">Detect Medication</string>
+    <string name="camera_detection_instruction_no_object">Point camera at medication label</string>
+    <string name="camera_detection_instruction_no_text">Make sure text is clear and readable</string>
+    <string name="camera_detection_instruction_ready">Press scan to detect information</string>
+    <string name="camera_detection_help_text">Make sure the label is clearly visible</string>
+    <string name="camera_detection_reading">Reading label...</string>
+    <string name="camera_detection_no_data">No medication data could be detected</string>
+    <string name="camera_detection_permission_required">Camera permission is required to detect medication</string>
+    <string name="camera_detection_scan">Scan</string>
+    <string name="camera_detection_try_again">Try again</string>
+    <string name="camera_detection_use_this">Use this</string>
+    <string name="camera_detection_detected_info">Detected information</string>
+    <string name="camera_detection_medication_name">Medication name</string>
+    <string name="camera_detection_medication_type">Medication type</string>
+    <string name="camera_detection_medication_strength">Medication strength</string>
+    <string name="camera_detection_edit_note">You can edit this information in the following steps.</string>
+    <string name="camera_detection_from_camera">From camera detection</string>
+    <string name="camera_detection_strength_warning">Please make sure these values are correct and as written on your medication. If not correct the data or skip.</string>
+    <string name="camera_flash_on">Turn flash off</string>
+    <string name="camera_flash_off">Turn flash on</string>
+
+    <!-- Camera Detection Methods -->
+    <string name="camera_detection_method_basic">Smart match</string>
+    <string name="camera_detection_method_gemini">AI scan</string>
+
+    <!-- Camera Consent Dialogs -->
+    <string name="camera_consent_title">Scan a medication</string>
+    <string name="camera_consent_intro">Point your camera at a medication package or label. We'll detect the text and use it to pre-fill the next steps so you can add the medication faster. You'll still be able to review and edit everything before saving.</string>
+    <string name="camera_consent_privacy_android">Text and object recognition run on your device using Google's ML Kit. ML Kit may contact Google's servers to receive updates and sends usage and performance metrics to Google. This is covered by the %1$s. The image itself is not sent to Google by ML Kit.</string>
+    <string name="camera_consent_privacy_ios">Text and object recognition run on your device using Apple's Vision framework. Use of these features is covered by Apple's %1$s.</string>
+    <string name="camera_consent_privacy_google_link">Google Privacy Policy</string>
+    <string name="camera_consent_privacy_google_url">https://policies.google.com/privacy?hl=en</string>
+    <string name="camera_consent_privacy_apple_link">Privacy Policy</string>
+    <string name="camera_consent_privacy_apple_url">https://www.apple.com/legal/privacy/en-ww/</string>
+    <string name="camera_consent_choose_method">Detection method</string>
+    <string name="camera_consent_choose_method_description">Choose how the scanned text should be interpreted.</string>
+    <string name="camera_consent_method_basic_title">Basic</string>
+    <string name="camera_consent_method_basic_body_android">A standard text extractor. No AI and nothing to download, but it is less reliable.</string>
+    <string name="camera_consent_method_basic_body_ios">A standard text extractor. Runs entirely on your device without AI, but it is less reliable.</string>
+    <string name="camera_consent_method_ai_title_android">Gemini Nano</string>
+    <string name="camera_consent_method_ai_body_android">An on-device AI model figures out the name, form, and dosage. Runs offline (the model may need to download the first time you use it).</string>
+    <string name="camera_consent_method_ai_title_ios">Apple Intelligence</string>
+    <string name="camera_consent_method_ai_body_ios">Apple's AI figures out the name, form, and dosage. Apple runs this on your device when possible. For more complex requests, Apple may send the relevant data to Apple's Private Cloud Compute, where Apple states the data is not stored or accessible to them. %1$s.</string>
+    <string name="camera_consent_method_ai_learn_more">Learn more</string>
+    <string name="camera_consent_method_ai_learn_more_url">https://www.apple.com/legal/privacy/data/en/intelligence-engine/</string>
+    <string name="camera_consent_basic_only">The scanned text will be processed on your device using a standard text extractor.</string>
+    <string name="camera_consent_will_download">Will download Gemini Nano</string>
+    <string name="camera_consent_continue">Continue</string>
+
+    <!-- Gemini Download Dialog -->
+    <string name="gemini_download_title">Downloading Gemini Nano</string>
+    <string name="gemini_download_progress">%1$d / %2$d MB</string>
+    <string name="gemini_download_failed">Download Failed</string>
+    <string name="gemini_download_retry">Retry</string>
+    <string name="gemini_download_use_basic">Use Basic scan Instead</string>
+    <string name="gemini_download_tip_binding">Tip: Try updating Google Play Services and restarting your device.</string>
+    <string name="gemini_download_tip_feature_not_found">Tip: Gemini Nano may still be initializing. This can take a few minutes after device setup. Try restarting your device or waiting a bit longer.</string>
+    <string name="gemini_download_tip_network">Tip: Check your internet connection and try again in a few minutes.</string>
+
+    <!-- Data Settings -->
+    <string name="settings_data_title">Data</string>
+    <string name="settings_data_export">Export data</string>
+    <string name="settings_data_export_description">Save your medications and settings to a backup file</string>
+    <string name="settings_data_import">Import data</string>
+    <string name="settings_data_import_description">Restore medications from a backup file</string>
+
+    <!-- Auto-backup Settings -->
+    <string name="settings_auto_backup">Automatic backups</string>
+    <string name="auto_backup_title">Automatic backups</string>
+    <string name="auto_backup_enable">Enable automatic backups</string>
+    <string name="auto_backup_enable_description">Back up all medications daily with encryption</string>
+    <string name="auto_backup_status_failed">Last backup failed</string>
+    <string name="auto_backup_passphrase_description">Your backups are encrypted with this passphrase. You will need it to restore from a backup.</string>
+    <string name="auto_backup_set_passphrase">Set passphrase</string>
+    <string name="auto_backup_change_passphrase">Change passphrase</string>
+    <string name="auto_backup_passphrase">Passphrase</string>
+    <string name="auto_backup_confirm_passphrase">Confirm passphrase</string>
+    <string name="auto_backup_passphrase_hint">Hint (optional)</string>
+    <string name="auto_backup_remember_warning">Write this passphrase down! Without it, your backups cannot be restored.</string>
+    <string name="auto_backup_destination_select">Select folder</string>
+    <string name="auto_backup_destination_change">Change folder</string>
+    <string name="auto_backup_destination_unavailable">Storage location no longer accessible. Please select a new folder.</string>
+    <string name="auto_backup_destination_icloud">Backups are stored in iCloud Drive and sync automatically across your devices.</string>
+    <string name="auto_backup_retention_title">Keep recent backups</string>
+    <string name="auto_backup_trigger">Back up now</string>
+    <string name="auto_backup_backing_up">Backing up...</string>
+    <string name="auto_backup_needs_passphrase">Set a passphrase to enable automatic backups</string>
+    <string name="auto_backup_needs_destination">Select a backup destination folder</string>
+    <string name="auto_backup_explanation">HelloMeds automatically backs up all your medications daily with encryption. If you ever lose access to your device, you can restore from a backup using your passphrase.\n\nBackups are encrypted so only you can read them. Choose a strong passphrase and write it down somewhere safe.</string>
+    <string name="auto_backup_settings_title">Backup settings</string>
+    <string name="auto_backup_passphrase_set">Passphrase is set</string>
+    <string name="auto_backup_passphrase_not_set">No passphrase set</string>
+    <string name="settings_auto_backup_enabled">Enabled</string>
+    <string name="settings_auto_backup_disabled">Not configured</string>
+    <string name="backup_nudge_title">Protect your data</string>
+    <string name="backup_nudge_body">Set up automatic backups to keep your medication data safe. If you ever lose access to this device, you can restore everything with your passphrase.</string>
+    <string name="backup_nudge_setup">Set up</string>
+    <string name="backup_nudge_dismiss">Not now</string>
+
+    <!-- Export Screen -->
+    <string name="backup_export_title">Export data</string>
+    <string name="backup_export_options">Options</string>
+    <string name="backup_include_schedules">Include schedules</string>
+    <string name="backup_include_schedules_description">Export medication dosing schedules</string>
+    <string name="backup_include_stock">Include stock settings</string>
+    <string name="backup_include_stock_description">Export stock tracking configuration</string>
+    <string name="backup_include_archived">Include archived medications</string>
+    <string name="backup_include_archived_description">Also export medications you have archived</string>
+    <string name="backup_include_history">Include medication history</string>
+    <string name="backup_include_history_description">Export taken/skipped records and stock adjustments. May increase file size.</string>
+    <string name="backup_medications_section">Medications</string>
+    <string name="backup_select_all">Select all</string>
+    <string name="backup_deselect_all">Deselect all</string>
+    <string name="backup_exporting">Exporting…</string>
+    <string name="backup_action_save_to_files">Save to Files</string>
+    <string name="backup_action_share">Share…</string>
+
+    <!-- Import Screen -->
+    <string name="backup_import_title">Import data</string>
+    <string name="backup_import_info_description">Select a HelloMeds backup file (.json) to import. You'll be able to review what will be imported before confirming.</string>
+    <string name="backup_select_file">Select backup file</string>
+    <string name="backup_parsing">Reading backup file…</string>
+    <string name="backup_importing">Importing…</string>
+    <string name="backup_preview_summary_title">Backup contents</string>
+    <string name="backup_preview_summary">Found %1$d medication(s), %2$d schedule(s), and %3$d importance label(s)</string>
+    <string name="backup_preview_warnings">Warnings</string>
+    <string name="backup_duplicate_warning">A medication with this name already exists</string>
+    <string name="backup_decision_skip">Skip</string>
+    <string name="backup_decision_replace">Replace</string>
+    <string name="backup_decision_new">New</string>
+    <string name="backup_import_success_title">Import complete</string>
+    <string name="backup_import_error_title">Import failed</string>
+    <string name="backup_try_again">Try again</string>
+    <string name="backup_done">Done</string>
+
+    <!-- Encryption -->
+    <string name="backup_encryption_title">Security</string>
+    <string name="backup_encrypt">Encrypt backup</string>
+    <string name="backup_encrypt_description">Protect your backup with a passphrase using AES-256 encryption</string>
+    <string name="backup_encryption_info_title">Passphrase strength matters</string>
+    <string name="backup_encryption_info_description">Encryption protects your backup only as well as your passphrase. Short or common passphrases can be guessed by someone with access to the file. Use a long, unique passphrase for meaningful protection.</string>
+    <string name="backup_passphrase">Passphrase</string>
+    <string name="backup_confirm_passphrase">Confirm passphrase</string>
+    <string name="backup_passphrase_mismatch">Passphrases don't match</string>
+    <string name="backup_encrypted_title">Encrypted backup</string>
+    <string name="backup_encrypted_description">This backup file is encrypted. Enter the passphrase to decrypt it.</string>
+    <string name="backup_wrong_passphrase">Incorrect passphrase</string>
+    <string name="backup_decrypt">Decrypt</string>
+
+    <!-- Camera Settings Screen -->
+    <string name="settings_camera_title">Camera detection</string>
+    <string name="settings_camera_enable">Enable camera detection</string>
+    <string name="settings_camera_description">Use your camera to automatically fill in medication details from labels</string>
+    <string name="settings_camera_section_scanning">Camera scanning</string>
+    <string name="settings_camera_section_method">Detection method</string>
+    <string name="settings_camera_method_basic">Basic scan</string>
+    <string name="settings_camera_method_gemini">Gemini</string>
+    <string name="settings_camera_method_description">Basic scan: Quick pattern-based scanning\nGemini: AI-powered detection (Gemini Nano)</string>
+    <string name="settings_camera_gemini_status">Gemini Nano status:</string>
+    <string name="settings_camera_gemini_downloaded">Downloaded</string>
+    <string name="settings_camera_gemini_not_downloaded">Not downloaded</string>
+    <string name="settings_camera_gemini_downloading">Downloading…</string>
+    <string name="settings_camera_gemini_unavailable">Unavailable</string>
+    <string name="settings_camera_section_privacy">Privacy</string>
+    <string name="settings_camera_configure">Configure camera detection</string>
+    <string name="settings_camera_configure_description">Privacy details and detection method</string>
+
+    <!-- Notification Strings -->
+
+    <!-- Notification Channel Names (Android system) -->
+    <string name="notification_channel_normal_name">Medication Reminders</string>
+    <string name="notification_channel_normal_description">Reminders to take your medications</string>
+    <string name="notification_channel_critical_name">Critical Medication Reminders</string>
+    <string name="notification_channel_critical_description">Important medication reminders that require immediate attention</string>
+    <string name="notification_channel_alarm_name">Medication Alarms</string>
+    <string name="notification_channel_alarm_description">Fullscreen alarm reminders that wake the screen and play a looping sound</string>
+    <string name="notification_channel_stock_alerts_name">Stock Alerts</string>
+    <string name="notification_channel_stock_alerts_description">Low stock warnings and measurement reminders</string>
+    <string name="notification_channel_depletion_name">Depletion Reminders</string>
+    <string name="notification_channel_depletion_description">Reminders when a medication container is likely empty</string>
+
+    <!-- Notification actions -->
+    <string name="notification_action_taken">Taken</string>
+    <string name="notification_action_skipped">Skipped</string>
+    <string name="notification_action_snooze">Snooze</string>
+    <string name="notification_action_all_taken">All Taken</string>
+    <string name="notification_action_all_skipped">All Skipped</string>
+
+    <!-- Notification Settings -->
+    <string name="settings_notification_title">Notification Settings</string>
+    <string name="settings_notification_enable">Enable notifications</string>
+    <string name="settings_notification_enable_description">Receive reminders to take your medications</string>
+    <string name="settings_notification_disabled_warning">Notifications are disabled</string>
+    <string name="settings_notification_disabled_message">Enable notifications in system settings to receive medication reminders.</string>
+    <string name="settings_notification_open_settings">Open Settings</string>
+
+    <string name="settings_notification_behavior">Behavior</string>
+    <string name="settings_notification_snooze_title">Snooze</string>
+    <string name="settings_notification_snooze_interval">Snooze interval</string>
+    <string name="settings_notification_snooze_minutes_suffix">min</string>
+    <string name="settings_notification_advanced">More notification settings</string>
+    <string name="settings_notification_advanced_description">Snooze, grouping, privacy, and channels</string>
+    <string name="settings_notification_channels">Notification Channels</string>
+    <string name="settings_notification_channels_description">Configure sound and vibration for each notification type</string>
+    <string name="settings_notification_channel_normal">Normal Notifications</string>
+    <string name="settings_notification_channel_normal_description">Configure sound, vibration, and display for regular reminders</string>
+    <string name="settings_notification_channel_critical">Critical Alarms</string>
+    <string name="settings_notification_channel_critical_description">Configure alarm sound and verify Do Not Disturb bypass for critical medications</string>
+    <string name="settings_notification_grouping">Separate notifications</string>
+    <string name="settings_notification_grouping_combined">Single notification</string>
+    <string name="settings_notification_grouping_grouped">Separate notifications</string>
+
+    <string name="settings_notification_privacy">Notification privacy</string>
+    <string name="settings_notification_privacy_show_names">Show medication names</string>
+    <string name="settings_notification_privacy_show_names_description">Medication names are visible in notifications</string>
+    <string name="settings_notification_privacy_discreet">Discreet</string>
+    <string name="settings_notification_privacy_discreet_description">Hide medication names from notifications</string>
+    <string name="settings_notification_privacy_hide">Hide on lock screen</string>
+    <string name="settings_notification_privacy_hide_description">Notifications are hidden when the device is locked</string>
+    <string name="settings_notification_discreet_toggle">Discreet notifications</string>
+    <string name="settings_notification_discreet_toggle_description">Hide medication names from notifications</string>
+
+    <string name="settings_notification_exact_alarms">Use exact alarms</string>
+    <string name="settings_notification_exact_description">Ensures notifications arrive at exact scheduled time</string>
+    <string name="settings_notification_exact_not_granted">Exact alarm permission not granted</string>
+    <string name="settings_notification_exact_disabled">Exact alarm permission disabled</string>
+    <string name="settings_notification_grant_permission">Grant Permission</string>
+    <string name="settings_notification_inexact_warning">When disabled, reminders will be delivered with a delay of around 15 minutes. Potentially longer depending on battery saver or optimization settings.</string>
+
+    <!-- Battery Optimization Settings -->
+    <string name="settings_battery_title">Battery Optimization</string>
+    <string name="settings_battery_last_resort_info">Most users don't need to change this. Only disable battery optimization if notifications are consistently late or missing, even after granting exact alarm permission.</string>
+    <string name="settings_battery_status_label">Battery usage restriction</string>
+    <string name="settings_battery_status_unrestricted">Unrestricted</string>
+    <string name="settings_battery_status_optimized">Optimized</string>
+    <string name="settings_battery_action_label">Change battery settings</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Say\nHelloMeds</string>
+    <string name="onboarding_disclaimer_title">Before we start</string>
+    <string name="onboarding_disclaimer_paragraph1">HelloMeds is a personal medication tracking tool. It does not provide medical advice, diagnosis, or treatment.</string>
+    <string name="onboarding_disclaimer_paragraph2">Always follow your healthcare provider's instructions regarding your medication schedule and dosage.</string>
+    <string name="onboarding_disclaimer_paragraph3">Your data never leaves your device. HelloMeds works entirely offline and all medication data is stored locally. Only manual backups you create can be shared.</string>
+    <string name="onboarding_disclaimer_understood">Understood</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_continue">Continue</string>
+
+    <string name="onboarding_notifications_title">Enable Notifications</string>
+    <string name="onboarding_notifications_description">Allow HelloMeds to send you medication reminders at the right time.</string>
+
+    <string name="onboarding_exact_alarms_title">Precise Timing</string>
+    <string name="onboarding_exact_alarms_description">Allow exact alarm scheduling to ensure your reminders arrive precisely when you need them, not just approximately.</string>
+
+    <string name="onboarding_grant_permission">Grant Permission</string>
+
+    <!-- Quick Start Guide -->
+    <string name="onboarding_quickstart_title">Quick start</string>
+    <string name="onboarding_quickstart_step1_title">Add medication</string>
+    <string name="onboarding_quickstart_step1_body">Use your camera or add medication you want to track manually.</string>
+    <string name="onboarding_quickstart_step2_title">Set label</string>
+    <string name="onboarding_quickstart_step2_body">Each medication has a label that determines how you will get notified about your schedule.</string>
+    <string name="onboarding_quickstart_step3_title">Add schedule</string>
+    <string name="onboarding_quickstart_step3_body">Add the times you need to take your medication, and HelloMeds will remind you based on your label.</string>
+
+    <!-- Notifications Permission -->
+    <string name="onboarding_notifications_disable">Don't send notifications</string>
+    <string name="onboarding_notifications_footer">Notifications are required for medication reminders. If you disable them, you won't receive any reminders from the app.</string>
+
+    <!-- Exact Alarms Permission -->
+    <string name="onboarding_exact_alarms_use_imprecise">Use imprecise notifications</string>
+    <string name="onboarding_exact_alarms_footer">Using precise notifications lets the app run in the background, which may use more battery.\n\nImprecise notifications can be delayed, usually by up to 15 minutes. Potentially longer depending on your phone's battery optimizations.</string>
+
+    <!-- Completion Screen -->
+    <string name="onboarding_completion_title">All set!</string>
+    <string name="onboarding_completion_subtitle">You're ready to set up your first medication</string>
+    <string name="onboarding_add_medication">Add medication</string>
+    <string name="onboarding_later">Later</string>
+
+    <!-- Add Medication Options Bottom Sheet -->
+    <string name="add_medication_options_title">Add medication</string>
+    <string name="add_medication_camera">Use camera</string>
+    <string name="add_medication_camera_description">Scan medication packaging to automatically detect details</string>
+    <string name="add_medication_manual">Add manually</string>
+    <string name="add_medication_manual_description">Enter medication information yourself</string>
+    <string name="add_medication_import">Import from backup</string>
+    <string name="add_medication_import_description">Restore medications from a backup file</string>
+
+    <!-- Permission Revocation Dialogs -->
+    <string name="permission_revoked_notifications_title">Notifications Disabled</string>
+    <string name="permission_revoked_notifications_message">Notification permission has been revoked. HelloMeds cannot send you medication reminders without this permission.</string>
+
+    <string name="permission_revoked_exact_alarms_title">Precise Timing Disabled</string>
+    <string name="permission_revoked_exact_alarms_message">Exact alarm permission has been revoked. Your medication reminders may not arrive at the precise time scheduled.</string>
+
+    <string name="permission_revoked_grant">Open Settings</string>
+    <string name="permission_revoked_disable">Disable</string>
+    <string name="action_dismiss">Dismiss</string>
+
+    <!-- DND bypass warning (medication list card + first-time dialog) -->
+    <string name="dnd_warning_title">Critical notifications can't bypass Do Not Disturb</string>
+    <string name="dnd_warning_message">Some of your medications use critical reminders that need to break through Do Not Disturb mode. Enable this in notification channel settings.</string>
+    <string name="dnd_warning_open_settings">Open Channel Settings</string>
+    <string name="dnd_warning_dismiss">Not Now</string>
+
+    <!-- General Settings -->
+    <string name="settings_general_title">General</string>
+
+    <!-- Appearance Settings -->
+    <string name="settings_appearance_dynamic_color">Use Material You colors</string>
+    <string name="settings_appearance_dynamic_color_description">Adapt app colors to your wallpaper (Android 12+)</string>
+
+    <!-- Privacy Settings -->
+    <string name="settings_screen_privacy">Screen privacy</string>
+    <string name="settings_screen_privacy_description">Prevent screenshots and hide content in the app switcher</string>
+
+    <!-- About -->
+    <string name="settings_about_title">About</string>
+    <string name="settings_about_website">Website</string>
+    <string name="settings_about_website_url" translatable="false">https://juliana.me/projects/hellomeds</string>
+    <string name="settings_about_source_code">Source code</string>
+    <string name="settings_about_source_code_url" translatable="false">https://github.com/JulianaGaibler/hellomeds</string>
+    <string name="settings_privacy_policy">Privacy policy</string>
+    <string name="settings_privacy_policy_url" translatable="false">https://juliana.me/projects/hellomeds/privacy</string>
+    <string name="settings_about_version">Version</string>
+
+    <!-- Support -->
+    <string name="support_title">Support</string>
+    <string name="support_settings_description">Get in touch and generate a diagnostic report</string>
+    <string name="support_contact_section">Get in touch</string>
+    <string name="support_contact_description">Running into trouble or have feedback? You can reach out by email at %1$s. If you are more technically inclined, you can also file an issue on GitHub.</string>
+    <string name="support_contact_email" translatable="false">contact@juliana.me</string>
+    <string name="support_contact_email_url" translatable="false">mailto:contact@juliana.me</string>
+    <string name="support_contact_button_email">Send email</string>
+    <string name="support_contact_button_github">Report on GitHub</string>
+    <string name="support_contact_github_url" translatable="false">https://github.com/JulianaGaibler/hellomeds/issues</string>
+    <string name="support_report_section">Diagnostic report</string>
+    <string name="support_report_description">You do not need to send a report right away. It can be helpful later when tracking down a specific bug. The report includes system information, notification settings, and scheduling state — medication names and personal notes are not included. Even so, it is not completely free of personal details, so please review it before sharing and remove anything you are not comfortable with.</string>
+    <string name="support_generate">Generate report</string>
+    <string name="support_copy">Copy to clipboard</string>
+
+    <!-- Debug Screen -->
+    <string name="debug_screen_title" translatable="false">Debug Information</string>
+    <string name="debug_mode_enabled" translatable="false">Debug mode enabled</string>
+
+    <!-- Debug Sections -->
+
+    <string name="debug_onboarding_normal" translatable="false">Normal Onboarding Flow</string>
+    <string name="debug_onboarding_normal_desc" translatable="false">Launch onboarding with smart permission skipping (granted permissions are hidden)</string>
+    <string name="debug_onboarding_force_all" translatable="false">Force All Steps</string>
+    <string name="debug_onboarding_force_all_desc" translatable="false">Show all onboarding screens regardless of permission status</string>
+
+    <!-- Alarm Details -->
+
+    <!-- System Status Labels -->
+
+    <!-- Reconciler Status Labels -->
+
+    <!-- Preferences Labels -->
+
+    <!-- Debug Actions -->
+    <string name="debug_action_force_reconcile" translatable="false">Force Reconcile</string>
+    <string name="debug_action_force_reconcile_desc" translatable="false">Trigger alarm reconciler immediately</string>
+    <string name="debug_action_success_reconcile" translatable="false">Reconciliation complete</string>
+
+    <!-- Debug: iOS-specific -->
+
+    <!-- Stock Tracking -->
+
+    <!-- Stock Fields -->
+    <!-- Stock Dashboard -->
+
+    <!-- Stock Actions -->
+
+    <!-- Content Descriptions -->
+    <string name="content_description_manage_stock">Manage stock tracking</string>
+
+    <!-- Stock Screen (Dashboard) -->
+    <string name="stock_empty_title">No medication with stock tracking</string>
+    <string name="stock_empty_description">Enable stock tracking in medication settings to monitor inventory</string>
+
+    <!-- Stock Tracking Detail Screen -->
+    <string name="stock_detail_title">Stock Tracking</string>
+    <string name="stock_detail_no_tracking">No stock tracking enabled</string>
+    <string name="stock_detail_description">Track your medication inventory to get low stock alerts and usage insights.</string>
+    <string name="stock_detail_add_button">Add Stock Tracking</string>
+
+    <!-- Delete Tracking Dialog -->
+    <string name="dialog_delete_title">Delete Stock Tracking</string>
+    <string name="dialog_delete_message">How would you like to proceed?</string>
+    <string name="action_confirm">Confirm</string>
+
+    <!-- Weight Units -->
+
+    <!-- Container Stock Input -->
+    <string name="stock_auto_correct_message">Auto-corrected: %1$d containers + %2$s units</string>
+
+    <!-- Add Stock Tracking Flow -->
+    <string name="stock_flow_title">Add Stock Tracking</string>
+
+    <!-- Step 1: Method Selection -->
+    <string name="stock_method_title">Tracking Method</string>
+    <string name="stock_method_subtitle">How do you want to track stock?</string>
+    <string name="stock_method_discrete_title">Track by exact dose</string>
+    <string name="stock_method_discrete_desc">Use this when you know exactly how much medication you take each time, such as pills, patches or accurately measured liquids. Each dose reduces your supply by a known amount.</string>
+    <string name="stock_method_estimated_title">Track by container</string>
+    <string name="stock_method_estimated_desc">Use this for medications in dispensers, tubes, or inhalers. Track how many containers you have — the app estimates when each one runs out based on your schedule.</string>
+    <string name="stock_estimated_container_title">Container</string>
+    <string name="stock_estimated_container_subtitle">What type of container does your medication come in?</string>
+    <string name="stock_estimated_doses_title">Doses per container</string>
+    <string name="stock_estimated_doses_info">If you know how many doses are in each container, we can estimate when it runs out and remind you to update your stock.</string>
+    <string name="stock_depletion_step_desc">We can remind you to update your stock when we think a container is used up based on your dose schedule.</string>
+    <!-- DISCRETE Path -->
+    <string name="stock_discrete_packaging_title">Packaging</string>
+    <string name="stock_discrete_packaging_subtitle">If your medication comes in fixed-amount containers, you can add this here to make tracking easier</string>
+    <string name="stock_discrete_current_title">Current stock</string>
+    <string name="stock_discrete_current_subtitle">How much do you have right now?</string>
+    <string name="stock_discrete_low_title">Low stock warning</string>
+    <string name="stock_discrete_low_subtitle">Do you want to be notified when you're low on stock?</string>
+    <string name="stock_discrete_low_threshold">When at or lower than</string>
+    <string name="stock_discrete_low_enable">Enable low stock alerts</string>
+
+    <!-- Estimated tracking -->
+    <string name="stock_depletion_reminder_label">Depletion reminder</string>
+
+    <!-- Stock Detail Redesign -->
+    <string name="stock_detail_title_dynamic">%1$s stock</string>
+    <string name="stock_detail_settings">Settings</string>
+    <string name="stock_detail_no_changes">No changes</string>
+    <string name="stock_summary_sealed_remaining">%1$s remaining</string>
+    <string name="stock_summary_total">%1$d left in total</string>
+    <string name="stock_summary_discrete_current">%1$d in current %2$s</string>
+    <string name="stock_action_top_up">Top up</string>
+    <string name="stock_action_update">Update</string>
+    <string name="stock_prediction_single_prefix">You'll run out on</string>
+    <string name="stock_prediction_estimated_range">Estimated to run out between %1$s and %2$s</string>
+    <string name="stock_prediction_estimated_approximate">Estimated to run out around %1$s</string>
+    <string name="stock_top_up_title">Top up stock</string>
+    <string name="stock_top_up_quantity_label">Quantity to add</string>
+    <string name="stock_top_up_submit">Add to stock</string>
+    <string name="stock_update_title">Update stock</string>
+    <string name="stock_update_total_label">Current total</string>
+    <string name="stock_update_submit">Update stock</string>
+    <string name="stock_update_sealed_title">Update Containers</string>
+    <string name="stock_update_sealed_label">Sealed containers</string>
+
+    <!-- Estimated stock display -->
+    <string name="stock_summary_estimated_containers">%1$d %2$s</string>
+    <string name="stock_action_container_depleted">Mark container as depleted</string>
+    <string name="stock_container_generic">container</string>
+
+    <!-- Depletion Reminder -->
+
+    <!-- Stock Tracking Settings -->
+    <string name="stock_settings_title">Stock Settings</string>
+    <string name="stock_settings_section_general">General</string>
+    <string name="stock_settings_section_container">Container</string>
+    <string name="stock_settings_low_stock_title">Low stock warning</string>
+    <string name="stock_settings_container_type">Container type</string>
+    <string name="stock_settings_packaging_quantity">Packaging quantity</string>
+    <string name="stock_settings_doses_per_container">Doses per %1$s</string>
+    <string name="stock_settings_depletion_reminder">Depletion reminder</string>
+    <string name="stock_container_started_label">Current container started</string>
+    <string name="stock_container_started_default">Today (assume full)</string>
+    <string name="stock_depletion_confirm_title">Mark container as depleted?</string>
+    <string name="stock_depletion_confirm_message">This will reduce your container count by one. You can undo this by updating your stock.</string>
+    <string name="stock_settings_doses_per_container_desc">Helps estimate when your current container will run out</string>
+    <string name="stock_settings_depletion_reminder_desc">Reminds you to update your stock when a container is likely used up</string>
+    <string name="stock_settings_remove_tracking">Remove stock tracking</string>
+
+    <!-- Stock Level Adjustment -->
+    <string name="stock_adjust_level_title">Adjust stock level</string>
+    <string name="stock_adjust_level_action">Adjust stock level</string>
+    <string name="stock_adjust_level_action_desc">Fine-tune the current fill level of your open container</string>
+    <string name="stock_adjust_level_remaining">Current remaining doses</string>
+    <string name="stock_adjust_level_confirm">Save</string>
+    <string name="stock_adjust_level_remaining_disabled">Set up a schedule to adjust remaining doses</string>
+    <string name="stock_prediction_preview_unavailable">Add a schedule to see predictions</string>
+    <string name="stock_prediction_container_empty">This container may be empty</string>
+
+    <!-- Low Stock Notifications -->
+    <string name="low_stock_notification_title">Low stock: %1$s</string>
+    <string name="low_stock_notification_title_discreet">Low stock alert</string>
+    <string name="low_stock_notification_text">Your supply is running low. Tap to view stock details.</string>
+
+    <!-- Depletion Reminder Notifications -->
+    <string name="depletion_notification_title">Container may be empty: %1$s</string>
+    <string name="depletion_notification_title_discreet">Container may be empty</string>
+    <string name="depletion_notification_text">You've taken %1$d doses since the last container change. Tap to update your stock.</string>
+    <string name="depletion_notification_action_mark_depleted">Mark Depleted</string>
+
+    <!-- Stock Display Helper -->
+    <string name="stock_days_remaining_unknown">Unknown</string>
+    <string name="stock_days_remaining_out">Out of stock</string>
+    <string name="stock_days_remaining_less_than_one">Less than 1 day</string>
+    <string name="stock_container_in_use">1 in use</string>
+    <string name="stock_no_containers">No containers</string>
+    <string name="stock_container_info_separator"> + </string>
+
+    <!-- Dose Calculation Helper -->
+    <string name="stock_calculator_toggle">Help me calculate</string>
+    <string name="stock_calculator_sheet_title">Calculate doses per container</string>
+    <string name="stock_calculator_sheet_description">Enter the total amount in your container and the amount per dose. We'll calculate how many doses it contains.</string>
+    <string name="stock_calculator_total_label">Total amount per container</string>
+    <string name="stock_calculator_dose_label">Amount per dose</string>
+    <string name="stock_calculator_result">Estimated: ~%1$d doses</string>
+    <string name="stock_calculator_apply">Apply</string>
+    <string name="stock_calculator_error_dose_exceeds">Dose amount can't exceed total container amount</string>
+
+    <!-- Stock Display Helper -->
+    <string name="stock_quantity_with_remainder">%1$s + %2$s</string>
+
+    <!-- Stock Screen: Days Left Display -->
+    <string name="stock_days_left_range"> · ~%1$d\u2013%2$d days left</string>
+    <string name="stock_days_left_approximate"> · ~%1$d days left</string>
+    <string name="stock_days_left_exact"> · %1$d days left</string>
+
+    <!-- Stock Rationale Display -->
+    <string name="stock_rationale_rate_daily">%1$s doses/day</string>
+    <string name="stock_rationale_rate_weekly">%1$s doses/week</string>
+    <string name="stock_rationale_estimated_container">~%1$d doses/container</string>
+    <string name="stock_rationale_separator">%1$s · %2$s</string>
+
+    <!-- Stock Event Labels (mergeEvents) -->
+    <string name="stock_event_refilled">Refilled stock</string>
+    <string name="stock_event_full_container_added">Full %1$s added</string>
+    <string name="stock_event_container_added">%1$s added</string>
+    <string name="stock_event_containers_added">%1$d %2$s added</string>
+    <string name="stock_event_full_container">Full %1$s</string>
+    <string name="stock_event_full">Full</string>
+    <string name="stock_event_each">%1$s each</string>
+    <string name="stock_event_opening_next">Opening next %1$s</string>
+    <string name="stock_event_predicted_transition">Predicted transition</string>
+    <string name="stock_event_switched">Switched %1$s</string>
+    <string name="stock_event_name_transition">%1$s transition</string>
+    <string name="stock_event_started_tracking">Started tracking</string>
+    <string name="stock_event_container_depleted">Container depleted</string>
+    <string name="stock_event_marked_empty">Marked as empty</string>
+    <string name="stock_event_cleared_overdraft">Cleared overdraft</string>
+    <string name="stock_event_balanced_with_new">Balanced with new %1$s</string>
+    <string name="stock_event_packaging_updated">Packaging updated</string>
+    <string name="stock_event_corrected_stock">Corrected stock</string>
+    <string name="stock_event_adjusted_to">Adjusted to %1$s (%2$s)</string>
+    <string name="stock_event_adjustment">Adjustment</string>
+
+    <!-- Stock Event Detail Card Labels -->
+    <string name="stock_event_type_dose_taken">Dose Taken</string>
+    <string name="stock_event_type_refill">Refill (+%1$s)</string>
+    <string name="stock_event_type_initial_stock">Initial Stock</string>
+    <string name="stock_event_type_manual_correction">Manual Correction</string>
+    <string name="stock_event_type_predicted_empty">Predicted Empty</string>
+    <string name="stock_event_type_adjustment">Adjustment</string>
+    <string name="stock_event_type_container_switch">Container Switch</string>
+    <string name="stock_event_type_predicted">Predicted</string>
+    <string name="stock_event_type_stock_level">Stock Level</string>
+    <string name="stock_event_detail_stock"> · Stock: %1$s</string>
+
+    <!-- Container Stock Input -->
+    <string name="stock_input_full_containers">Full %1$s</string>
+    <string name="stock_input_units_from_current">%1$s from current %2$s</string>
+
+    <!-- Backup Summary -->
+    <string name="backup_preview_summary_format">Found %1$s, %2$s, and %3$s</string>
+
+    <!-- Common -->
+    <string name="action_skip">Skip</string>
+    <!-- Permission Warning Banners -->
+    <string name="permission_warning_notifications_title">Notifications are disabled</string>
+    <string name="permission_warning_notifications_message">Enable notifications in system settings to receive medication reminders.</string>
+    <string name="permission_warning_exact_alarms_title">Precise timing disabled</string>
+    <string name="permission_warning_exact_alarms_message">Allow exact alarms so your reminders arrive on time, not minutes late.</string>
+    <string name="permission_warning_fsi_title">Screen wake disabled</string>
+    <string name="permission_warning_fsi_message">Allow full-screen alerts so your screen turns on for medication reminders.</string>
+    <string name="permission_warning_dnd_title">Do Not Disturb bypass disabled</string>
+    <string name="permission_warning_dnd_message">Critical medication reminders won't break through Do Not Disturb. Enable DnD bypass in channel settings.</string>
+    <string name="permission_warning_fix_button">Fix</string>
+    <string name="permission_warning_dismiss_button">Dismiss</string>
+    <string name="permission_warning_alarmkit_title">Alarm permission disabled</string>
+    <string name="permission_warning_alarmkit_message">Some of your medications use alarm-level reminders. Enable alarm permission so they can wake your screen and bypass Focus mode.</string>
+    <string name="permission_warning_critical_alerts_title">Critical alerts disabled</string>
+    <string name="permission_warning_critical_alerts_message">Some of your medications use critical reminders. Enable critical alerts so they can play a sound even on silent or Do Not Disturb.</string>
+    <string name="permission_warning_collapsed_title">%d permissions need attention</string>
+    <string name="warning_backup_failed_title">Auto-backup failing</string>
+    <string name="warning_backup_failed_message">Automatic backups have failed %d times in a row. Check your backup settings.</string>
+
+    <!-- FSI Onboarding -->
+    <string name="onboarding_fsi_title">Screen wake</string>
+    <string name="onboarding_fsi_description">Allow HelloMeds to turn on your screen when a medication reminder fires — even when your phone is locked.</string>
+    <string name="onboarding_fsi_enable">Enable</string>
+    <string name="onboarding_fsi_skip">Skip for now</string>
+
+    <!-- AlarmKit Permission Screen (iOS 26+) -->
+    <string name="onboarding_alarmkit_title">Medication Alarms</string>
+    <string name="onboarding_alarmkit_description">Allow HelloMeds to use system alarms for your most important medications. Alarms can wake your screen and play a sound even when your phone is in Focus mode.</string>
+    <string name="onboarding_alarmkit_footer">Without alarm permission, important medication reminders will still be delivered as notifications but may not wake your screen or bypass Focus mode.</string>
+    <string name="onboarding_alarmkit_skip">Use notifications instead</string>
+
+    <!-- Critical Alerts Permission Screen (iOS) -->
+    <string name="onboarding_critical_alerts_title">Critical Alerts</string>
+    <string name="onboarding_critical_alerts_description">Allow HelloMeds to send critical alerts for medications marked as critical. These alerts play a sound even when your phone is on silent or Do Not Disturb.</string>
+    <string name="onboarding_critical_alerts_footer">Critical alerts are only used for medications you mark as critical. Without this permission, critical medications will use standard time-sensitive notifications instead.</string>
+    <string name="onboarding_critical_alerts_skip">Skip for now</string>
+
+    <!-- Medication wizard step headers -->
+    <string name="wizard_medication_name_headline">Medication name</string>
+    <string name="wizard_medication_name_title">Ideally use the name on the packaging or bottle. You can add a display name later.</string>
+    <string name="wizard_medication_name_placeholder">Enter medication name</string>
+    <string name="wizard_medication_type_headline">Medication type</string>
+    <string name="wizard_medication_type_title">What form does your medication come in.</string>
+    <string name="wizard_medication_strength_headline">Medication strength</string>
+    <string name="wizard_medication_strength_title">Optional strength of your medication. Should be on your packaging or bottle.</string>
+    <string name="wizard_medication_shape_headline">Medication shape</string>
+    <string name="wizard_medication_shape_title">Helps you recognize your medication in the app.</string>
+    <string name="wizard_medication_colors_headline">Medication colors</string>
+    <string name="wizard_medication_colors_title">Choose a color to customize your medication icon.</string>
+
+    <!-- Auto backup -->
+    <string name="auto_backup_passphrase_saved">Passphrase saved</string>
+    <string name="auto_backup_passphrase_too_short">Passphrase must be at least 8 characters</string>
+    <string name="auto_backup_passphrase_mismatch">Passphrases don't match</string>
+
+    <!-- Import warnings -->
+    <string name="import_warning_newer_version">This backup was created by a newer version of HelloMeds. Some data may not import correctly.</string>
+    <string name="import_warning_unknown_med_type">Unknown medication type '%1$s', will use Tablet</string>
+    <string name="import_warning_unknown_strength_unit">Unknown strength unit '%1$s', will be cleared</string>
+    <string name="import_warning_unknown_frequency_type">Schedule %1$d: unknown frequency type '%2$s', will use Interval</string>
+    <string name="import_warning_unknown_tracking_precision">Unknown tracking precision '%1$s', will be cleared</string>
+    <string name="import_warning_unknown_container">Unknown container type '%1$s', will be cleared</string>
+    <string name="import_warning_label_not_found">Importance label '%1$s' not found, will use default</string>
+    <string name="import_warning_medication_prefix">%1$s: %2$s</string>
+
+    <!-- Dosing Cycle -->
+    <string name="wizard_cycle_headline">Schedule settings</string>
+    <string name="wizard_cycle_title">Configure timing behavior and dosing cycles for this medication.</string>
+    <string name="cycle_enabled">This medication follows a cycle</string>
+    <string name="cycle_enabled_description">Adjusts your schedule and notifications based on active and break days.</string>
+    <string name="cycle_placebos_on_description">During break days, you will still receive reminders for placebo pills. Notifications will be quieter.</string>
+    <string name="cycle_placebos_off_description">During break days, no reminders will be sent and no events will appear on your schedule.</string>
+    <string name="cycle_active_days">Active days</string>
+    <string name="cycle_active_days_hint">Must be at least 1</string>
+    <string name="cycle_break_days">Break days</string>
+    <string name="cycle_has_placebos">Pack includes placebo pills during break</string>
+    <string name="cycle_current_day">Current day in cycle</string>
+    <string name="cycle_current_day_description">If you started today, you are on day 1.</string>
+    <string name="cycle_preset_label">Common cycles</string>
+    <string name="cycle_preset_21_7">21/7</string>
+    <string name="cycle_preset_21_7_description">21 active days, 7 break days</string>
+    <string name="cycle_preset_24_4">24/4</string>
+    <string name="cycle_preset_24_4_description">24 active days, 4 break days</string>
+    <string name="cycle_preset_continuous">Continuous</string>
+    <string name="cycle_preset_continuous_description">28 active days, no break</string>
+    <string name="cycle_progress_active">Day %1$d of %2$d - Active</string>
+    <string name="cycle_progress_break">Day %1$d of %2$d - Break</string>
+    <string name="cycle_progress_next_cycle">%1$d days until next cycle</string>
+    <string name="cycle_edit">Edit cycle</string>
+    <string name="cycle_setup">Set up dosing cycle</string>
+    <string name="cycle_remove">Remove cycle</string>
+    <string name="cycle_reset">Reset cycle</string>
+    <string name="cycle_reset_confirm_title">Reset cycle?</string>
+    <string name="cycle_reset_confirm_message">This will reset your cycle to Day 1.</string>
+    <string name="cycle_set_day">Set day</string>
+    <string name="cycle_set_day_title">Set cycle day</string>
+    <string name="cycle_config_title">Cycle Settings</string>
+    <string name="tracking_placebo_badge">Placebo</string>
+    <string name="tracking_active_badge">Active</string>
+    <string name="cycle_section_title">Dosing Cycle</string>
+    <string name="cycle_info_calendar_days">The cycle advances by one each calendar day from your start date — it does not pause for missed doses or non-scheduled days.</string>
+    <string name="schedule_cycle_info_title">Cycle and Schedule</string>
+    <string name="schedule_cycle_info_body_1">Your schedule sets the specific times and days for your medication. Your cycle acts as an overall filter for those reminders.</string>
+    <string name="schedule_cycle_info_body_2">On Active days, you'll receive your reminders as planned. On Break days, those same reminders are either skipped or switched to placebos.</string>
+    <string name="tracking_missed_dose_banner">You have a missed active dose. Check your medication instructions for guidance.</string>
+
+    <!-- Timezone mode -->
+    <string name="timezone_mode_label">Fix reminder times to timezone</string>
+    <string name="timezone_mode_local_description">Adjusts to your current timezone</string>
+    <string name="timezone_mode_fixed_description">Keeps exact timing when you travel</string>
+    <string name="timezone_mode_fixed_hint">Recommended for birth control or antibiotics where exact intervals matter</string>
+    <string name="timezone_mode_detail_local">Reminders follow your local time</string>
+    <string name="timezone_mode_detail_fixed">Reminders anchored to %1$s</string>
+    <string name="timezone_anchor_update">Update to current timezone</string>
+    <string name="timezone_anchor_description">Reminders are anchored to this timezone</string>
+    <string name="timezone_picker_title">Select timezone</string>
+    <string name="timezone_picker_search">Search timezones</string>
+    <string name="timezone_current">Current</string>
+
+    <!-- Overdue -->
+    <string name="tracking_overdue_section_title">Overdue</string>
+    <string name="tracking_section_missed">Missed</string>
+
+    <!-- Reliability banner -->
+    <string name="reliability_banner_exact_alarms_message">Reminders may be delayed.</string>
+    <string name="reliability_banner_exact_alarms_action">Fix</string>
+    <string name="reliability_banner_ios_budget_message">Too many reminders scheduled. Open the app every 2 days to keep them active.</string>
+    <string name="reliability_banner_database_recovered_message">A system error caused your local database to be wiped to prevent a fatal crash. Please restore your medications from a backup or re-enter them.</string>
+    <string name="reliability_banner_database_recovered_action">Dismiss</string>
+</resources>

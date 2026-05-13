@@ -1,0 +1,81 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+**/.DS_Store
+build/
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Kotlin compiler metadata
+.kotlin/
+
+# Generated iOS version config
+iosApp/Version.generated.xcconfig
+
+# Test output artifacts
+test-results.xml
+failures.xml
+
+# Xcode
+iosApp/**/*.xcodeproj/xcuserdata/
+iosApp/**/*.xcworkspace/xcuserdata/
+iosApp/**/DerivedData/
+iosApp/**/*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/configuration/
+iosApp/**/xcuserdata/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+## User settings
+xcuserdata/
+## Obj-C/Swift specific
+*.hmap
+
+## App packaging
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# LLM configuration files
+.claude
+CLAUDE.md
+.cursor/
+.cursorrules
+.github/copilot-instructions.md
+
+# JetBrains IDEs
+## Personal UI/Device state
+.idea/deploymentTargetSelector.xml
+.idea/deviceManager.xml
+.idea/androidTestResultsUserPreferences.xml
+.idea/appInsightsSettings.xml
+.idea/material_theme_project_new.xml
+.idea/markdown.xml
+.idea/xcode.xml
+## AI / Studio Bot local state/migration
+.idea/studiobot.xml
+.idea/copilot.data.migration.agent.xml
+.idea/copilot.data.migration.ask.xml
+.idea/copilot.data.migration.ask2agent.xml
+.idea/copilot.data.migration.edit.xml
+## Internal IDE migrations and system state
+.idea/migrations.xml
+.idea/AndroidProjectSystem.xml
+## Personal artifact build configs
+/.idea/artifacts/

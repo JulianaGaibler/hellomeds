@@ -1,0 +1,4 @@
+/* AlarmKit Live Activity button labels */
+"alarm_button_taken" = "Eingenommen";
+"alarm_button_snooze" = "Snooze";
+"alarm_button_skipped" = "Übersprungen";

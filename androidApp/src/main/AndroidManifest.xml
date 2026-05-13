@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- This ensures only YOUR app can trigger the "Taken/Skipped" actions, preventing other apps from messing with your data. -->
+    <permission android:name="${applicationId}.NOTIFICATION_PROCESSED" />
+
+    <!-- 2. NOTIFICATION & ALARM PERMISSIONS -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission
+        android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission
+        android:name="android.permission.USE_FULL_SCREEN_INTENT"
+        tools:ignore="FullScreenIntentPolicy" />
+
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
+
+    <application
+        android:name=".HelloMedsApplication"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.HelloMeds">
+
+        <!-- Remove default WorkManager initializer (app uses on-demand init via Configuration.Provider) -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
+        <!-- singleTask: ensures one instance in the app's own task. When opened from
+             another app (e.g., Telegram sharing a .hmbackup file), Android routes to
+             the existing instance via onNewIntent() instead of creating a duplicate
+             in the sender's task. Without this, the app appears twice in the switcher. -->
+        <activity
+            android:name=".MainActivity"
+            android:enableOnBackInvokedCallback="true"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.HelloMeds.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Handle .hmbackup files opened from other apps -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="content" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.hmbackup" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="file" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.hmbackup" />
+            </intent-filter>
+        </activity>
+
+        <!-- FileProvider for sharing backup files -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- Full-screen alarm activity for medication reminders (wakes screen, shows over lock screen) -->
+        <activity
+            android:name=".notifications.AlarmActivity"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:theme="@style/Theme.HelloMeds" />
+
+        <!-- Global alarm receiver (single reconciler alarm) -->
+        <receiver
+            android:name=".notifications.GlobalAlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="${applicationId}.RECONCILER_ALARM" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Added the permission attribute here. Now this receiver rejects signals that don't have your signature. -->
+        <receiver
+            android:name=".notifications.NotificationActionReceiver"
+            android:exported="false"
+            android:permission="${applicationId}.NOTIFICATION_PROCESSED">
+            <intent-filter>
+                <action android:name="${applicationId}.NOTIFICATION_ACTION" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Boot receiver for rescheduling -->
+        <receiver
+            android:name=".receivers.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Alarm permission receiver for detecting permission grants -->
+        <receiver
+            android:name=".notifications.AlarmPermissionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Timezone and manual clock change receiver for alarm rescheduling -->
+        <receiver
+            android:name=".receivers.TimezoneChangeReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>

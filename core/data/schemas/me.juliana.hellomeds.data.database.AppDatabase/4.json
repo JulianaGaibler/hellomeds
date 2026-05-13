@@ -1,0 +1,752 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 4,
+    "identityHash": "931382a157bb5ce59d88f72b09f885b2",
+    "entities": [
+      {
+        "tableName": "importance_labels",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `shouldRemind` INTEGER NOT NULL, `isCritical` INTEGER NOT NULL, `isAlarm` INTEGER NOT NULL, `hasFollowUps` INTEGER NOT NULL, `followUpCount` INTEGER NOT NULL, `followUpIntervalMinutes` INTEGER NOT NULL, `criticalAfterFollowUp` INTEGER, `alarmAfterFollowUp` INTEGER, `defaultType` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shouldRemind",
+            "columnName": "shouldRemind",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isCritical",
+            "columnName": "isCritical",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isAlarm",
+            "columnName": "isAlarm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasFollowUps",
+            "columnName": "hasFollowUps",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "followUpCount",
+            "columnName": "followUpCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "followUpIntervalMinutes",
+            "columnName": "followUpIntervalMinutes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "criticalAfterFollowUp",
+            "columnName": "criticalAfterFollowUp",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "alarmAfterFollowUp",
+            "columnName": "alarmAfterFollowUp",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "defaultType",
+            "columnName": "defaultType",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "medications",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `shape` TEXT NOT NULL, `importanceLabelId` INTEGER NOT NULL, `strengthValue` REAL, `strengthUnit` TEXT, `displayName` TEXT, `notes` TEXT, `isArchived` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `foregroundShape` TEXT NOT NULL, `backgroundShape` TEXT NOT NULL, `shapeColor` TEXT, `stockTrackingEnabled` INTEGER NOT NULL, `trackingPrecision` TEXT, `currentStockQuantity` REAL, `lowStockThreshold` REAL, `lowStockAlertSent` INTEGER NOT NULL, `packagingQuantity` REAL, `medicationContainer` TEXT, `depletionReminderEnabled` INTEGER NOT NULL, `depletionAlertSent` INTEGER NOT NULL, `containerStartedAt` INTEGER, `cycleType` TEXT NOT NULL, `cycleDaysActive` INTEGER, `cycleDaysBreak` INTEGER, `cycleHasPlacebos` INTEGER NOT NULL, `cycleStartDate` TEXT, `timeZoneMode` TEXT NOT NULL, `anchorTimeZone` TEXT, `displayOrder` INTEGER NOT NULL, FOREIGN KEY(`importanceLabelId`) REFERENCES `importance_labels`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shape",
+            "columnName": "shape",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "importanceLabelId",
+            "columnName": "importanceLabelId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "strengthValue",
+            "columnName": "strengthValue",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "strengthUnit",
+            "columnName": "strengthUnit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "isArchived",
+            "columnName": "isArchived",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "foregroundShape",
+            "columnName": "foregroundShape",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "backgroundShape",
+            "columnName": "backgroundShape",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shapeColor",
+            "columnName": "shapeColor",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "stockTrackingEnabled",
+            "columnName": "stockTrackingEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "trackingPrecision",
+            "columnName": "trackingPrecision",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "currentStockQuantity",
+            "columnName": "currentStockQuantity",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "lowStockThreshold",
+            "columnName": "lowStockThreshold",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "lowStockAlertSent",
+            "columnName": "lowStockAlertSent",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "packagingQuantity",
+            "columnName": "packagingQuantity",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "medicationContainer",
+            "columnName": "medicationContainer",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "depletionReminderEnabled",
+            "columnName": "depletionReminderEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "depletionAlertSent",
+            "columnName": "depletionAlertSent",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "containerStartedAt",
+            "columnName": "containerStartedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "cycleType",
+            "columnName": "cycleType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cycleDaysActive",
+            "columnName": "cycleDaysActive",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "cycleDaysBreak",
+            "columnName": "cycleDaysBreak",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "cycleHasPlacebos",
+            "columnName": "cycleHasPlacebos",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cycleStartDate",
+            "columnName": "cycleStartDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "timeZoneMode",
+            "columnName": "timeZoneMode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "anchorTimeZone",
+            "columnName": "anchorTimeZone",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "displayOrder",
+            "columnName": "displayOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_medications_importanceLabelId",
+            "unique": false,
+            "columnNames": [
+              "importanceLabelId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_medications_importanceLabelId` ON `${TABLE_NAME}` (`importanceLabelId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "importance_labels",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "importanceLabelId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "schedules",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `medicationId` INTEGER NOT NULL, `dose` REAL NOT NULL, `startDate` INTEGER NOT NULL, `endDate` INTEGER, `timeOfDay` TEXT NOT NULL, `frequencyType` TEXT NOT NULL, `frequencyValue` INTEGER NOT NULL, `daysOfWeek` TEXT, `isArchived` INTEGER NOT NULL, `originTimeZone` TEXT, `createdAt` INTEGER NOT NULL, FOREIGN KEY(`medicationId`) REFERENCES `medications`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "medicationId",
+            "columnName": "medicationId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dose",
+            "columnName": "dose",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startDate",
+            "columnName": "startDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endDate",
+            "columnName": "endDate",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "timeOfDay",
+            "columnName": "timeOfDay",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "frequencyType",
+            "columnName": "frequencyType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "frequencyValue",
+            "columnName": "frequencyValue",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "daysOfWeek",
+            "columnName": "daysOfWeek",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "isArchived",
+            "columnName": "isArchived",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "originTimeZone",
+            "columnName": "originTimeZone",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_schedules_medicationId",
+            "unique": false,
+            "columnNames": [
+              "medicationId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_schedules_medicationId` ON `${TABLE_NAME}` (`medicationId`)"
+          },
+          {
+            "name": "index_schedules_isArchived_endDate",
+            "unique": false,
+            "columnNames": [
+              "isArchived",
+              "endDate"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_schedules_isArchived_endDate` ON `${TABLE_NAME}` (`isArchived`, `endDate`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "medications",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "medicationId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "medication_history",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `medicationId` INTEGER NOT NULL, `scheduleId` INTEGER, `scheduledTime` INTEGER, `takenTime` INTEGER, `scheduledDose` REAL NOT NULL, `actualDose` REAL, `status` TEXT NOT NULL, `notes` TEXT, `createdAt` INTEGER NOT NULL, FOREIGN KEY(`medicationId`) REFERENCES `medications`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`scheduleId`) REFERENCES `schedules`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "medicationId",
+            "columnName": "medicationId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scheduleId",
+            "columnName": "scheduleId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "scheduledTime",
+            "columnName": "scheduledTime",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "takenTime",
+            "columnName": "takenTime",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "scheduledDose",
+            "columnName": "scheduledDose",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actualDose",
+            "columnName": "actualDose",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_medication_history_medicationId",
+            "unique": false,
+            "columnNames": [
+              "medicationId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_medication_history_medicationId` ON `${TABLE_NAME}` (`medicationId`)"
+          },
+          {
+            "name": "index_medication_history_scheduleId",
+            "unique": false,
+            "columnNames": [
+              "scheduleId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_medication_history_scheduleId` ON `${TABLE_NAME}` (`scheduleId`)"
+          },
+          {
+            "name": "index_medication_history_scheduledTime",
+            "unique": false,
+            "columnNames": [
+              "scheduledTime"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_medication_history_scheduledTime` ON `${TABLE_NAME}` (`scheduledTime`)"
+          },
+          {
+            "name": "index_medication_history_dedup",
+            "unique": true,
+            "columnNames": [
+              "medicationId",
+              "scheduleId",
+              "scheduledTime"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_medication_history_dedup` ON `${TABLE_NAME}` (`medicationId`, `scheduleId`, `scheduledTime`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "medications",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "medicationId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "schedules",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "scheduleId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "stock_adjustments",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `medicationId` INTEGER NOT NULL, `historyId` INTEGER, `quantityChange` REAL NOT NULL, `timestamp` INTEGER NOT NULL, `adjustmentType` TEXT NOT NULL, `notes` TEXT, FOREIGN KEY(`medicationId`) REFERENCES `medications`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`historyId`) REFERENCES `medication_history`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "medicationId",
+            "columnName": "medicationId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "historyId",
+            "columnName": "historyId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "quantityChange",
+            "columnName": "quantityChange",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "adjustmentType",
+            "columnName": "adjustmentType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_stock_adjustments_historyId",
+            "unique": false,
+            "columnNames": [
+              "historyId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_stock_adjustments_historyId` ON `${TABLE_NAME}` (`historyId`)"
+          },
+          {
+            "name": "index_stock_adjustments_medicationId_timestamp",
+            "unique": false,
+            "columnNames": [
+              "medicationId",
+              "timestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_stock_adjustments_medicationId_timestamp` ON `${TABLE_NAME}` (`medicationId`, `timestamp`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "medications",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "medicationId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "medication_history",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "historyId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "notification_sessions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`timeSlotKey` TEXT NOT NULL, `scheduleIds` TEXT NOT NULL, `notificationId` INTEGER NOT NULL, `followUpsFired` INTEGER NOT NULL, `maxFollowUps` INTEGER NOT NULL, `followUpIntervalMs` INTEGER NOT NULL, `nextFollowUpTime` INTEGER, `channelId` TEXT NOT NULL, `hasCriticalMed` INTEGER NOT NULL, `criticalAfterFollowUp` INTEGER, `alarmAfterFollowUp` INTEGER, `snoozeUntilTime` INTEGER, `isSnoozed` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `sessionType` TEXT NOT NULL, `parentTimeSlotKey` TEXT, `scheduleId` INTEGER, PRIMARY KEY(`timeSlotKey`))",
+        "fields": [
+          {
+            "fieldPath": "timeSlotKey",
+            "columnName": "timeSlotKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scheduleIds",
+            "columnName": "scheduleIds",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notificationId",
+            "columnName": "notificationId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "followUpsFired",
+            "columnName": "followUpsFired",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "maxFollowUps",
+            "columnName": "maxFollowUps",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "followUpIntervalMs",
+            "columnName": "followUpIntervalMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nextFollowUpTime",
+            "columnName": "nextFollowUpTime",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasCriticalMed",
+            "columnName": "hasCriticalMed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "criticalAfterFollowUp",
+            "columnName": "criticalAfterFollowUp",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "alarmAfterFollowUp",
+            "columnName": "alarmAfterFollowUp",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "snoozeUntilTime",
+            "columnName": "snoozeUntilTime",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "isSnoozed",
+            "columnName": "isSnoozed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionType",
+            "columnName": "sessionType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "parentTimeSlotKey",
+            "columnName": "parentTimeSlotKey",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "scheduleId",
+            "columnName": "scheduleId",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "timeSlotKey"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '931382a157bb5ce59d88f72b09f885b2')"
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Splash screen icon color (light mode) — Material You dynamic primary -->
+    <color name="splash_icon_color">@android:color/system_accent1_600</color>
+
+    <color name="action_on_background">#FFFFFFFF</color>
+    <color name="action_background_success">#FF326A35</color>
+    <color name="action_background_neutral">#32456A</color>
+    <color name="action_background_destructive">#FF973638</color>
+
+    <!-- Medication foreground colors (light mode) -->
+    <color name="medication_foreground_rose">#FF8F4A56</color>
+    <color name="medication_foreground_pink">#FF8A4B68</color>
+    <color name="medication_foreground_red">#FF914B43</color>
+    <color name="medication_foreground_orange">#FF8D4F28</color>
+    <color name="medication_foreground_yellow">#FF795A0C</color>
+    <color name="medication_foreground_chartreuse">#FF5C641E</color>
+    <color name="medication_foreground_green">#FF376A3E</color>
+    <color name="medication_foreground_teal">#FF006B60</color>
+    <color name="medication_foreground_cyan">#FF01687D</color>
+    <color name="medication_foreground_blue">#FF485E92</color>
+    <color name="medication_foreground_indigo">#FF5B5992</color>
+    <color name="medication_foreground_purple">#FF6B548D</color>
+    <color name="medication_foreground_monochrome">#FFFFFF</color>
+
+    <!-- Medication background colors (light mode) -->
+    <color name="medication_background_rose">#FFFDA6B3</color>
+    <color name="medication_background_pink">#FFFEB0D1</color>
+    <color name="medication_background_red">#FFFDA499</color>
+    <color name="medication_background_orange">#FFFFAE7F</color>
+    <color name="medication_background_yellow">#FFFFD57D</color>
+    <color name="medication_background_chartreuse">#FFDDE692</color>
+    <color name="medication_background_green">#FFB7F1B9</color>
+    <color name="medication_background_teal">#FF9EF2E3</color>
+    <color name="medication_background_cyan">#FF9AE5FD</color>
+    <color name="medication_background_blue">#FFADC3FE</color>
+    <color name="medication_background_indigo">#FFC1BDFE</color>
+    <color name="medication_background_purple">#FFD9BDFE</color>
+    <color name="medication_background_monochrome">#BDBDBD</color>
+</resources>

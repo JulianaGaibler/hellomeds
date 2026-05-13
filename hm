@@ -1,0 +1,299 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ─── Colors & Formatting ───────────────────────────────────────────────────────
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+DIM='\033[2m'
+RESET='\033[0m'
+
+info()    { echo -e "${BLUE}▸${RESET} $*"; }
+success() { echo -e "${GREEN}✓${RESET} $*"; }
+warn()    { echo -e "${YELLOW}!${RESET} $*"; }
+error()   { echo -e "${RED}✗${RESET} $*" >&2; }
+header()  { echo -e "\n${BOLD}${CYAN}── $* ──${RESET}\n"; }
+
+# ─── Paths ─────────────────────────────────────────────────────────────────────
+
+PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$PROJECT_ROOT"
+
+# ─── JAVA_HOME Detection ──────────────────────────────────────────────────────
+
+detect_java() {
+    if [ -n "${JAVA_HOME:-}" ] && [ -d "$JAVA_HOME" ]; then
+        return 0
+    elif [ -d "/Applications/Android Studio.app/Contents/jbr/Contents/Home" ]; then
+        export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+    elif command -v /usr/libexec/java_home &>/dev/null; then
+        export JAVA_HOME="$(/usr/libexec/java_home 2>/dev/null)" || true
+    fi
+
+    if [ -z "${JAVA_HOME:-}" ] || [ ! -d "$JAVA_HOME" ]; then
+        error "JAVA_HOME not found."
+        echo "  Install Android Studio or set JAVA_HOME manually."
+        exit 1
+    fi
+}
+
+# ─── Version Config Generation ─────────────────────────────────────────────────
+
+generate_xcconfig() {
+    local version_file="$PROJECT_ROOT/version.properties"
+    local xcconfig="$PROJECT_ROOT/iosApp/Version.generated.xcconfig"
+
+    if [ ! -f "$version_file" ]; then
+        warn "version.properties not found — skipping xcconfig generation"
+        return
+    fi
+
+    echo "// Auto-generated from version.properties — do not edit" > "$xcconfig"
+    grep APP_VERSION_NAME "$version_file" | sed 's/APP_VERSION_NAME=/MARKETING_VERSION = /' >> "$xcconfig"
+    grep APP_VERSION_CODE "$version_file" | sed 's/APP_VERSION_CODE=/CURRENT_PROJECT_VERSION = /' >> "$xcconfig"
+    success "Generated iosApp/Version.generated.xcconfig"
+}
+
+# ─── Commands ──────────────────────────────────────────────────────────────────
+
+cmd_setup() {
+    header "HelloMeds Development Setup"
+
+    detect_java
+    success "JAVA_HOME=${DIM}$JAVA_HOME${RESET}"
+    local java_ver
+    java_ver=$("$JAVA_HOME/bin/java" -version 2>&1 | head -1 || true)
+    info "Java: $java_ver"
+
+    if command -v xcodebuild &>/dev/null; then
+        local xcode_ver
+        xcode_ver=$(xcodebuild -version 2>/dev/null | head -1 || true)
+        success "$xcode_ver"
+    else
+        warn "Xcode not found — iOS builds will not work"
+    fi
+
+    if [ -f "$PROJECT_ROOT/gradlew" ]; then
+        success "Gradle wrapper found"
+    else
+        error "Gradle wrapper missing"
+        exit 1
+    fi
+
+    generate_xcconfig
+
+    info "Configuring git hooks..."
+    git config core.hooksPath .githooks
+    success "Git hooks configured (.githooks/pre-commit)"
+
+    if [ -f "$PROJECT_ROOT/.git-blame-ignore-revs" ]; then
+        git config blame.ignoreRevsFile .git-blame-ignore-revs
+        success "Git blame ignore-revs configured"
+    fi
+
+    echo ""
+    success "Setup complete!"
+    echo ""
+    echo -e "  ${DIM}Next steps:${RESET}"
+    echo -e "    ${CYAN}./hm build android${RESET}   Build Android APK"
+    echo -e "    ${CYAN}./hm build ios${RESET}       Build iOS framework"
+    echo -e "    ${CYAN}./hm verify${RESET}          Quick both-platform check"
+}
+
+cmd_build() {
+    local target="${1:-all}"
+    detect_java
+
+    case "$target" in
+        android)
+            header "Building Android (both flavors)"
+            ./gradlew :androidApp:assembleDebug 2>&1 | grep "^e:" | head -20 || true
+            success "Done — APKs at androidApp/build/outputs/apk/{google,fdroid}/debug/"
+            ;;
+        android-google)
+            header "Building Android (Google/Play Store)"
+            ./gradlew :androidApp:assembleGoogleDebug 2>&1 | grep "^e:" | head -20 || true
+            success "Done — APK at androidApp/build/outputs/apk/google/debug/"
+            ;;
+        android-fdroid)
+            header "Building Android (F-Droid)"
+            ./gradlew :androidApp:assembleFdroidDebug 2>&1 | grep "^e:" | head -20 || true
+            success "Done — APK at androidApp/build/outputs/apk/fdroid/debug/"
+            ;;
+        ios)
+            header "Building iOS Framework"
+            ./gradlew :shared:compileKotlinIosArm64 2>&1 | grep "^e:" | head -20 || true
+            success "Done — open iosApp/HelloMeds.xcodeproj to build and run"
+            ;;
+        all)
+            header "Building Android (both flavors) + iOS"
+            ./gradlew :androidApp:assembleDebug :shared:compileKotlinIosArm64 2>&1 | grep "^e:" | head -20 || true
+            success "Done"
+            ;;
+        *)
+            error "Unknown target: $target"
+            echo "  Usage: $0 build [android|android-google|android-fdroid|ios|all]"
+            exit 1
+            ;;
+    esac
+}
+
+cmd_verify() {
+    detect_java
+    header "Verification Build (both platforms)"
+
+    local failed=0
+
+    info "Shared UI → Android..."
+    if ./gradlew :shared:compileAndroidMain 2>&1 | grep "^e:" | head -20 | grep -q "^e:"; then
+        error "shared:compileAndroidMain failed"; failed=1
+    else
+        success "shared:compileAndroidMain"
+    fi
+
+    info "Shared UI → iOS..."
+    if ./gradlew :shared:compileKotlinIosArm64 2>&1 | grep "^e:" | head -20 | grep -q "^e:"; then
+        error "shared:compileKotlinIosArm64 failed"; failed=1
+    else
+        success "shared:compileKotlinIosArm64"
+    fi
+
+    info "Data layer..."
+    if ./gradlew :core:data:compileCommonMainKotlinMetadata 2>&1 | grep "^e:" | head -20 | grep -q "^e:"; then
+        error "core:data:compileCommonMainKotlinMetadata failed"; failed=1
+    else
+        success "core:data:compileCommonMainKotlinMetadata"
+    fi
+
+    info "Android app (google)..."
+    if ./gradlew :androidApp:compileGoogleDebugKotlin 2>&1 | grep "^e:" | head -20 | grep -q "^e:"; then
+        error "androidApp:compileGoogleDebugKotlin failed"; failed=1
+    else
+        success "androidApp:compileGoogleDebugKotlin"
+    fi
+
+    info "Android app (fdroid)..."
+    if ./gradlew :androidApp:compileFdroidDebugKotlin 2>&1 | grep "^e:" | head -20 | grep -q "^e:"; then
+        error "androidApp:compileFdroidDebugKotlin failed"; failed=1
+    else
+        success "androidApp:compileFdroidDebugKotlin"
+    fi
+
+    echo ""
+    if [ "$failed" -eq 0 ]; then
+        success "${BOLD}All checks passed${RESET}"
+    else
+        error "${BOLD}Some checks failed${RESET}"
+        exit 1
+    fi
+}
+
+cmd_test() {
+    local target="${1:-all}"
+    detect_java
+
+    case "$target" in
+        shared)
+            header "Running Shared Tests (KMP)"
+            ./gradlew :core:data:iosSimulatorArm64Test :core:domain:iosSimulatorArm64Test :shared:iosSimulatorArm64Test 2>&1 | tail -20
+            ;;
+        android)
+            header "Running Android Tests (google flavor)"
+            ./gradlew :androidApp:testGoogleDebugUnitTest 2>&1 | tail -20
+            ;;
+        all)
+            header "Running All Tests"
+            info "KMP shared tests (iOS simulator)..."
+            ./gradlew :core:data:iosSimulatorArm64Test :core:domain:iosSimulatorArm64Test :shared:iosSimulatorArm64Test 2>&1 | tail -5
+            echo ""
+            info "Android unit tests (google flavor)..."
+            ./gradlew :androidApp:testGoogleDebugUnitTest 2>&1 | tail -5
+            ;;
+        *)
+            error "Unknown target: $target"
+            echo "  Usage: $0 test [shared|android|all]"
+            exit 1
+            ;;
+    esac
+}
+
+cmd_clean() {
+    detect_java
+    header "Cleaning Build Artifacts"
+
+    info "Gradle clean..."
+    ./gradlew clean 2>&1 | tail -3
+
+    if [ -d ~/Library/Developer/Xcode/DerivedData ]; then
+        info "Clearing Xcode DerivedData for HelloMeds..."
+        rm -rf ~/Library/Developer/Xcode/DerivedData/HelloMeds-*
+    fi
+
+    success "Clean complete"
+}
+
+cmd_format() {
+    detect_java
+    header "Formatting Code"
+    ./gradlew spotlessApply 2>&1 | tail -5
+    success "Formatting complete"
+}
+
+cmd_lint() {
+    detect_java
+    header "Checking Code Format"
+    if ./gradlew spotlessCheck 2>&1 | tail -20; then
+        success "All files correctly formatted"
+    else
+        error "Formatting issues found — run ${CYAN}./hm format${RESET} to fix"
+        exit 1
+    fi
+}
+
+cmd_help() {
+    echo ""
+    echo -e "${BOLD}HelloMeds${RESET} — build & development helper"
+    echo ""
+    echo -e "${BOLD}Usage:${RESET} ./hm ${CYAN}<command>${RESET} [args]"
+    echo ""
+    echo -e "${BOLD}Commands:${RESET}"
+    echo -e "  ${CYAN}setup${RESET}               Check prerequisites, generate iOS version config"
+    echo -e "  ${CYAN}build${RESET} [target]      Build the app  ${DIM}(android|android-google|android-fdroid|ios|all)${RESET}"
+    echo -e "  ${CYAN}verify${RESET}              Quick verification of both platforms"
+    echo -e "  ${CYAN}test${RESET} [target]       Run unit tests  ${DIM}(shared|android|all, default: all)${RESET}"
+    echo -e "  ${CYAN}format${RESET}              Auto-format all Kotlin files"
+    echo -e "  ${CYAN}lint${RESET}                Check formatting (no changes)"
+    echo -e "  ${CYAN}clean${RESET}               Clean Gradle + Xcode DerivedData"
+    echo -e "  ${CYAN}help${RESET}                Show this help"
+    echo ""
+    echo -e "${BOLD}Examples:${RESET}"
+    echo -e "  ${DIM}./hm setup${RESET}           First-time setup"
+    echo -e "  ${DIM}./hm build android${RESET}   Build debug APK"
+    echo -e "  ${DIM}./hm verify${RESET}          Quick check before PR"
+    echo ""
+}
+
+# ─── Main ──────────────────────────────────────────────────────────────────────
+
+command="${1:-help}"
+shift || true
+
+case "$command" in
+    setup)   cmd_setup "$@" ;;
+    build)   cmd_build "$@" ;;
+    verify)  cmd_verify "$@" ;;
+    test)    cmd_test "$@" ;;
+    format)  cmd_format "$@" ;;
+    lint)    cmd_lint "$@" ;;
+    clean)   cmd_clean "$@" ;;
+    help|-h|--help) cmd_help ;;
+    *)
+        error "Unknown command: $command"
+        cmd_help
+        exit 1
+        ;;
+esac

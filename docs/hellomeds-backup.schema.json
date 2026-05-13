@@ -1,0 +1,655 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hellomeds-backup.schema.json",
+  "title": "HelloMeds Backup",
+  "description": "Schema for HelloMeds medication data backup files. The JSON payload is either stored as plain text (.hmbackup) or encrypted with AES-256-GCM using a user-provided passphrase. See docs/backups.md for the binary encryption format.",
+  "type": "object",
+  "required": [
+    "version",
+    "medications"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference. Included for tooling support (editor autocompletion, validation)."
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Backup format version. Importers should warn on unknown versions but still attempt import. Current: 1."
+    },
+    "appVersion": {
+      "type": "string",
+      "description": "The HelloMeds app version that created this backup (e.g., '1.0.0'). Informational only."
+    },
+    "exportedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp of when this backup was created. Used for display and conflict resolution."
+    },
+    "importanceLabels": {
+      "type": "array",
+      "description": "Importance labels define notification behavior for medications. Each medication references a label by name. Labels must be imported before medications that reference them.",
+      "items": {
+        "$ref": "#/$defs/importanceLabel"
+      }
+    },
+    "medications": {
+      "type": "array",
+      "description": "The medication entries in this backup. Each medication contains nested schedules, history, and stock data.",
+      "items": {
+        "$ref": "#/$defs/medication"
+      }
+    }
+  },
+  "$defs": {
+    "importanceLabel": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "description": "An importance label controls how aggressively the app reminds the user about a medication. Labels range from 'silent' (no reminders) to 'critical with follow-ups' (escalating alerts).",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Display name of the label. Must be unique within the backup. Medications reference this name, not an ID."
+        },
+        "shouldRemind": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether medications with this label trigger notifications at all. When false, no reminders are sent."
+        },
+        "isCritical": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether notifications use the critical/high-priority channel. On Android this can bypass Do Not Disturb. On iOS this uses time-sensitive interruption level."
+        },
+        "hasFollowUps": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the app sends follow-up reminders if the user hasn't responded to the initial notification."
+        },
+        "followUpCount": {
+          "type": "integer",
+          "default": 0,
+          "description": "Number of follow-up reminders to send. Only meaningful when hasFollowUps is true."
+        },
+        "followUpIntervalMinutes": {
+          "type": "integer",
+          "default": 0,
+          "description": "Minutes between each follow-up reminder. Only meaningful when hasFollowUps is true."
+        },
+        "criticalAfterFollowUp": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null,
+          "description": "If set, the notification channel escalates to critical after this many follow-ups have been sent. Null means no escalation."
+        }
+      }
+    },
+    "medication": {
+      "type": "object",
+      "required": [
+        "name",
+        "importanceLabel"
+      ],
+      "description": "A single medication with its visual appearance, schedules, intake history, and stock tracking data.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The medication name as it appears on the packaging (e.g., 'Ibuprofen 400mg'). Required and must not be blank."
+        },
+        "displayName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "An optional user-defined display name shown instead of 'name' in the UI (e.g., 'Morning pain pill'). If null, the name field is displayed."
+        },
+        "type": {
+          "type": "string",
+          "default": "TABLET",
+          "enum": [
+            "CAPSULE",
+            "TABLET",
+            "LIQUID",
+            "TOPICAL",
+            "CREAM",
+            "DEVICE",
+            "DROPS",
+            "FOAM",
+            "GEL",
+            "INHALER",
+            "INJECTION",
+            "LOTION",
+            "OINTMENT",
+            "PATCH",
+            "POWDER",
+            "SPRAY",
+            "SUPPOSITORY"
+          ],
+          "description": "The physical form of the medication. Determines the default icon shape. Unknown values should fall back to TABLET."
+        },
+        "shape": {
+          "type": "string",
+          "default": "",
+          "description": "Legacy shape identifier. Superseded by foregroundShape/backgroundShape but retained for backward compatibility."
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "Free-text user notes about this medication. May contain personal information."
+        },
+        "isArchived": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the user has archived this medication. Archived medications are hidden from the main tracking screen but retained for history."
+        },
+        "createdAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "default": null,
+          "description": "ISO-8601 timestamp of when this medication was first added to the app."
+        },
+        "foregroundShape": {
+          "type": "string",
+          "default": "CAPSULE_PILL",
+          "enum": [
+            "CAPSULE_PILL",
+            "TABLET_PILL",
+            "TABLET_PILL_NOTCH",
+            "ROUND_PILL",
+            "ROUND_PILL_NOTCH",
+            "OVAL_PILL",
+            "OVAL_PILL_NOTCH",
+            "RECTANGLE_PILL",
+            "RECTANGLE_PILL_NOTCH",
+            "SQUARE_PILL",
+            "DIAMOND_PILL",
+            "DIAMOND_PILL_NOTCH",
+            "DIAMOND_PILL_TALL",
+            "DIAMOND_PILL_TALL_NOTCH",
+            "PENTAGON_PILL",
+            "TRIANGLE_PILL",
+            "DOUBLE_CIRCLE_PILL",
+            "EFFERVESCENT_TABLET",
+            "PILL_BOTTLE",
+            "JAR",
+            "BLISTER_PACK_GRID",
+            "TUBE",
+            "DROPPER_BOTTLE",
+            "DISPENSER",
+            "LIQUID",
+            "MEASUREMENT_CUP",
+            "POWDER_SACHET",
+            "SYRINGE",
+            "INJECTION_PEN",
+            "INHALER",
+            "PATCH",
+            "SUPPOSITORY",
+            "CONTRACEPTIVE_RING",
+            "IUD_T_SHAPE"
+          ],
+          "description": "The foreground icon shape rendered on top of the background shape. Represents the medication's physical appearance."
+        },
+        "backgroundShape": {
+          "type": "string",
+          "default": "CIRCLE",
+          "enum": [
+            "CIRCLE",
+            "SQUARE",
+            "SLANTED",
+            "ARCH",
+            "PILL",
+            "DIAMOND",
+            "CLAMSHELL",
+            "PENTAGON",
+            "GEM",
+            "SUNNY",
+            "VERY_SUNNY",
+            "FOUR_SIDED_COOKIE",
+            "SEVEN_SIDED_COOKIE",
+            "TWELVE_SIDED_COOKIE",
+            "FOUR_LEAF_CLOVER",
+            "EIGHT_LEAF_CLOVER",
+            "SOFT_BURST",
+            "SOFT_BOOM",
+            "FLOWER",
+            "PUFFY_DIAMOND",
+            "BUN"
+          ],
+          "description": "The background container shape behind the foreground icon. Purely decorative."
+        },
+        "shapeColor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "Primary color for the medication icon, as a MedicationColor enum name (e.g., 'RED', 'BLUE'). Null uses the theme default."
+        },
+        "strengthValue": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null,
+          "description": "Numeric strength of the medication (e.g., 400 for '400mg'). Null if strength is not tracked."
+        },
+        "strengthUnit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "enum": [
+            null,
+            "MG",
+            "MCG",
+            "G",
+            "ML",
+            "IU",
+            "MEQ",
+            "PERCENT"
+          ],
+          "description": "Unit for the strength value. Combined with strengthValue for display (e.g., '400 MG'). Null if not tracked."
+        },
+        "importanceLabel": {
+          "type": "string",
+          "description": "The name of the importance label assigned to this medication. Must match an entry in the top-level importanceLabels array. Controls notification behavior."
+        },
+        "displayOrder": {
+          "type": "integer",
+          "default": 0,
+          "description": "Sort order in the medication list. Lower values appear first. Users can reorder medications via drag-and-drop."
+        },
+        "timeZoneMode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "enum": [
+            null,
+            "LOCAL",
+            "FIXED"
+          ],
+          "description": "LOCAL (default): schedule times adjust to the user's current timezone when traveling. FIXED: schedule times are anchored to the origin timezone — recommended for birth control or antibiotics where exact intervals matter."
+        },
+        "cycleType": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "enum": [
+            null,
+            "NONE",
+            "CYCLIC"
+          ],
+          "description": "NONE (default): standard medication with no cycle. CYCLIC: medication follows an active/break day pattern (e.g., birth control blister packs). When CYCLIC, the schedule projector masks events on break days."
+        },
+        "cycleDaysActive": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null,
+          "description": "Number of active days per cycle (e.g., 21 for a 21/7 cycle). Must be > 0 when cycleType is CYCLIC. Null when not cyclic."
+        },
+        "cycleDaysBreak": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null,
+          "description": "Number of break/off days per cycle (e.g., 7 for a 21/7 cycle). Must be >= 0 when cycleType is CYCLIC. Null when not cyclic."
+        },
+        "cycleHasPlacebos": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false,
+          "description": "Whether break days include placebo pills. When true, reminders still appear on break days but are marked as placebo. When false, break day events are suppressed entirely."
+        },
+        "cycleStartDate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date",
+          "default": null,
+          "description": "ISO-8601 date (YYYY-MM-DD) anchoring the cycle. Day 0 of each cycle aligns to this date. The cycle advances by one calendar day regardless of missed doses or schedule frequency."
+        },
+        "stock": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/stockSettings"
+            }
+          ],
+          "default": null,
+          "description": "Stock tracking configuration. Null if the user has not enabled stock tracking for this medication."
+        },
+        "schedules": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/schedule"
+          },
+          "description": "Dosing schedules. Each schedule defines a recurring time and dose. A medication can have multiple schedules (e.g., morning and evening)."
+        },
+        "history": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/historyEntry"
+          },
+          "description": "Medication intake history (taken/skipped/auto-skipped events). Optional — manual exports may exclude this to reduce file size."
+        },
+        "stockAdjustments": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/stockAdjustment"
+          },
+          "description": "Stock adjustment ledger. Tracks refills, intakes, and manual corrections. Optional — included when history is included."
+        }
+      }
+    },
+    "stockSettings": {
+      "type": "object",
+      "description": "Configuration for tracking how much medication the user has remaining. Supports exact dose counting or estimated container tracking.",
+      "properties": {
+        "trackingEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether stock tracking is active. When false, the remaining fields are ignored."
+        },
+        "trackingPrecision": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "enum": [
+            null,
+            "EXACT",
+            "ESTIMATED"
+          ],
+          "description": "EXACT counts individual doses. ESTIMATED tracks containers (e.g., 'bottle is half full'). Null if not configured."
+        },
+        "currentStockQuantity": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null,
+          "description": "Current stock level. For EXACT: number of doses remaining. For ESTIMATED: number of containers. Updated automatically as doses are logged."
+        },
+        "lowStockThreshold": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null,
+          "description": "When currentStockQuantity drops below this value, the app shows a low-stock warning."
+        },
+        "packagingQuantity": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null,
+          "description": "Number of doses per package/container. Used to calculate run-out predictions."
+        },
+        "medicationContainer": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "enum": [
+            null,
+            "PACKAGE",
+            "BOTTLE",
+            "DISPENSER",
+            "BLISTER_PACK",
+            "TUBE",
+            "VIAL",
+            "INHALER",
+            "PEN",
+            "AMPOULE",
+            "CANISTER",
+            "JAR"
+          ],
+          "description": "The type of container this medication comes in. Affects the stock tracking icon and terminology."
+        },
+        "depletionReminderEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to send a notification when stock runs low."
+        },
+        "containerStartedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "default": null,
+          "description": "ISO-8601 timestamp of when the current container was opened. Used for estimated depletion calculations."
+        }
+      }
+    },
+    "schedule": {
+      "type": "object",
+      "required": [
+        "id",
+        "startDate",
+        "timeOfDay"
+      ],
+      "description": "A recurring dosing schedule. Defines when and how much medication to take. The app generates projected events from these schedules — events are never stored in the database.",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Local schedule ID from the source database. Used during import to map history entries to their schedules. The importing app assigns new IDs and maintains the mapping."
+        },
+        "dose": {
+          "type": "number",
+          "default": 1.0,
+          "description": "Number of doses to take at each scheduled time (e.g., 2 for 'take 2 tablets')."
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date",
+          "description": "ISO-8601 date (YYYY-MM-DD) when this schedule becomes active. Events are not generated before this date."
+        },
+        "endDate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date",
+          "default": null,
+          "description": "ISO-8601 date when this schedule expires. Null means the schedule runs indefinitely. Past end dates effectively archive the schedule."
+        },
+        "timeOfDay": {
+          "type": "string",
+          "description": "Time of day in HH:mm format (24-hour clock). The notification fires at this local time."
+        },
+        "frequencyType": {
+          "type": "string",
+          "default": "INTERVAL",
+          "enum": [
+            "INTERVAL",
+            "DAYS_OF_WEEK"
+          ],
+          "description": "INTERVAL: repeat every N days (e.g., daily, every 2 days). DAYS_OF_WEEK: repeat on specific weekdays."
+        },
+        "frequencyValue": {
+          "type": "integer",
+          "default": 1,
+          "description": "For INTERVAL: the number of days between doses (1 = daily, 2 = every other day). Ignored for DAYS_OF_WEEK."
+        },
+        "daysOfWeek": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "Comma-separated day names (e.g., 'MON,WED,FRI') when frequencyType is DAYS_OF_WEEK. Null for INTERVAL schedules."
+        },
+        "isArchived": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the user has manually archived this schedule. Archived schedules stop generating events but are retained for history."
+        },
+        "originTimeZone": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "IANA timezone ID (e.g., 'America/New_York') where this schedule was created. Used when the medication's timeZoneMode is FIXED to anchor reminder times. Null for LOCAL mode schedules."
+        },
+        "createdAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "default": null,
+          "description": "ISO-8601 timestamp of when this schedule was created."
+        }
+      }
+    },
+    "historyEntry": {
+      "type": "object",
+      "required": [
+        "scheduledDose",
+        "status"
+      ],
+      "description": "A single medication intake event. Records whether a dose was taken, skipped, or auto-skipped (missed and automatically marked).",
+      "properties": {
+        "scheduleId": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null,
+          "description": "The schedule ID this history entry belongs to. Maps to a schedule's 'id' field within the same medication. Null for as-needed doses that don't follow a schedule."
+        },
+        "scheduledTime": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "default": null,
+          "description": "ISO-8601 timestamp of when the dose was scheduled. Null for as-needed doses."
+        },
+        "takenTime": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "default": null,
+          "description": "ISO-8601 timestamp of when the user actually took the dose. Null if the dose was skipped."
+        },
+        "scheduledDose": {
+          "type": "number",
+          "description": "The dose that was scheduled (from the schedule's dose field)."
+        },
+        "actualDose": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null,
+          "description": "The dose the user actually took, if different from the scheduled dose. Null means the scheduled dose was taken as-is."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "TAKEN",
+            "SKIPPED",
+            "AUTO_SKIPPED"
+          ],
+          "description": "TAKEN: user confirmed they took the dose. SKIPPED: user explicitly skipped. AUTO_SKIPPED: the app automatically marked as missed after the catch-up window expired."
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "User notes about this specific dose (e.g., 'took with food'). May contain personal information."
+        },
+        "createdAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "default": null,
+          "description": "ISO-8601 timestamp of when this record was created in the database."
+        }
+      }
+    },
+    "stockAdjustment": {
+      "type": "object",
+      "required": [
+        "quantityChange",
+        "adjustmentType"
+      ],
+      "description": "A single stock level change. The stock system works as a ledger: the current stock is the sum of all adjustments.",
+      "properties": {
+        "quantityChange": {
+          "type": "number",
+          "description": "The change in stock quantity. Positive for refills, negative for intakes. For example, -1 means one dose was taken; +30 means a refill of 30 doses."
+        },
+        "timestamp": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "default": null,
+          "description": "ISO-8601 timestamp of when this adjustment occurred."
+        },
+        "adjustmentType": {
+          "type": "string",
+          "enum": [
+            "INTAKE",
+            "REFILL",
+            "MANUAL_CORRECTION",
+            "INITIAL_STOCK",
+            "CONTAINER_DEPLETED"
+          ],
+          "description": "INTAKE: dose taken (auto-generated when logging). REFILL: user added stock. MANUAL_CORRECTION: user corrected the count. INITIAL_STOCK: first stock entry. CONTAINER_DEPLETED: user marked a container as empty."
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "User notes about this adjustment (e.g., 'picked up prescription'). May contain personal information."
+        }
+      }
+    }
+  }
+}
