@@ -10,9 +10,9 @@ The app runs natively on both platforms with a shared codebase and keeps all dat
 
 ## Features
 
-**Scheduling.** Medications can be scheduled daily, on specific days of the week, or at custom intervals (every N days). Each medication can have multiple schedules at different times, and schedules can have start and end dates. For medications that follow a cycle pattern, like oral contraceptives, HelloMeds supports configurable active/break periods with presets for common regimens (21/7, 24/4, 28/0).
+**Scheduling.** Medications can be scheduled daily, on specific days of the week, or at custom intervals (every N days). Each medication can have multiple schedules at different times, and schedules can have start and end dates. For medications that follow a cycle pattern, HelloMeds supports configurable active/break periods with presets for common routines (21/7, 24/4, 28/0).
 
-Schedules are timezone-aware. By default, a medication follows your local clock, so a 9 PM dose stays at 9 PM wherever you are. Medications that need consistent absolute timing (like birth control) can be pinned to a fixed timezone instead, so the reminder adjusts when you travel.
+Schedules are timezone-aware. By default, a medication follows your local clock, so a 9 PM dose stays at 9 PM wherever you are. Medications that need consistent absolute timing can be pinned to a fixed timezone instead, so the reminder adjusts when you travel.
 
 **Reminders and importance labels.** Each medication is assigned an importance label that controls its entire notification behavior. Labels are user-configurable and determine whether the medication gets reminders at all, how many follow-up reminders are sent if a dose goes unconfirmed, and whether those follow-ups escalate to critical alerts or alarm sounds. This lets you set up aggressive escalation chains for essential medications while keeping supplement reminders low-key or silent.
 

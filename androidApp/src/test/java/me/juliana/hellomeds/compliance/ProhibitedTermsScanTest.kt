@@ -12,13 +12,9 @@ import java.io.File
  * Regression test for the Google Play "Medical misinformation" policy.
  *
  * Scans user-facing string resources for terms that imply HelloMeds cures,
- * diagnoses, or treats disease. Hits are only allowed inside the protective
- * onboarding disclaimer (which uses these words in their negated form:
- * "does not provide medical advice, diagnosis, or treatment").
- *
- * If this test starts failing after a copy edit, either rephrase the new
- * string to drop the term, or — if the new string is itself a disclaimer —
- * add its resource name to [ALLOWLISTED_RESOURCE_NAMES].
+ * diagnoses, or treats disease. If this test fails after a copy edit,
+ * rephrase the new string to drop the term — or, if the string is itself
+ * a protective disclaimer, add its name to [ALLOWLISTED_RESOURCE_NAMES].
  */
 class ProhibitedTermsScanTest {
 
@@ -74,8 +70,6 @@ class ProhibitedTermsScanTest {
 
         // Strings that *use* prohibited terms in their negated form to disclaim
         // that the app is a medical device. Keep this list as small as possible.
-        private val ALLOWLISTED_RESOURCE_NAMES = setOf(
-            "onboarding_disclaimer_paragraph1",
-        )
+        private val ALLOWLISTED_RESOURCE_NAMES = setOf<String>()
     }
 }

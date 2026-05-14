@@ -411,10 +411,10 @@
     <string name="tracking_empty_state">No medications for this day</string>
     <string name="tracking_log_scheduled">Log scheduled</string>
     <string name="tracking_log_as_needed">Log as needed</string>
-    <string name="tracking_fab_tooltip">Log medication</string>
+    <string name="tracking_fab_tooltip">Log dose</string>
 
     <!-- Log Medication Bottom Sheet -->
-    <string name="log_medication_title">Log medication</string>
+    <string name="log_medication_title">Log dose</string>
     <string name="log_medication_edit_title">Edit logged medication</string>
     <string name="log_medication_scheduled">Scheduled</string>
     <string name="log_medication_as_needed">As-needed</string>
@@ -680,12 +680,7 @@
 
     <!-- Onboarding -->
     <string name="onboarding_welcome_title">Say\nHelloMeds</string>
-    <string name="onboarding_disclaimer_title">Before we start</string>
-    <string name="onboarding_disclaimer_paragraph1">HelloMeds is a personal medication tracking tool. It does not provide medical advice, diagnosis, or treatment.</string>
-    <string name="onboarding_disclaimer_paragraph2">Always follow your healthcare provider's instructions regarding your medication schedule and dosage.</string>
-    <string name="onboarding_disclaimer_paragraph3">Your data never leaves your device. HelloMeds works entirely offline and all medication data is stored locally. Only manual backups you create can be shared.</string>
     <string name="onboarding_disclaimer_understood">Understood</string>
-    <string name="onboarding_disclaimer_privacy_link">Read the privacy policy</string>
 
     <!-- BETA: Closed-beta onboarding card. Remove per BETA_ROLLBACK.md before public release. -->
     <string name="onboarding_closed_beta_title">You're in the closed beta</string>
@@ -780,7 +775,7 @@
 
     <!-- Support -->
     <string name="support_title">Support</string>
-    <string name="support_settings_description">Get in touch and generate a diagnostic report</string>
+    <string name="support_settings_description">Get in touch and generate a system report</string>
     <string name="support_contact_section">Get in touch</string>
     <string name="support_contact_description">Running into trouble or have feedback? You can reach out by email at %1$s. If you are more technically inclined, you can also file an issue on GitHub.</string>
     <string name="support_contact_email" translatable="false">contact@juliana.me</string>
@@ -788,7 +783,7 @@
     <string name="support_contact_button_email">Send email</string>
     <string name="support_contact_button_github">Report on GitHub</string>
     <string name="support_contact_github_url" translatable="false">https://github.com/JulianaGaibler/hellomeds/issues</string>
-    <string name="support_report_section">Diagnostic report</string>
+    <string name="support_report_section">System report</string>
     <string name="support_report_description">You do not need to send a report right away. It can be helpful later when tracking down a specific bug. The report includes system information, notification settings, and scheduling state — medication names and personal notes are not included. Even so, it is not completely free of personal details, so please review it before sharing and remove anything you are not comfortable with.</string>
     <string name="support_generate">Generate report</string>
     <string name="support_copy">Copy to clipboard</string>
@@ -1088,7 +1083,7 @@
     <string name="wizard_cycle_title">Configure timing behavior and dosing cycles for this medication.</string>
     <string name="cycle_enabled">This medication follows a cycle</string>
     <string name="cycle_enabled_description">Adjusts your schedule and notifications based on active and break days.</string>
-    <string name="cycle_placebos_on_description">During break days, you will still receive reminders for placebo pills. Notifications will be quieter.</string>
+    <string name="cycle_placebos_on_description">During break days, you will still receive reminders for inactive days. Notifications will be quieter.</string>
     <string name="cycle_placebos_off_description">During break days, no reminders will be sent and no events will appear on your schedule.</string>
     <string name="cycle_active_days">Active days</string>
     <string name="cycle_active_days_hint">Must be at least 1</string>
@@ -1128,7 +1123,7 @@
     <string name="timezone_mode_label">Fix reminder times to timezone</string>
     <string name="timezone_mode_local_description">Adjusts to your current timezone</string>
     <string name="timezone_mode_fixed_description">Keeps exact timing when you travel</string>
-    <string name="timezone_mode_fixed_hint">Recommended for birth control or antibiotics where exact intervals matter</string>
+    <string name="timezone_mode_fixed_hint">Recommended for cyclic medication or routines where exact intervals matter</string>
     <string name="timezone_mode_detail_local">Reminders follow your local time</string>
     <string name="timezone_mode_detail_fixed">Reminders anchored to %1$s</string>
     <string name="timezone_anchor_update">Update to current timezone</string>

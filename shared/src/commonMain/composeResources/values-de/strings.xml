@@ -409,10 +409,10 @@
 	<string name="tracking_empty_state">Keine Medikamente für diesen Tag</string>
 	<string name="tracking_log_scheduled">Geplante Einnahme protokollieren</string>
 	<string name="tracking_log_as_needed">Bedarfseinnahme protokollieren</string>
-	<string name="tracking_fab_tooltip">Medikament protokollieren</string>
+	<string name="tracking_fab_tooltip">Dosis protokollieren</string>
 
 	<!-- Log Medication Bottom Sheet -->
-	<string name="log_medication_title">Medikament protokollieren</string>
+	<string name="log_medication_title">Dosis protokollieren</string>
 	<string name="log_medication_edit_title">Protokolliertes Medikament bearbeiten</string>
 	<string name="log_medication_scheduled">Geplant</string>
 	<string name="log_medication_as_needed">Bei Bedarf</string>
@@ -672,12 +672,7 @@
 
 	<!-- Onboarding -->
 	<string name="onboarding_welcome_title">Sag hallo zu\nHelloMeds</string>
-	<string name="onboarding_disclaimer_title">Vor dem Start</string>
-	<string name="onboarding_disclaimer_paragraph1">HelloMeds ist ein persönliches Tool zur Dokumentation von Medikamenten. Es bietet keine medizinische Beratung, Diagnose oder Behandlung.</string>
-	<string name="onboarding_disclaimer_paragraph2">Bitte den Anweisungen der behandelnden Person zu Einnahmezeiten und Dosierung folgen.</string>
-	<string name="onboarding_disclaimer_paragraph3">Ihre Daten verlassen das Gerät nicht. HelloMeds funktioniert vollständig offline und alle Medikamentendaten werden lokal gespeichert. Nur manuell erstellte Sicherungen können geteilt werden.</string>
 	<string name="onboarding_disclaimer_understood">Verstanden</string>
-	<string name="onboarding_disclaimer_privacy_link">Datenschutzerklärung lesen</string>
 
 	<!-- BETA: Geschlossene-Beta-Onboarding-Karte. Vor öffentlichem Release gemäß BETA_ROLLBACK.md entfernen. -->
 	<string name="onboarding_closed_beta_title">Willkommen in der geschlossenen Beta</string>
@@ -768,12 +763,12 @@
 
 	<!-- Support -->
 	<string name="support_title">Support</string>
-	<string name="support_settings_description">Kontakt aufnehmen und Diagnosebericht erstellen</string>
+	<string name="support_settings_description">Kontakt aufnehmen und Systembericht erstellen</string>
 	<string name="support_contact_section">Kontakt</string>
 	<string name="support_contact_description">Probleme oder Feedback? Du kannst dich per E-Mail an %1$s wenden. Wer technisch versierter ist, kann auch ein Issue auf GitHub eröffnen.</string>
 	<string name="support_contact_button_email">E-Mail senden</string>
 	<string name="support_contact_button_github">Auf GitHub melden</string>
-	<string name="support_report_section">Diagnosebericht</string>
+	<string name="support_report_section">Systembericht</string>
 	<string name="support_report_description">Der Bericht muss nicht sofort gesendet werden. Er kann später hilfreich sein, wenn ein konkreter Fehler eingegrenzt werden soll. Der Bericht enthält Systeminformationen, Benachrichtigungseinstellungen und den Zeitplanstatus — Medikamentennamen und persönliche Notizen werden nicht aufgenommen. Trotzdem ist er nicht vollständig frei von persönlichen Details. Bitte vor dem Teilen prüfen und alles entfernen, womit du nicht einverstanden bist.</string>
 	<string name="support_generate">Bericht erstellen</string>
 	<string name="support_copy">In Zwischenablage kopieren</string>
@@ -1049,7 +1044,7 @@
 	<string name="wizard_cycle_title">Zeitverhalten und Dosierungszyklen für dieses Medikament konfigurieren.</string>
 	<string name="cycle_enabled">Dieses Medikament folgt einem Zyklus</string>
 	<string name="cycle_enabled_description">Passt Zeitplan und Benachrichtigungen anhand von Einnahme- und Pausentagen an.</string>
-	<string name="cycle_placebos_on_description">An Pausentagen werden weiterhin Erinnerungen für Placebo-Tabletten gesendet. Benachrichtigungen sind zurückhaltender.</string>
+	<string name="cycle_placebos_on_description">An Pausentagen werden weiterhin Erinnerungen für inaktive Tage gesendet. Benachrichtigungen sind zurückhaltender.</string>
 	<string name="cycle_placebos_off_description">An Pausentagen werden keine Erinnerungen gesendet und keine Ereignisse im Zeitplan angezeigt.</string>
 	<string name="cycle_active_days">Einnahmetage</string>
 	<string name="cycle_active_days_hint">Muss mindestens 1 sein</string>
@@ -1089,7 +1084,7 @@
 	<string name="timezone_mode_label">Erinnerungen an Zeitzone binden</string>
 	<string name="timezone_mode_local_description">Passt sich an die aktuelle Zeitzone an</string>
 	<string name="timezone_mode_fixed_description">Behält exaktes Timing auf Reisen bei</string>
-	<string name="timezone_mode_fixed_hint">Empfohlen bei Verhütungsmitteln oder Antibiotika, wenn exakte Intervalle wichtig sind</string>
+	<string name="timezone_mode_fixed_hint">Empfohlen bei zyklischer Medikation oder festen Einnahmeroutinen, wenn exakte Intervalle wichtig sind</string>
 	<string name="timezone_mode_detail_local">Erinnerungen folgen der lokalen Zeit</string>
 	<string name="timezone_mode_detail_fixed">Erinnerungen sind an %1$s gebunden</string>
 	<string name="timezone_anchor_update">Auf aktuelle Zeitzone umstellen</string>

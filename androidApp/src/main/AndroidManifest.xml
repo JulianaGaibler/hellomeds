@@ -21,12 +21,13 @@
         android:name="android.permission.ACCESS_NETWORK_STATE"
         tools:node="remove" />
 
-    <!-- Form factor targeting: phones and tablets only -->
+    <!-- Form factor targeting: phones and tablets only.
+         Note: type.watch and type.automotive are opt-in markers — omitting them
+         excludes those form factors. Declaring them with required="false" is
+         rejected by Play Console. -->
     <uses-feature android:name="android.hardware.touchscreen" android:required="true" />
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.type.television" android:required="false" />
-    <uses-feature android:name="android.hardware.type.watch" android:required="false" />
-    <uses-feature android:name="android.hardware.type.automotive" android:required="false" />
 
     <application
         android:name=".HelloMedsApplication"

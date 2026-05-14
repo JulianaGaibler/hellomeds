@@ -25,7 +25,6 @@ import me.juliana.hellomeds.ui.compat.PlatformBackHandler
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.features.onboarding.steps.BetaThankYouScreen
 import me.juliana.hellomeds.ui.features.onboarding.steps.CompletionScreen
-import me.juliana.hellomeds.ui.features.onboarding.steps.DisclaimerScreen
 import me.juliana.hellomeds.ui.features.onboarding.steps.ExactAlarmPermissionScreen
 import me.juliana.hellomeds.ui.features.onboarding.steps.FullScreenIntentPermissionScreen
 import me.juliana.hellomeds.ui.features.onboarding.steps.QuickStartScreen
@@ -39,13 +38,12 @@ import kotlin.time.Clock
 /**
  * Main onboarding flow coordinator
  *
- * 6 Screens:
+ * Screens:
  * 1. Welcome (Splash) - "Say HelloMeds"
- * 2. Disclaimer - Medical disclaimer
- * 3. Notifications Permission
- * 4. Exact Alarms Permission (Precise Timing)
- * 5. Quick Start - 3-step guide
- * 6. Completion (Splash) - "All set!" with add medication options
+ * 2. Notifications Permission
+ * 3. Exact Alarms Permission (Precise Timing)
+ * 4. Quick Start - 3-step guide
+ * 5. Completion (Splash) - "All set!" with add medication options
  *
  * Note: Dark theme is applied at the navigation level in HelloMedsNavigation3.kt
  */
@@ -84,10 +82,7 @@ fun OnboardingScreen(
             // BETA: closed-beta thank-you. Remove per BETA_ROLLBACK.md before release.
             add(OnboardingPage.BetaThankYou)
 
-            // Screen 2: Always show disclaimer
-            add(OnboardingPage.Disclaimer)
-
-            // Screen 3: Notifications (skip if already granted, unless showAllSteps)
+            // Notifications (skip if already granted, unless showAllSteps)
             if (showAllSteps || !PermissionUtils.areNotificationsEnabled(context)) {
                 add(OnboardingPage.Notifications)
             }
@@ -172,19 +167,6 @@ fun OnboardingScreen(
 
             // BETA: closed-beta thank-you. Remove per BETA_ROLLBACK.md before release.
             OnboardingPage.BetaThankYou -> BetaThankYouScreen(
-                onContinue = {
-                    scope.launch {
-                        pagerState.animateScrollToPage(pageIndex + 1)
-                    }
-                },
-                onBack = {
-                    scope.launch {
-                        pagerState.animateScrollToPage(pageIndex - 1)
-                    }
-                },
-            )
-
-            OnboardingPage.Disclaimer -> DisclaimerScreen(
                 onContinue = {
                     scope.launch {
                         pagerState.animateScrollToPage(pageIndex + 1)
@@ -323,7 +305,6 @@ private enum class OnboardingPage {
     Welcome,
     // BETA: Remove per BETA_ROLLBACK.md before release.
     BetaThankYou,
-    Disclaimer,
     QuickStart,
     Notifications,
     ExactAlarms,
