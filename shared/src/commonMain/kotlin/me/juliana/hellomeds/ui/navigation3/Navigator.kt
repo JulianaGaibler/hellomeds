@@ -35,7 +35,7 @@ class Navigator(val state: AppNavigationState) {
     fun closeOverlay() {
         if (state.rootBackStack.size > 1) {
             // Remove current overlay
-            state.rootBackStack.removeLast()
+            state.rootBackStack.removeAt(state.rootBackStack.lastIndex)
         }
         // If rootBackStack.size == 1, we're at MainAppRoute - system handles app exit
     }

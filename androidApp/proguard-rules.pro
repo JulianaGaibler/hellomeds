@@ -5,6 +5,10 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
+# Open-source app: keep source names in stack traces (Play Console pre-review reports,
+# user-submitted logs, third-party crash tools). R8 still shrinks and optimizes.
+-dontobfuscate
+
 # Keep ML Kit classes (on-device object detection and text recognition)
 -keep class com.google.mlkit.** { *; }
 -dontwarn com.google.mlkit.**

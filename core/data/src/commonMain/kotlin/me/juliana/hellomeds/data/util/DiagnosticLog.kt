@@ -114,7 +114,7 @@ object DiagnosticLog {
         val maxEntries = effectiveMaxEntries
         val current = entries.toMutableList()
         while (current.size >= maxEntries) {
-            current.removeFirst()
+            current.removeAt(0)
         }
         current.add(entry)
         entries = current
@@ -165,7 +165,7 @@ object DiagnosticLog {
         // Trim to effective max
         val maxEntries = effectiveMaxEntries
         while (loaded.size > maxEntries) {
-            loaded.removeFirst()
+            loaded.removeAt(0)
         }
 
         entries = loaded
@@ -176,7 +176,7 @@ object DiagnosticLog {
         val pruned = entries.filter { it.timestamp >= cutoff }.toMutableList()
 
         while (pruned.size > effectiveMaxEntries) {
-            pruned.removeFirst()
+            pruned.removeAt(0)
         }
 
         entries = pruned
