@@ -427,6 +427,7 @@
 	<string name="date_today">Heute</string>
 	<string name="date_yesterday">Gestern</string>
 	<string name="date_tomorrow">Morgen</string>
+	<string name="date_relative_day_time_format">%1$s, %2$s</string>
 
 	<!-- Time Formatting -->
 	<string name="time_unit_minutes">Minuten</string>
@@ -559,6 +560,8 @@
 	<string name="backup_preview_summary">%1$d Medikament(e), %2$d Zeitplan/zeitpläne und %3$d Prioritätsstufe(n) gefunden</string>
 	<string name="backup_preview_warnings">Warnungen</string>
 	<string name="backup_duplicate_warning">Ein Medikament mit diesem Namen existiert bereits</string>
+	<string name="backup_import_item_stock_tracked">Vorrat verfolgt</string>
+	<string name="backup_import_item_cannot_import">Import nicht möglich</string>
 	<string name="backup_decision_skip">Überspringen</string>
 	<string name="backup_decision_replace">Ersetzen</string>
 	<string name="backup_decision_new">Neu</string>
@@ -668,12 +671,17 @@
 	<string name="settings_battery_action_label">Akku-Einstellungen ändern</string>
 
 	<!-- Onboarding -->
-	<string name="onboarding_welcome_title">Hello\nMeds</string>
+	<string name="onboarding_welcome_title">Sag hallo zu\nHelloMeds</string>
 	<string name="onboarding_disclaimer_title">Vor dem Start</string>
 	<string name="onboarding_disclaimer_paragraph1">HelloMeds ist ein persönliches Tool zur Dokumentation von Medikamenten. Es bietet keine medizinische Beratung, Diagnose oder Behandlung.</string>
-	<string name="onboarding_disclaimer_paragraph2">Bitte den Anweisungen der behandelnden Fachperson zu Einnahmezeiten und Dosierung folgen.</string>
+	<string name="onboarding_disclaimer_paragraph2">Bitte den Anweisungen der behandelnden Person zu Einnahmezeiten und Dosierung folgen.</string>
 	<string name="onboarding_disclaimer_paragraph3">Ihre Daten verlassen das Gerät nicht. HelloMeds funktioniert vollständig offline und alle Medikamentendaten werden lokal gespeichert. Nur manuell erstellte Sicherungen können geteilt werden.</string>
 	<string name="onboarding_disclaimer_understood">Verstanden</string>
+	<string name="onboarding_disclaimer_privacy_link">Datenschutzerklärung lesen</string>
+
+	<!-- BETA: Geschlossene-Beta-Onboarding-Karte. Vor öffentlichem Release gemäß BETA_ROLLBACK.md entfernen. -->
+	<string name="onboarding_closed_beta_title">Willkommen in der geschlossenen Beta</string>
+	<string name="onboarding_closed_beta_body">Vielen Dank fürs Testen von HelloMeds! Die App bitte mindestens 14 Tage lang installiert lassen. Das verlangt Google Play, bevor sie öffentlich veröffentlicht werden darf. In den Einstellungen gibt es eine "Geschlossene Beta"-Karte mit Möglichkeiten für Feedback und Fehlermeldungen.</string>
 	<string name="onboarding_get_started">Loslegen</string>
 	<string name="onboarding_continue">Weiter</string>
 
@@ -744,6 +752,12 @@
 	<!-- Privacy Settings -->
 	<string name="settings_screen_privacy">Bildschirm-Datenschutz</string>
 	<string name="settings_screen_privacy_description">Screenshots verhindern und Inhalt in der App-Übersicht ausblenden</string>
+
+	<!-- BETA: Geschlossene-Beta-Einstellungskarte. Vor öffentlichem Release gemäß BETA_ROLLBACK.md entfernen. -->
+	<string name="settings_closed_beta_title">Geschlossene Beta</string>
+	<string name="settings_closed_beta_body">Vielen Dank fürs Testen von HelloMeds vor dem Release. Die Schaltfläche unten führt zu den Kanälen für Feedback und Fehlermeldungen.</string>
+	<string name="settings_closed_beta_cta">Beta-Seite öffnen</string>
+	<string name="settings_closed_beta_support_cta">Support öffnen</string>
 
 	<!-- About -->
 	<string name="settings_about_title">Info</string>

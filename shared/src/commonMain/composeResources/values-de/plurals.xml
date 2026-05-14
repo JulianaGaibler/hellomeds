@@ -357,6 +357,34 @@
 		<item quantity="one">%1$d Prioritätsstufe</item>
 		<item quantity="other">%1$d Prioritätsstufen</item>
 	</plurals>
+	<plurals name="backup_import_summary_medications_imported">
+		<item quantity="one">%1$d Medikament importiert</item>
+		<item quantity="other">%1$d Medikamente importiert</item>
+	</plurals>
+	<plurals name="backup_import_summary_medications_replaced">
+		<item quantity="one">%1$d Medikament ersetzt</item>
+		<item quantity="other">%1$d Medikamente ersetzt</item>
+	</plurals>
+	<plurals name="backup_import_summary_medications_skipped">
+		<item quantity="one">%1$d Medikament übersprungen</item>
+		<item quantity="other">%1$d Medikamente übersprungen</item>
+	</plurals>
+	<plurals name="backup_import_summary_schedules_imported">
+		<item quantity="one">%1$d Zeitplan importiert</item>
+		<item quantity="other">%1$d Zeitpläne importiert</item>
+	</plurals>
+	<plurals name="backup_import_summary_labels_created">
+		<item quantity="one">%1$d Prioritätsstufe erstellt</item>
+		<item quantity="other">%1$d Prioritätsstufen erstellt</item>
+	</plurals>
+	<plurals name="backup_import_summary_history_imported">
+		<item quantity="one">%1$d Verlaufseintrag importiert</item>
+		<item quantity="other">%1$d Verlaufseinträge importiert</item>
+	</plurals>
+	<plurals name="backup_import_summary_stock_adjustments_imported">
+		<item quantity="one">%1$d Bestandsänderung importiert</item>
+		<item quantity="other">%1$d Bestandsänderungen importiert</item>
+	</plurals>
 
 	<!-- Schedule Plurals (replace string versions) -->
 	<plurals name="schedule_times_per_day_plural">

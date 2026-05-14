@@ -52,9 +52,11 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
 import me.juliana.hellomeds.data.database.entities.Medication
@@ -73,7 +75,9 @@ import me.juliana.hellomeds.shared.accessibility_collapsed
 import me.juliana.hellomeds.shared.accessibility_expanded
 import me.juliana.hellomeds.shared.accessibility_loading
 import me.juliana.hellomeds.shared.accessibility_toggle_menu
+import me.juliana.hellomeds.shared.date_relative_day_time_format
 import me.juliana.hellomeds.shared.date_today
+import me.juliana.hellomeds.shared.date_yesterday
 import me.juliana.hellomeds.shared.illustration_empty_no_schedule
 import me.juliana.hellomeds.shared.outline_step_over_24px
 import me.juliana.hellomeds.shared.tracking_active_badge
@@ -376,6 +380,25 @@ fun TrackingScreen(
                         items = missedBeyondGrace,
                         key = { _, it -> "missed_${it.event.compositeKey}" },
                     ) { index, eventWithMed ->
+                        // Disambiguate doses that crossed midnight from earlier
+                        // today's doses by prefixing the time with a relative-day
+                        // label. The format string is translator-controlled so
+                        // languages can adjust separator and word order.
+                        val tz = TimeZone.currentSystemDefault()
+                        val eventDate = Instant.fromEpochMilliseconds(eventWithMed.event.scheduledTime)
+                            .toLocalDateTime(tz).date
+                        val yesterday = today.minus(1, DateTimeUnit.DAY)
+                        val dayLabel = when (eventDate) {
+                            today -> stringResource(Res.string.date_today)
+                            yesterday -> stringResource(Res.string.date_yesterday)
+                            else -> null
+                        }
+                        val baseTime = formatLogEventTime(eventWithMed.event)
+                        val prefixedTime = if (dayLabel != null) {
+                            stringResource(Res.string.date_relative_day_time_format, dayLabel, baseTime)
+                        } else {
+                            baseTime
+                        }
                         SwipeableMedicationLogListItem(
                             eventWithMedication = eventWithMed,
                             onClick = {
@@ -391,6 +414,7 @@ fun TrackingScreen(
                             modifier = Modifier
                                 .padding(horizontal = 16.dp)
                                 .animateItem(),
+                            timeOverride = prefixedTime,
                         )
 
                         if (index < missedBeyondGrace.lastIndex) {
@@ -791,6 +815,7 @@ private fun SwipeableMedicationLogListItem(
     onMarkAsSkipped: (() -> Unit)? = null,
     shapes: ListItemShapes,
     modifier: Modifier = Modifier,
+    timeOverride: String? = null,
 ) {
     SwipeableListItem(
         key = "${eventWithMedication.event.historyRecord?.id ?: eventWithMedication.event.compositeKey}",
@@ -808,6 +833,7 @@ private fun SwipeableMedicationLogListItem(
             eventWithMedication = eventWithMedication,
             onClick = onClick,
             shapes = shapes,
+            timeOverride = timeOverride,
         )
     }
 }
@@ -819,6 +845,7 @@ private fun MedicationLogListItem(
     shapes: ListItemShapes,
     modifier: Modifier = Modifier,
     isLogged: Boolean = false,
+    timeOverride: String? = null,
 ) {
     val context = platformContext()
     val medication = eventWithMedication.medication
@@ -831,7 +858,7 @@ private fun MedicationLogListItem(
     val typeAndStrength = formatMedicationTypeAndStrength(medication)
 
     // Get time and dose
-    val time = formatLogEventTime(event)
+    val time = timeOverride ?: formatLogEventTime(event)
     val dose = formatLogEventDose(event, medication.type)
 
     // Parse shape properties

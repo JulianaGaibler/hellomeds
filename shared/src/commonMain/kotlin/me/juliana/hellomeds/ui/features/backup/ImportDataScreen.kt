@@ -64,7 +64,16 @@ import me.juliana.hellomeds.shared.backup_encrypted_title
 import me.juliana.hellomeds.shared.backup_import_count
 import me.juliana.hellomeds.shared.backup_import_error_title
 import me.juliana.hellomeds.shared.backup_import_info_description
+import me.juliana.hellomeds.shared.backup_import_item_cannot_import
+import me.juliana.hellomeds.shared.backup_import_item_stock_tracked
 import me.juliana.hellomeds.shared.backup_import_success_title
+import me.juliana.hellomeds.shared.backup_import_summary_history_imported
+import me.juliana.hellomeds.shared.backup_import_summary_labels_created
+import me.juliana.hellomeds.shared.backup_import_summary_medications_imported
+import me.juliana.hellomeds.shared.backup_import_summary_medications_replaced
+import me.juliana.hellomeds.shared.backup_import_summary_medications_skipped
+import me.juliana.hellomeds.shared.backup_import_summary_schedules_imported
+import me.juliana.hellomeds.shared.backup_import_summary_stock_adjustments_imported
 import me.juliana.hellomeds.shared.backup_import_title
 import me.juliana.hellomeds.shared.backup_importing
 import me.juliana.hellomeds.shared.backup_labels_count
@@ -86,6 +95,7 @@ import me.juliana.hellomeds.shared.import_warning_unknown_frequency_type
 import me.juliana.hellomeds.shared.import_warning_unknown_med_type
 import me.juliana.hellomeds.shared.import_warning_unknown_strength_unit
 import me.juliana.hellomeds.shared.import_warning_unknown_tracking_precision
+import me.juliana.hellomeds.data.model.enums.MedicationType
 import me.juliana.hellomeds.ui.compat.ButtonGroupDefaults
 import me.juliana.hellomeds.ui.compat.ListItemShapes
 import me.juliana.hellomeds.ui.compat.ToggleButton
@@ -95,6 +105,7 @@ import me.juliana.hellomeds.ui.features.settings.settingsContentPadding
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.SmartListItem
 import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
+import me.juliana.hellomeds.ui.util.displayNameRes
 import me.juliana.hellomeds.ui.util.rememberFileLoader
 import me.juliana.hellomeds.ui.viewmodel.BackupViewModel
 import me.juliana.hellomeds.ui.viewmodel.ImportUiState
@@ -393,6 +404,24 @@ private fun MedicationImportItem(
     val med = info.backupMedication
     val scheduleCount = med.schedules.size
 
+    val parsedType = MedicationType.fromValue(med.type)
+    val typeLabel = if (parsedType != null) {
+        stringResource(parsedType.displayNameRes)
+    } else {
+        med.type
+    }
+    val scheduleLabel = if (scheduleCount > 0) {
+        pluralStringResource(Res.plurals.backup_schedules_count, scheduleCount, scheduleCount)
+    } else {
+        null
+    }
+    val stockLabel = if (med.stock != null) {
+        stringResource(Res.string.backup_import_item_stock_tracked)
+    } else {
+        null
+    }
+    val cannotImportFallback = stringResource(Res.string.backup_import_item_cannot_import)
+
     SmartListItem(
         headlineContent = {
             Text(med.displayName ?: med.name)
@@ -402,20 +431,16 @@ private fun MedicationImportItem(
                 // Medication details
                 val details = buildString {
                     if (med.displayName != null) append("${med.name} \u2022 ")
-                    append(med.type)
-                    if (scheduleCount > 0) {
-                        append(
-                            " \u2022 $scheduleCount schedule${if (scheduleCount != 1) "s" else ""}",
-                        )
-                    }
-                    if (med.stock != null) append(" \u2022 Stock tracked")
+                    append(typeLabel)
+                    if (scheduleLabel != null) append(" \u2022 $scheduleLabel")
+                    if (stockLabel != null) append(" \u2022 $stockLabel")
                 }
                 Text(details, style = MaterialTheme.typography.bodySmall)
 
                 // Error state
                 if (info.hasErrors) {
                     Text(
-                        info.errorMessage ?: "Cannot import",
+                        info.errorMessage ?: cannotImportFallback,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
                     )
@@ -612,43 +637,78 @@ private fun SuccessPhase(result: ImportResult, paddingValues: PaddingValues, onD
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        val summary = buildString {
-            if (result.medicationsImported > 0) {
-                appendLine(
-                    "${result.medicationsImported} medication${if (result.medicationsImported != 1) "s" else ""} imported",
-                )
-            }
-            if (result.medicationsReplaced > 0) {
-                appendLine(
-                    "${result.medicationsReplaced} medication${if (result.medicationsReplaced != 1) "s" else ""} replaced",
-                )
-            }
-            if (result.medicationsSkipped > 0) {
-                appendLine(
-                    "${result.medicationsSkipped} medication${if (result.medicationsSkipped != 1) "s" else ""} skipped",
-                )
-            }
-            if (result.schedulesImported > 0) {
-                appendLine(
-                    "${result.schedulesImported} schedule${if (result.schedulesImported != 1) "s" else ""} imported",
-                )
-            }
-            if (result.labelsCreated > 0) {
-                appendLine(
-                    "${result.labelsCreated} label${if (result.labelsCreated != 1) "s" else ""} created",
-                )
-            }
-            if (result.historyImported > 0) {
-                appendLine(
-                    "${result.historyImported} history record${if (result.historyImported != 1) "s" else ""} imported",
-                )
-            }
-            if (result.stockAdjustmentsImported > 0) {
-                appendLine(
-                    "${result.stockAdjustmentsImported} stock adjustment${if (result.stockAdjustmentsImported != 1) "s" else ""} imported",
-                )
-            }
-        }.trim()
+        val medicationsImportedLine = if (result.medicationsImported > 0) {
+            pluralStringResource(
+                Res.plurals.backup_import_summary_medications_imported,
+                result.medicationsImported,
+                result.medicationsImported,
+            )
+        } else {
+            null
+        }
+        val medicationsReplacedLine = if (result.medicationsReplaced > 0) {
+            pluralStringResource(
+                Res.plurals.backup_import_summary_medications_replaced,
+                result.medicationsReplaced,
+                result.medicationsReplaced,
+            )
+        } else {
+            null
+        }
+        val medicationsSkippedLine = if (result.medicationsSkipped > 0) {
+            pluralStringResource(
+                Res.plurals.backup_import_summary_medications_skipped,
+                result.medicationsSkipped,
+                result.medicationsSkipped,
+            )
+        } else {
+            null
+        }
+        val schedulesImportedLine = if (result.schedulesImported > 0) {
+            pluralStringResource(
+                Res.plurals.backup_import_summary_schedules_imported,
+                result.schedulesImported,
+                result.schedulesImported,
+            )
+        } else {
+            null
+        }
+        val labelsCreatedLine = if (result.labelsCreated > 0) {
+            pluralStringResource(
+                Res.plurals.backup_import_summary_labels_created,
+                result.labelsCreated,
+                result.labelsCreated,
+            )
+        } else {
+            null
+        }
+        val historyImportedLine = if (result.historyImported > 0) {
+            pluralStringResource(
+                Res.plurals.backup_import_summary_history_imported,
+                result.historyImported,
+                result.historyImported,
+            )
+        } else {
+            null
+        }
+        val stockAdjustmentsImportedLine = if (result.stockAdjustmentsImported > 0) {
+            pluralStringResource(
+                Res.plurals.backup_import_summary_stock_adjustments_imported,
+                result.stockAdjustmentsImported,
+                result.stockAdjustmentsImported,
+            )
+        } else {
+            null
+        }
+        val summary = listOfNotNull(
+            medicationsImportedLine,
+            medicationsReplacedLine,
+            medicationsSkippedLine,
+            schedulesImportedLine,
+            labelsCreatedLine,
+            historyImportedLine,
+            stockAdjustmentsImportedLine,
+        ).joinToString("\n")
 
         Text(
             text = summary,

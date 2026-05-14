@@ -78,19 +78,27 @@ import kotlin.math.abs
 import kotlin.time.Clock
 
 private suspend fun LazyListState.animateScrollAndCentralizeItem(index: Int) {
-    val itemInfo = this.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
-    if (itemInfo != null) {
+    // If the target isn't laid out yet, snap it into view (no animation) so we
+    // can measure it. The snap places the item at the viewport start; the
+    // animateScrollBy below corrects to center. The snap happens before any
+    // frame paints for this scroll, so the user perceives a single glide.
+    if (layoutInfo.visibleItemsInfo.none { it.index == index }) {
+        scrollToItem(index)
+    }
+    layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }?.let { itemInfo ->
         val viewportCenter = (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
         val childCenter = itemInfo.offset + itemInfo.size / 2
         animateScrollBy((childCenter - viewportCenter).toFloat())
-    } else {
-        animateScrollToItem(index)
     }
 }
 
 private suspend fun LazyListState.scrollAndCentralizeItem(index: Int) {
-    val itemInfo = this.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
-    if (itemInfo != null) {
+    // Same two-step pattern as the animated variant: snap into view first so
+    // visibleItemsInfo contains the target, then center via scrollBy.
+    if (layoutInfo.visibleItemsInfo.none { it.index == index }) {
+        scrollToItem(index)
+    }
+    layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }?.let { itemInfo ->
         val viewportCenter = (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
         val childCenter = itemInfo.offset + itemInfo.size / 2
         scrollBy((childCenter - viewportCenter).toFloat())

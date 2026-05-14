@@ -6,6 +6,7 @@ package me.juliana.hellomeds.ui.features.settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -59,6 +61,11 @@ import me.juliana.hellomeds.shared.settings_about_title
 import me.juliana.hellomeds.shared.settings_about_version
 import me.juliana.hellomeds.shared.settings_about_website
 import me.juliana.hellomeds.shared.settings_about_website_url
+import me.juliana.hellomeds.shared.settings_closed_beta_body
+import me.juliana.hellomeds.shared.settings_closed_beta_cta
+import me.juliana.hellomeds.shared.settings_closed_beta_support_cta
+import me.juliana.hellomeds.shared.settings_closed_beta_title
+import me.juliana.hellomeds.shared.settings_closed_beta_url
 import me.juliana.hellomeds.shared.settings_appearance_dynamic_color
 import me.juliana.hellomeds.shared.settings_appearance_dynamic_color_description
 import me.juliana.hellomeds.shared.settings_auto_backup
@@ -188,6 +195,59 @@ fun SettingsScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             state = scrollState,
         ) {
+            // === BETA: Closed-beta announcement card. Remove per BETA_ROLLBACK.md before release. ===
+            item {
+                val betaUriHandler = LocalUriHandler.current
+                val closedBetaUrl = stringResource(Res.string.settings_closed_beta_url)
+                AutoSmartList(
+                    items = listOf(
+                        SmartListItemConfig(visible = true) { shapes, visible ->
+                            SmartListInfoCard(
+                                headlineContent = {
+                                    Text(
+                                        stringResource(Res.string.settings_closed_beta_title),
+                                        style = MaterialTheme.typography.titleMedium,
+                                    )
+                                },
+                                supportingContent = {
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Text(
+                                            stringResource(Res.string.settings_closed_beta_body),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                        )
+                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Button(
+                                                onClick = { betaUriHandler.openUri(closedBetaUrl) },
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = MaterialTheme.colorScheme.secondary,
+                                                    contentColor = MaterialTheme.colorScheme.onSecondary,
+                                                ),
+                                            ) {
+                                                Text(stringResource(Res.string.settings_closed_beta_cta))
+                                            }
+                                            OutlinedButton(
+                                                onClick = onNavigateToSupport,
+                                                colors = ButtonDefaults.outlinedButtonColors(
+                                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                ),
+                                            ) {
+                                                Text(stringResource(Res.string.settings_closed_beta_support_cta))
+                                            }
+                                        }
+                                    }
+                                },
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                shapes = shapes,
+                                visible = visible,
+                            )
+                        },
+                    ),
+                )
+            }
+
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+
             // === NOTIFICATION SETTINGS ===
             item {
                 SettingsHeader(text = stringResource(Res.string.settings_notification_title))

@@ -23,6 +23,7 @@ import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.accessibility_pager_state
 import me.juliana.hellomeds.ui.compat.PlatformBackHandler
 import me.juliana.hellomeds.ui.compat.platformContext
+import me.juliana.hellomeds.ui.features.onboarding.steps.BetaThankYouScreen
 import me.juliana.hellomeds.ui.features.onboarding.steps.CompletionScreen
 import me.juliana.hellomeds.ui.features.onboarding.steps.DisclaimerScreen
 import me.juliana.hellomeds.ui.features.onboarding.steps.ExactAlarmPermissionScreen
@@ -79,6 +80,9 @@ fun OnboardingScreen(
         buildList {
             // Screen 1: Always show welcome
             add(OnboardingPage.Welcome)
+
+            // BETA: closed-beta thank-you. Remove per BETA_ROLLBACK.md before release.
+            add(OnboardingPage.BetaThankYou)
 
             // Screen 2: Always show disclaimer
             add(OnboardingPage.Disclaimer)
@@ -162,6 +166,20 @@ fun OnboardingScreen(
                 onContinue = {
                     scope.launch {
                         pagerState.animateScrollToPage(pageIndex + 1)
+                    }
+                },
+            )
+
+            // BETA: closed-beta thank-you. Remove per BETA_ROLLBACK.md before release.
+            OnboardingPage.BetaThankYou -> BetaThankYouScreen(
+                onContinue = {
+                    scope.launch {
+                        pagerState.animateScrollToPage(pageIndex + 1)
+                    }
+                },
+                onBack = {
+                    scope.launch {
+                        pagerState.animateScrollToPage(pageIndex - 1)
                     }
                 },
             )
@@ -303,6 +321,8 @@ fun OnboardingScreen(
 
 private enum class OnboardingPage {
     Welcome,
+    // BETA: Remove per BETA_ROLLBACK.md before release.
+    BetaThankYou,
     Disclaimer,
     QuickStart,
     Notifications,

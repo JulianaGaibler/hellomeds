@@ -429,6 +429,9 @@
     <string name="date_today">Today</string>
     <string name="date_yesterday">Yesterday</string>
     <string name="date_tomorrow">Tomorrow</string>
+    <!-- Combines a relative day label (e.g. "Today") with a time (e.g. "08:30").
+         Translators can adjust separator, order, or punctuation per language. -->
+    <string name="date_relative_day_time_format">%1$s, %2$s</string>
 
     <!-- Time Formatting -->
     <string name="time_unit_minutes">minutes</string>
@@ -563,6 +566,8 @@
     <string name="backup_preview_summary">Found %1$d medication(s), %2$d schedule(s), and %3$d importance label(s)</string>
     <string name="backup_preview_warnings">Warnings</string>
     <string name="backup_duplicate_warning">A medication with this name already exists</string>
+    <string name="backup_import_item_stock_tracked">Stock tracked</string>
+    <string name="backup_import_item_cannot_import">Cannot import</string>
     <string name="backup_decision_skip">Skip</string>
     <string name="backup_decision_replace">Replace</string>
     <string name="backup_decision_new">New</string>
@@ -680,6 +685,11 @@
     <string name="onboarding_disclaimer_paragraph2">Always follow your healthcare provider's instructions regarding your medication schedule and dosage.</string>
     <string name="onboarding_disclaimer_paragraph3">Your data never leaves your device. HelloMeds works entirely offline and all medication data is stored locally. Only manual backups you create can be shared.</string>
     <string name="onboarding_disclaimer_understood">Understood</string>
+    <string name="onboarding_disclaimer_privacy_link">Read the privacy policy</string>
+
+    <!-- BETA: Closed-beta onboarding card. Remove per BETA_ROLLBACK.md before public release. -->
+    <string name="onboarding_closed_beta_title">You're in the closed beta</string>
+    <string name="onboarding_closed_beta_body">Thanks for helping test HelloMeds! Please keep the app installed for at least 14 days. That's what Google Play requires before it can be launched publicly. You'll find a "Closed beta" card in Settings with everything you need to share feedback or report problems.</string>
     <string name="onboarding_get_started">Get Started</string>
     <string name="onboarding_continue">Continue</string>
 
@@ -750,6 +760,13 @@
     <!-- Privacy Settings -->
     <string name="settings_screen_privacy">Screen privacy</string>
     <string name="settings_screen_privacy_description">Prevent screenshots and hide content in the app switcher</string>
+
+    <!-- BETA: Closed-beta settings card. Remove per BETA_ROLLBACK.md before public release. -->
+    <string name="settings_closed_beta_title">Closed beta</string>
+    <string name="settings_closed_beta_body">Thanks for helping test HelloMeds before launch. Tap below for feedback and bug-report channels.</string>
+    <string name="settings_closed_beta_cta">Open beta page</string>
+    <string name="settings_closed_beta_support_cta">Open Support</string>
+    <string name="settings_closed_beta_url" translatable="false">https://juliana.me/projects/hellomeds/closedbeta-feedback</string>
 
     <!-- About -->
     <string name="settings_about_title">About</string>

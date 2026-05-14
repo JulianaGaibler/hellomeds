@@ -357,6 +357,34 @@
         <item quantity="one">%1$d importance label</item>
         <item quantity="other">%1$d importance labels</item>
     </plurals>
+    <plurals name="backup_import_summary_medications_imported">
+        <item quantity="one">%1$d medication imported</item>
+        <item quantity="other">%1$d medications imported</item>
+    </plurals>
+    <plurals name="backup_import_summary_medications_replaced">
+        <item quantity="one">%1$d medication replaced</item>
+        <item quantity="other">%1$d medications replaced</item>
+    </plurals>
+    <plurals name="backup_import_summary_medications_skipped">
+        <item quantity="one">%1$d medication skipped</item>
+        <item quantity="other">%1$d medications skipped</item>
+    </plurals>
+    <plurals name="backup_import_summary_schedules_imported">
+        <item quantity="one">%1$d schedule imported</item>
+        <item quantity="other">%1$d schedules imported</item>
+    </plurals>
+    <plurals name="backup_import_summary_labels_created">
+        <item quantity="one">%1$d importance label created</item>
+        <item quantity="other">%1$d importance labels created</item>
+    </plurals>
+    <plurals name="backup_import_summary_history_imported">
+        <item quantity="one">%1$d history record imported</item>
+        <item quantity="other">%1$d history records imported</item>
+    </plurals>
+    <plurals name="backup_import_summary_stock_adjustments_imported">
+        <item quantity="one">%1$d stock adjustment imported</item>
+        <item quantity="other">%1$d stock adjustments imported</item>
+    </plurals>
 
     <!-- Schedule Plurals (replace string versions) -->
     <plurals name="schedule_times_per_day_plural">
