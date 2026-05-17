@@ -142,21 +142,16 @@ class MedicationDetector(private val context: Context) {
                 }
 
                 FeatureStatus.DOWNLOADABLE -> {
-                    Log.d(TAG, "Gemini Nano available for download, starting download...")
-                    // Start download and wait for completion
+                    Log.d(TAG, "Gemini Nano available for download, starting download…")
                     model.download().collect { downloadStatus ->
                         when (downloadStatus) {
-                            is DownloadStatus.DownloadStarted ->
-                                Log.d(TAG, "Starting download for Gemini Nano")
-
-                            is DownloadStatus.DownloadProgress ->
-                                Log.d(TAG, "Gemini Nano ${downloadStatus.totalBytesDownloaded} bytes downloaded")
-
+                            is DownloadStatus.DownloadStarted,
+                            is DownloadStatus.DownloadProgress,
+                            -> Unit
                             DownloadStatus.DownloadCompleted -> {
                                 Log.d(TAG, "Gemini Nano download complete")
                                 modelDownloaded = true
                             }
-
                             is DownloadStatus.DownloadFailed -> {
                                 AppLogger.e(TAG, "Gemini Nano download failed: ${downloadStatus.e.message}")
                             }
@@ -165,14 +160,9 @@ class MedicationDetector(private val context: Context) {
                     modelDownloaded
                 }
 
-                FeatureStatus.DOWNLOADING -> {
-                    Log.d(TAG, "Gemini Nano currently being downloaded")
-                    // Wait a bit and check again
-                    false
-                }
+                FeatureStatus.DOWNLOADING -> false
 
                 FeatureStatus.AVAILABLE -> {
-                    Log.d(TAG, "Gemini Nano available and ready to use")
                     modelDownloaded = true
                     true
                 }
@@ -228,8 +218,6 @@ class MedicationDetector(private val context: Context) {
                 val inputImage = InputImage.fromBitmap(bitmap, rotation)
                 val detectedObjects = objectDetector.process(inputImage).await()
 
-                Log.d(TAG, "ML Kit detected ${detectedObjects.size} objects (preferCenter=$preferCenter)")
-
                 val primaryObject = if (preferCenter) {
                     // Prefer objects near the center (for frozen analysis / reticle initialization)
                     val centerX = bitmap.width / 2f
@@ -246,30 +234,13 @@ class MedicationDetector(private val context: Context) {
                         val centerDistance = sqrt(distanceX * distanceX + distanceY * distanceY)
 
                         // Larger area + closer to center scores higher.
-                        val score = area / (centerDistance + 100f)
-
-                        Log.d(
-                            TAG,
-                            "  Object: box=$box, area=$area, centerDist=%.1f, score=%.1f".format(
-                                centerDistance,
-                                score,
-                            ),
-                        )
-                        score
+                        area / (centerDistance + 100f)
                     }
                 } else {
-                    // Simple largest-object selection (for live scanning - detect anything)
+                    // Largest-object selection (for live scanning — detect anything).
                     detectedObjects.maxByOrNull { obj ->
-                        val area = obj.boundingBox.width() * obj.boundingBox.height()
-                        Log.d(TAG, "  Object: box=${obj.boundingBox}, area=$area")
-                        area
+                        obj.boundingBox.width() * obj.boundingBox.height()
                     }
-                }
-
-                if (primaryObject != null) {
-                    Log.d(TAG, "Selected primary object: ${primaryObject.boundingBox}")
-                } else {
-                    Log.d(TAG, "No primary object selected")
                 }
 
                 if (primaryObject != null) {
@@ -317,7 +288,6 @@ class MedicationDetector(private val context: Context) {
                 val extractedText = recognizedText.text.trim()
                 val wordCount = extractedText.split(Regex("\\s+")).filter { it.isNotBlank() }.size
 
-                Log.d(TAG, "OCR: $wordCount words")
                 onTextRecognized(extractedText, wordCount)
             } catch (e: Exception) {
                 AppLogger.e(TAG, "OCR error", e)
@@ -409,9 +379,7 @@ class MedicationDetector(private val context: Context) {
 
             val jsonResponse = response.candidates.firstOrNull()?.text
                 ?: throw Exception("Empty response from Gemini")
-            Log.d(TAG, "Gemini response: $jsonResponse")
 
-            // Parse JSON response - returns null if no valid data
             val result = parseGeminiResponse(jsonResponse)
             if (result == null) {
                 // No valid data extracted, use heuristic fallback
@@ -464,7 +432,6 @@ class MedicationDetector(private val context: Context) {
                     val typeEnum = MedicationType.fromValue(typeStr)
                     if (typeEnum != null) {
                         types.add(typeEnum)
-                        Log.d(TAG, "  Type detected: '${typeEnum.value}'")
                     } else if (typeStr.isNotBlank()) {
                         AppLogger.w(TAG, "Discarding invalid medication type: $typeStr")
                     }
@@ -479,7 +446,6 @@ class MedicationDetector(private val context: Context) {
             val strength = if (!strengthValue.isNaN() && strengthValue > 0 && strengthUnitStr != null) {
                 val unitEnum = MedicationStrengthUnit.fromValue(strengthUnitStr)
                 if (unitEnum != null) {
-                    Log.d(TAG, "  Strength detected: $strengthValue ${unitEnum.value}")
                     StrengthSuggestion(strengthValue, unitEnum)
                 } else {
                     AppLogger.w(TAG, "Discarding invalid strength unit: $strengthUnitStr")
