@@ -22,8 +22,8 @@ import me.juliana.hellomeds.data.model.enums.StockAdjustmentType
 import me.juliana.hellomeds.data.model.enums.TrackingPrecision
 import me.juliana.hellomeds.data.service.StockPrediction
 import me.juliana.hellomeds.data.service.StockPredictionEngine
-import me.juliana.hellomeds.data.util.currentTimeMillis
 import me.juliana.hellomeds.ui.components.graph.models.StockLine
+import kotlin.time.Clock
 import kotlin.time.Instant
 
 /**
@@ -34,6 +34,7 @@ class StockGraphBuilder(
     private val stockAdjustmentDao: StockAdjustmentDao,
     private val scheduleDao: ScheduleDao,
     private val predictionEngine: StockPredictionEngine,
+    private val clock: Clock = Clock.System,
 ) {
 
     /**
@@ -140,7 +141,7 @@ class StockGraphBuilder(
             // partial consumption of the open container), bridging to the prediction.
             val nowBridgePoint = if (isEstimated && packagingQuantity != null && totalDoses != null) {
                 StockDataPoint(
-                    timestamp = alignToDay(currentTimeMillis()),
+                    timestamp = alignToDay(clock.now().toEpochMilliseconds()),
                     value = totalDoses,
                     isFuture = false,
                 )

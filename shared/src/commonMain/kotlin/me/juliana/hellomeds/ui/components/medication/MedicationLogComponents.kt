@@ -31,7 +31,6 @@ import me.juliana.hellomeds.shared.accessibility_action_collapse
 import me.juliana.hellomeds.shared.accessibility_action_expand
 import me.juliana.hellomeds.shared.accessibility_not_selected
 import me.juliana.hellomeds.shared.accessibility_selected
-import me.juliana.hellomeds.shared.log_medication_status_not_yet
 import me.juliana.hellomeds.shared.log_medication_status_skipped
 import me.juliana.hellomeds.shared.log_medication_status_taken
 import me.juliana.hellomeds.ui.compat.ButtonGroupDefaults
@@ -43,7 +42,7 @@ import me.juliana.hellomeds.ui.components.list.SmartListItem
 import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
 import me.juliana.hellomeds.ui.components.list.SmartListTextItem
 import me.juliana.hellomeds.ui.theme.MedicationColor
-import me.juliana.hellomeds.ui.util.formatDecimal
+import me.juliana.hellomeds.ui.util.formatDecimalPlain
 import me.juliana.hellomeds.ui.util.formatMedicationTypeAndStrength
 import me.juliana.hellomeds.ui.util.getDoseUnitPluralRes
 import org.jetbrains.compose.resources.pluralStringResource
@@ -125,7 +124,7 @@ fun DoseInputListItem(
 
     SmartListTextItem(
         label = doseLabel,
-        value = if (dose == 0.0) "" else formatDecimal(dose),
+        value = if (dose == 0.0) "" else formatDecimalPlain(dose),
         onValueChange = { value ->
             value.toDoubleOrNull()?.let { onDoseChange(it) }
         },
@@ -149,7 +148,6 @@ fun StatusSegmentedButton(
     selectedStatus: LogStatus,
     onStatusChange: (LogStatus) -> Unit,
     modifier: Modifier = Modifier,
-    showNotYet: Boolean = true,
 ) {
     val selectedText = stringResource(Res.string.accessibility_selected)
     val notSelectedText = stringResource(Res.string.accessibility_not_selected)
@@ -161,11 +159,7 @@ fun StatusSegmentedButton(
         ToggleButton(
             checked = selectedStatus == LogStatus.SKIPPED,
             onCheckedChange = { onStatusChange(LogStatus.SKIPPED) },
-            shapes = if (showNotYet) {
-                ButtonGroupDefaults.connectedLeadingButtonShapes()
-            } else {
-                ButtonGroupDefaults.connectedLeadingButtonShapes()
-            },
+            shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
@@ -178,25 +172,6 @@ fun StatusSegmentedButton(
                 stringResource(Res.string.log_medication_status_skipped),
                 textAlign = TextAlign.Center,
             )
-        }
-        if (showNotYet) {
-            ToggleButton(
-                checked = selectedStatus == LogStatus.NOT_YET,
-                onCheckedChange = { onStatusChange(LogStatus.NOT_YET) },
-                shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .semantics {
-                        stateDescription =
-                            if (selectedStatus == LogStatus.NOT_YET) selectedText else notSelectedText
-                    },
-            ) {
-                Text(
-                    stringResource(Res.string.log_medication_status_not_yet),
-                    textAlign = TextAlign.Center,
-                )
-            }
         }
         ToggleButton(
             checked = selectedStatus == LogStatus.TAKEN,

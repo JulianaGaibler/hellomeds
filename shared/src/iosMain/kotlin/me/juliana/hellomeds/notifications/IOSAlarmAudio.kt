@@ -25,6 +25,12 @@ private var audioPlayer: AVAudioPlayer? = null
 private var vibrationJob: Job? = null
 private const val TAG = "IOSAlarmAudio"
 
+// Start very quiet and fade up over a few seconds so the alarm doesn't jolt the user.
+// The AVAudioPlayer scalar (0.0–1.0) multiplies the system's media volume.
+private const val RAMP_START_VOLUME: Float = 0.05f
+private const val RAMP_TARGET_VOLUME: Float = 1.0f
+private const val RAMP_DURATION_SECONDS: Double = 10.0
+
 /**
  * Starts looping alarm audio + vibration.
  * Uses AVAudioPlayer for looping the bundled alarm sound file,
@@ -43,11 +49,14 @@ fun startAlarmSound() {
     if (url != null) {
         audioPlayer = AVAudioPlayer(contentsOfURL = url, error = null)?.apply {
             numberOfLoops = -1 // Infinite loop
-            volume = 1.0f
+            volume = RAMP_START_VOLUME
             prepareToPlay()
             play()
+            // Native fade — AVAudioPlayer handles the interpolation on the audio thread,
+            // so we don't need a coroutine ticker. Available since iOS 10.
+            setVolume(RAMP_TARGET_VOLUME, fadeDuration = RAMP_DURATION_SECONDS)
         }
-        AppLogger.d(TAG, "Alarm audio started (looping)")
+        AppLogger.d(TAG, "Alarm audio started (looping, fading in)")
     } else {
         AppLogger.w(TAG, "alarm_sound.caf not found in bundle, no audio will play")
     }

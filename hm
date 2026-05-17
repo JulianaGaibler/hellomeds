@@ -254,6 +254,213 @@ cmd_lint() {
     fi
 }
 
+# ─── Screenshots (Fastlane Screengrab) ─────────────────────────────────────────
+
+ensure_bundler() {
+    # Reject macOS system Ruby (2.6) — fastlane needs a modern Ruby to build
+    # native gem extensions, and system Ruby's headers don't ship the toolchain.
+    local ruby_path
+    ruby_path="$(command -v ruby || true)"
+    if [ -z "$ruby_path" ] || [[ "$ruby_path" == /usr/bin/ruby ]] || [[ "$ruby_path" == /System/* ]]; then
+        error "macOS system Ruby is too old for fastlane. Install a modern Ruby:"
+        echo ""
+        echo "  ${BOLD}Homebrew (simplest):${RESET}"
+        echo "    brew install ruby"
+        echo "    echo 'export PATH=\"\$(brew --prefix ruby)/bin:\$PATH\"' >> ~/.zshrc"
+        echo "    source ~/.zshrc"
+        echo ""
+        echo "  ${BOLD}rbenv (recommended for multi-version):${RESET}"
+        echo "    brew install rbenv ruby-build"
+        echo "    rbenv install 3.3.5 && rbenv global 3.3.5"
+        echo "    echo 'eval \"\$(rbenv init - zsh)\"' >> ~/.zshrc"
+        echo "    source ~/.zshrc"
+        echo ""
+        echo "  Then: ${CYAN}gem install bundler${RESET} && ${CYAN}./hm screenshots${RESET}"
+        exit 1
+    fi
+
+    local ruby_major
+    ruby_major="$(ruby -e 'puts RUBY_VERSION.split(".").first' 2>/dev/null || echo "0")"
+    if [ "$ruby_major" -lt 3 ]; then
+        error "Ruby $(ruby -v 2>/dev/null) is too old. fastlane needs Ruby 3+."
+        echo "  Install a modern Ruby (see: brew install ruby) and retry."
+        exit 1
+    fi
+
+    if ! command -v bundle &>/dev/null; then
+        info "bundler not found — installing..."
+        gem install bundler --no-document || {
+            error "gem install bundler failed"
+            exit 1
+        }
+    fi
+
+    if [ ! -f "$PROJECT_ROOT/Gemfile.lock" ] || [ ! -d "$PROJECT_ROOT/vendor/bundle" ]; then
+        info "Installing Ruby gems (this may take a minute)..."
+        (cd "$PROJECT_ROOT" && bundle config set --local path 'vendor/bundle' && bundle install) || {
+            error "bundle install failed"
+            exit 1
+        }
+    fi
+}
+
+ensure_adb() {
+    if ! command -v adb &>/dev/null; then
+        local sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"
+        if [ -x "$sdk/platform-tools/adb" ]; then
+            export PATH="$sdk/platform-tools:$sdk/emulator:$PATH"
+        else
+            error "adb not found on PATH; set ANDROID_HOME"
+            exit 1
+        fi
+    fi
+}
+
+avd_exists() {
+    local avd="$1"
+    local emu="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}/emulator/emulator"
+    [ -x "$emu" ] && "$emu" -list-avds 2>/dev/null | grep -qx "$avd"
+}
+
+boot_avd() {
+    local avd="$1"
+    local kind="$2"   # phone | tablet
+    local emu="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}/emulator/emulator"
+    info "Booting AVD '$avd' (this can take a minute)..."
+    nohup "$emu" -avd "$avd" -no-snapshot-load -no-boot-anim -netdelay none -netspeed full \
+        >/tmp/hm-emulator-$avd.log 2>&1 &
+    adb wait-for-device
+    # Wait for boot completion
+    until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do sleep 2; done
+    adb shell input keyevent 82 >/dev/null 2>&1 || true   # unlock
+    if [ "$kind" = "tablet" ]; then
+        # Pixel Tablet (and most tablet AVDs) boot in their natural landscape
+        # orientation. We just lock auto-rotate off so the OS doesn't fight us.
+        # Forcing user_rotation rotates the OS *off* the natural orientation
+        # (e.g., to portrait) on devices that are already landscape — exactly
+        # what we don't want.
+        adb shell settings put system accelerometer_rotation 0 >/dev/null
+        adb shell settings put system user_rotation 0 >/dev/null
+    fi
+    success "AVD '$avd' booted"
+}
+
+kill_avd() {
+    adb -e emu kill >/dev/null 2>&1 || true
+    # Give the emulator a moment to actually die before we boot another.
+    sleep 3
+}
+
+disable_animations() {
+    adb shell settings put global window_animation_scale 0 >/dev/null
+    adb shell settings put global transition_animation_scale 0 >/dev/null
+    adb shell settings put global animator_duration_scale 0 >/dev/null
+}
+
+restore_animations() {
+    adb shell settings put global window_animation_scale 1 >/dev/null 2>&1 || true
+    adb shell settings put global transition_animation_scale 1 >/dev/null 2>&1 || true
+    adb shell settings put global animator_duration_scale 1 >/dev/null 2>&1 || true
+}
+
+grant_screenshot_app_permissions() {
+    local pkg="me.juliana.hellomeds.screenshot"
+    # Suppress the runtime permission warning banners on the tracking screen.
+    adb shell pm grant "$pkg" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 || true
+    adb shell appops set "$pkg" SCHEDULE_EXACT_ALARM allow >/dev/null 2>&1 || true
+    adb shell appops set "$pkg" USE_FULL_SCREEN_INTENT allow >/dev/null 2>&1 || true
+    # Grant the app DND policy override so the "critical channel cannot bypass DND"
+    # warning is suppressed for the curated medications.
+    adb shell cmd notification allow_dnd "$pkg" >/dev/null 2>&1 || true
+}
+
+enable_sysui_demo() {
+    adb shell settings put global sysui_demo_allowed 1 >/dev/null
+    adb shell am broadcast -a com.android.systemui.demo -e command enter >/dev/null
+    adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 1000 >/dev/null
+    adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false >/dev/null
+    adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 >/dev/null
+    adb shell am broadcast -a com.android.systemui.demo -e command network -e mobile show -e datatype none -e level 4 >/dev/null
+    adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false >/dev/null
+}
+
+disable_sysui_demo() {
+    adb shell am broadcast -a com.android.systemui.demo -e command exit >/dev/null 2>&1 || true
+}
+
+cmd_screenshots() {
+    local target="${1:-all}"
+    detect_java
+    ensure_adb
+    ensure_bundler
+
+    header "Building screenshot APKs (google flavor, screenshotDebug)"
+    ./gradlew :androidApp:assembleGoogleScreenshotDebug \
+              :androidApp:assembleGoogleScreenshotDebugAndroidTest 2>&1 | grep "^e:" | head -20 || true
+
+    local devices=()
+    case "$target" in
+        phone)  devices=(phone) ;;
+        tablet) devices=(tablet) ;;
+        all|"") devices=(phone tablet) ;;
+        *)
+            error "Unknown target: $target"
+            echo "  Usage: $0 screenshots [phone|tablet|all]"
+            exit 1
+            ;;
+    esac
+
+    for d in "${devices[@]}"; do
+        local avd
+        if [ "$d" = "phone" ]; then
+            avd="${HM_PHONE_AVD:-hm_phone}"
+        else
+            avd="${HM_TABLET_AVD:-hm_tablet}"
+        fi
+        if ! avd_exists "$avd"; then
+            error "AVD '$avd' not found."
+            echo ""
+            local emu="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}/emulator/emulator"
+            local available
+            available="$("$emu" -list-avds 2>/dev/null | paste -sd', ' - || echo none)"
+            echo "  Available AVDs on this machine: ${available:-none}"
+            echo ""
+            echo "  Point hm at one of those with:"
+            if [ "$d" = "phone" ]; then
+                echo "    HM_PHONE_AVD=<name> ./hm screenshots phone"
+            else
+                echo "    HM_TABLET_AVD=<name> ./hm screenshots tablet"
+            fi
+            echo ""
+            echo "  Or create a dedicated AVD via Android Studio's Device Manager"
+            echo "  (Pixel 6 for phone, Pixel Tablet for tablet)."
+            exit 1
+        fi
+
+        boot_avd "$avd" "$d"
+        disable_animations
+        grant_screenshot_app_permissions
+        enable_sysui_demo
+
+        info "Running screengrab → $d"
+        if (cd "$PROJECT_ROOT" && bundle exec fastlane "screenshots_$d"); then
+            success "Captured $d screenshots"
+        else
+            disable_sysui_demo
+            restore_animations
+            kill_avd
+            error "fastlane screenshots_$d failed"
+            exit 1
+        fi
+
+        disable_sysui_demo
+        restore_animations
+        kill_avd
+    done
+
+    success "Done — see fastlane/metadata/android/screenshots/{phone,tablet}/"
+}
+
 cmd_help() {
     echo ""
     echo -e "${BOLD}HelloMeds${RESET} — build & development helper"
@@ -268,6 +475,7 @@ cmd_help() {
     echo -e "  ${CYAN}format${RESET}              Auto-format all Kotlin files"
     echo -e "  ${CYAN}lint${RESET}                Check formatting (no changes)"
     echo -e "  ${CYAN}clean${RESET}               Clean Gradle + Xcode DerivedData"
+    echo -e "  ${CYAN}screenshots${RESET} [target] Capture Play Store screenshots ${DIM}(phone|tablet|all, default: all)${RESET}"
     echo -e "  ${CYAN}help${RESET}                Show this help"
     echo ""
     echo -e "${BOLD}Examples:${RESET}"
@@ -290,6 +498,7 @@ case "$command" in
     format)  cmd_format "$@" ;;
     lint)    cmd_lint "$@" ;;
     clean)   cmd_clean "$@" ;;
+    screenshots) cmd_screenshots "$@" ;;
     help|-h|--help) cmd_help ;;
     *)
         error "Unknown command: $command"

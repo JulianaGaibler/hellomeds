@@ -116,6 +116,28 @@ import me.juliana.hellomeds.shared.medication_type_tablet
 import me.juliana.hellomeds.shared.medication_type_tablet_plural
 import me.juliana.hellomeds.shared.medication_type_topical
 import me.juliana.hellomeds.shared.medication_type_topical_plural
+import me.juliana.hellomeds.shared.stock_summary_current_ampoule
+import me.juliana.hellomeds.shared.stock_summary_current_blister_pack
+import me.juliana.hellomeds.shared.stock_summary_current_bottle
+import me.juliana.hellomeds.shared.stock_summary_current_canister
+import me.juliana.hellomeds.shared.stock_summary_current_dispenser
+import me.juliana.hellomeds.shared.stock_summary_current_inhaler
+import me.juliana.hellomeds.shared.stock_summary_current_jar
+import me.juliana.hellomeds.shared.stock_summary_current_package
+import me.juliana.hellomeds.shared.stock_summary_current_pen
+import me.juliana.hellomeds.shared.stock_summary_current_tube
+import me.juliana.hellomeds.shared.stock_summary_current_vial
+import me.juliana.hellomeds.shared.stock_summary_full_ampoule
+import me.juliana.hellomeds.shared.stock_summary_full_blister_pack
+import me.juliana.hellomeds.shared.stock_summary_full_bottle
+import me.juliana.hellomeds.shared.stock_summary_full_canister
+import me.juliana.hellomeds.shared.stock_summary_full_dispenser
+import me.juliana.hellomeds.shared.stock_summary_full_inhaler
+import me.juliana.hellomeds.shared.stock_summary_full_jar
+import me.juliana.hellomeds.shared.stock_summary_full_package
+import me.juliana.hellomeds.shared.stock_summary_full_pen
+import me.juliana.hellomeds.shared.stock_summary_full_tube
+import me.juliana.hellomeds.shared.stock_summary_full_vial
 import me.juliana.hellomeds.shared.unit_g
 import me.juliana.hellomeds.shared.unit_iu
 import me.juliana.hellomeds.shared.unit_mcg
@@ -273,6 +295,36 @@ val MedicationContainer.labelPluralRes: PluralStringResource
         MedicationContainer.AMPOULE -> Res.plurals.container_label_ampoule
         MedicationContainer.CANISTER -> Res.plurals.container_label_canister
         MedicationContainer.JAR -> Res.plurals.container_label_jar
+    }
+
+val MedicationContainer.currentLabelRes: StringResource
+    get() = when (this) {
+        MedicationContainer.PACKAGE -> Res.string.stock_summary_current_package
+        MedicationContainer.BOTTLE -> Res.string.stock_summary_current_bottle
+        MedicationContainer.DISPENSER -> Res.string.stock_summary_current_dispenser
+        MedicationContainer.BLISTER_PACK -> Res.string.stock_summary_current_blister_pack
+        MedicationContainer.TUBE -> Res.string.stock_summary_current_tube
+        MedicationContainer.VIAL -> Res.string.stock_summary_current_vial
+        MedicationContainer.INHALER -> Res.string.stock_summary_current_inhaler
+        MedicationContainer.PEN -> Res.string.stock_summary_current_pen
+        MedicationContainer.AMPOULE -> Res.string.stock_summary_current_ampoule
+        MedicationContainer.CANISTER -> Res.string.stock_summary_current_canister
+        MedicationContainer.JAR -> Res.string.stock_summary_current_jar
+    }
+
+val MedicationContainer.fullRemainingPluralRes: PluralStringResource
+    get() = when (this) {
+        MedicationContainer.PACKAGE -> Res.plurals.stock_summary_full_package
+        MedicationContainer.BOTTLE -> Res.plurals.stock_summary_full_bottle
+        MedicationContainer.DISPENSER -> Res.plurals.stock_summary_full_dispenser
+        MedicationContainer.BLISTER_PACK -> Res.plurals.stock_summary_full_blister_pack
+        MedicationContainer.TUBE -> Res.plurals.stock_summary_full_tube
+        MedicationContainer.VIAL -> Res.plurals.stock_summary_full_vial
+        MedicationContainer.INHALER -> Res.plurals.stock_summary_full_inhaler
+        MedicationContainer.PEN -> Res.plurals.stock_summary_full_pen
+        MedicationContainer.AMPOULE -> Res.plurals.stock_summary_full_ampoule
+        MedicationContainer.CANISTER -> Res.plurals.stock_summary_full_canister
+        MedicationContainer.JAR -> Res.plurals.stock_summary_full_jar
     }
 
 // ── MedicationStrengthUnit extensions ────────────────────────────────────────

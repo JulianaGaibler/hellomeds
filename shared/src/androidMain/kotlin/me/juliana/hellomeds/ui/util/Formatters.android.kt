@@ -13,7 +13,6 @@ import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toJavaLocalTime
 import kotlinx.datetime.toLocalDateTime
-import me.juliana.hellomeds.data.database.entities.ImportanceLabel
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.database.entities.Schedule
 import me.juliana.hellomeds.data.model.ProjectedEvent
@@ -42,11 +41,6 @@ import me.juliana.hellomeds.shared.dose_unit_spray
 import me.juliana.hellomeds.shared.dose_unit_suppository
 import me.juliana.hellomeds.shared.dose_unit_tablet
 import me.juliana.hellomeds.shared.dose_unit_topical
-import me.juliana.hellomeds.shared.importance_label_becomes_critical
-import me.juliana.hellomeds.shared.importance_label_critical
-import me.juliana.hellomeds.shared.importance_label_follow_ups_plural
-import me.juliana.hellomeds.shared.importance_label_no_reminders
-import me.juliana.hellomeds.shared.importance_label_reminds_once
 import me.juliana.hellomeds.shared.medication_type_strength_format
 import me.juliana.hellomeds.shared.schedule_ended_on
 import me.juliana.hellomeds.shared.schedule_ends_on
@@ -141,11 +135,21 @@ actual fun formatDateWithTodayPrefix(date: LocalDate): String {
 // ── Number Formatting ───────────────────────────────────────────────────────
 
 actual fun formatDecimal(value: Double): String {
+    // Locale-aware grouping for display: "20,000" / "20.000 IE" / "1,234.5".
+    val symbols = DecimalFormatSymbols(Locale.getDefault())
+    val formatter = DecimalFormat("#,##0.##########", symbols)
+    return formatter.format(value)
+}
+
+actual fun formatDecimalPlain(value: Double): String {
+    // Round-trip safe via toDoubleOrNull(); used to seed editable text fields.
     if (value == value.toLong().toDouble()) {
         return value.toLong().toString()
     }
-    val symbols = DecimalFormatSymbols(Locale.getDefault())
-    val formatter = DecimalFormat("#.##########", symbols)
+    // Force `.` decimal separator regardless of locale.
+    val symbols = DecimalFormatSymbols(Locale.US)
+    val formatter = DecimalFormat("0.##########", symbols)
+    formatter.isGroupingUsed = false
     return formatter.format(value)
 }
 
@@ -159,7 +163,9 @@ actual fun formatMedicationTypeAndStrength(medication: Medication): String {
     val strengthUnit = medication.strengthUnit
     return if (strengthValue != null && strengthUnit != null) {
         val formattedValue = formatDecimal(strengthValue)
-        val strengthFormatted = "$formattedValue${strengthUnit.value}"
+        // Localize the unit ("IU" → "IE" in de) via the existing displayNameRes mapping.
+        val unitString = stringResource(strengthUnit.displayNameRes)
+        val strengthFormatted = "$formattedValue$unitString"
         stringResource(Res.string.medication_type_strength_format, typeString, strengthFormatted)
     } else {
         typeString
@@ -271,44 +277,6 @@ actual fun formatLogEventTime(event: ProjectedEvent): String {
     val time = Instant.fromEpochMilliseconds(timeMillis)
         .toLocalDateTime(TimeZone.currentSystemDefault()).time
     return formatTime(time)
-}
-
-// ── Importance Label Formatting ─────────────────────────────────────────────
-
-@Composable
-actual fun formatImportanceLabelDescription(label: ImportanceLabel): String {
-    if (!label.shouldRemind) {
-        return stringResource(Res.string.importance_label_no_reminders)
-    }
-
-    val reminderParts = mutableListOf<String>()
-
-    if (label.isCritical) {
-        reminderParts.add(stringResource(Res.string.importance_label_critical))
-    }
-
-    if (!label.hasFollowUps) {
-        reminderParts.add(stringResource(Res.string.importance_label_reminds_once))
-    } else {
-        reminderParts.add(
-            pluralStringResource(
-                Res.plurals.importance_label_follow_ups_plural,
-                label.followUpCount,
-                label.followUpCount,
-            ),
-        )
-    }
-
-    if (label.criticalAfterFollowUp != null && !label.isCritical) {
-        reminderParts.add(
-            stringResource(
-                Res.string.importance_label_becomes_critical,
-                label.criticalAfterFollowUp!!,
-            ),
-        )
-    }
-
-    return reminderParts.joinToString(", ")
 }
 
 // ── Dose Unit Plurals ───────────────────────────────────────────────────────

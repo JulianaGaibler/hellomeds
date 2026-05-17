@@ -4,11 +4,11 @@
 package me.juliana.hellomeds.data.repository
 
 import kotlinx.coroutines.test.runTest
-import me.juliana.hellomeds.data.backup.FakeAppDatabase
 import me.juliana.hellomeds.data.backup.FakeHistoryDao
 import me.juliana.hellomeds.data.backup.FakeMedicationDao
 import me.juliana.hellomeds.data.backup.FakeScheduleDao
 import me.juliana.hellomeds.data.backup.FakeStockAdjustmentDao
+import me.juliana.hellomeds.data.backup.FakeTransactionRunner
 import me.juliana.hellomeds.data.backup.NoOpDepletionChecker
 import me.juliana.hellomeds.data.backup.NoOpLowStockChecker
 import me.juliana.hellomeds.data.backup.NoOpReconciler
@@ -41,17 +41,12 @@ class MedicationHistoryRepositoryTest {
         scheduleDao = FakeScheduleDao()
         stockAdjustmentDao = FakeStockAdjustmentDao()
 
-        val database = FakeAppDatabase(
-            fakeHistoryDao = historyDao,
-            fakeMedDao = medicationDao,
-            fakeScheduleDao = scheduleDao,
-            fakeStockAdjDao = stockAdjustmentDao,
-        )
+        val transactionRunner = FakeTransactionRunner()
 
         stockTrackingRepository = StockTrackingRepository(
             medicationDao = medicationDao,
             stockAdjustmentDao = stockAdjustmentDao,
-            database = database,
+            transactionRunner = transactionRunner,
             scheduleDao = scheduleDao,
             lowStockNotifier = NoOpLowStockChecker(),
             predictionEngine = StockPredictionEngine(),
@@ -63,7 +58,7 @@ class MedicationHistoryRepositoryTest {
             historyDao = historyDao,
             medicationDao = medicationDao,
             scheduleDao = scheduleDao,
-            database = database,
+            transactionRunner = transactionRunner,
             projector = ScheduleProjector(scheduleDao, historyDao, medicationDao),
             stockTrackingRepository = stockTrackingRepository,
             reconciler = NoOpReconciler(),
@@ -178,6 +173,61 @@ class MedicationHistoryRepositoryTest {
     // ================================================================
     // Test 3: "PRN Null Safety" — as-needed deletion doesn't crash or wipe siblings
     // ================================================================
+
+    // ================================================================
+    // Test 4: "Stale dialog id" — deleteHistoryRecord(event) for a scheduled event
+    // must remove the row even when event.historyRecord.id no longer matches any row.
+    // Guards against the silent-no-op bug seen in user testing.
+    // ================================================================
+
+    @Test
+    fun deleteHistoryRecord_byEvent_removesScheduledRow_whenHistoryRecordIdIsStale() = runTest {
+        val medication = createMedication(id = 1, stockTrackingEnabled = true)
+        medicationDao.insert(medication)
+
+        // Insert the actual TAKEN row; its DAO-assigned id is what would normally
+        // be put on event.historyRecord.id.
+        val realId = historyDao.insert(
+            MedicationHistory(
+                medicationId = 1,
+                scheduleId = 10,
+                scheduledTime = 1_000_000L,
+                status = "TAKEN",
+                scheduledDose = 1.0,
+                actualDose = 1.0,
+                takenTime = 2_000_000L,
+            ),
+        ).toInt()
+        assertEquals(1, historyDao.history.size, "Precondition: 1 row inserted")
+
+        // Simulate the dialog capturing a stale historyRecord whose id (99999)
+        // does NOT match the row in the DB, but whose composite key DOES.
+        val staleEvent = createProjectedEvent(
+            medicationId = 1,
+            scheduleId = 10,
+            scheduledTime = 1_000_000L,
+            historyRecord = MedicationHistory(
+                id = 99999, // deliberately wrong
+                medicationId = 1,
+                scheduleId = 10,
+                scheduledTime = 1_000_000L,
+                status = "TAKEN",
+                scheduledDose = 1.0,
+                actualDose = 1.0,
+                takenTime = 2_000_000L,
+            ),
+        )
+
+        // Act: delete via the event-based overload
+        repository.deleteHistoryRecord(staleEvent)
+
+        // Assert: row is gone — composite-key path doesn't depend on the dialog id
+        val remaining = historyDao.getAllByCompositeKey(1, 10, 1_000_000L)
+        assertTrue(
+            remaining.isEmpty(),
+            "Row should be deleted by composite key even with stale historyRecord.id (realId=$realId)",
+        )
+    }
 
     @Test
     fun deleteHistoryRecord_prnMedication_deletesOnlyTargetRecord() = runTest {

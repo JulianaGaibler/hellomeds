@@ -18,6 +18,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class StockPredictionEngineTest {
 
@@ -767,7 +769,14 @@ class StockPredictionEngineTest {
 
     @Test
     fun predict_cyclic_noPlacebos_stockLastsLonger() {
-        // 21 active / 7 break, no placebos → stock should last ~33% longer
+        // 21 active / 7 break, no placebos → stock should last ~33% longer.
+        // Pin "now" to mid-day Jan 14 2026 UTC = cycle day 13 of the
+        // 21-active/7-break cycle starting Jan 1 2026 → deep inside the active
+        // phase, so the 21-dose prediction is deterministically 28 days in
+        // any system timezone (±12h jitter cannot push us off active phase).
+        val engine = StockPredictionEngine(
+            clock = FixedClock(Instant.parse("2026-01-14T12:00:00Z")),
+        )
         val cyclicMed = createMedication(
             trackingPrecision = TrackingPrecision.EXACT,
             packagingQuantity = null,
@@ -803,7 +812,13 @@ class StockPredictionEngineTest {
 
     @Test
     fun predict_cyclic_withPlacebos_sameAsNonCyclic() {
-        // 21 active / 7 placebo → pill consumed every day, same as non-cyclic
+        // 21 active / 7 placebo → pill consumed every day, same as non-cyclic.
+        // Pin the clock for the same reason as the no-placebos test above —
+        // engine output is identical across calendar dates with placebos, but
+        // pinning makes the *test* date-independent end-to-end.
+        val engine = StockPredictionEngine(
+            clock = FixedClock(Instant.parse("2026-01-14T12:00:00Z")),
+        )
         val cyclicMed = createMedication(
             trackingPrecision = TrackingPrecision.EXACT,
             packagingQuantity = null,
@@ -857,4 +872,9 @@ class StockPredictionEngineTest {
             "Expected roughly 10 data points (only dose days), got ${futurePoints.size}",
         )
     }
+}
+
+/** Test helper for pinning `Clock` to a fixed instant. */
+private class FixedClock(private val instant: Instant) : Clock {
+    override fun now(): Instant = instant
 }

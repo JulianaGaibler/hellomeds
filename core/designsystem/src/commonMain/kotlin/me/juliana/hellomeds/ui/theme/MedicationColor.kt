@@ -126,10 +126,10 @@ sealed class MedicationColor(
     )
 
     data object Monochrome : MedicationColor(
-        foregroundLight = Color(0xFFFFFFFF),
-        backgroundLight = Color(0xFFBDBDBD),
-        foregroundDark = Color(0xFFFFFFFF),
-        backgroundDark = Color(0xFFD4D4D4),
+        foregroundLight = Color(0xFF586071),
+        backgroundLight = Color(0xFFBFC5D2),
+        foregroundDark = Color(0xFFC0C7D8),
+        backgroundDark = Color(0xFF474759),
     )
 
     companion object {

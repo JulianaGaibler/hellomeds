@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 HelloMeds Contributors
-//
-// BETA: Closed-beta thank-you onboarding step. Remove per BETA_ROLLBACK.md
-// before public release.
 
 package me.juliana.hellomeds.ui.features.onboarding.steps
 

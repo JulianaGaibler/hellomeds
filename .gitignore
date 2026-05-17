@@ -50,6 +50,16 @@ iosApp/Version.generated.xcconfig
 test-results.xml
 failures.xml
 
+# Fastlane (Screengrab)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+fastlane/metadata/
+Gemfile.lock
+.bundle/
+vendor/bundle/
+
 # Xcode
 iosApp/**/*.xcodeproj/xcuserdata/
 iosApp/**/*.xcworkspace/xcuserdata/

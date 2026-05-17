@@ -18,10 +18,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -29,8 +25,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import kotlinx.datetime.TimeZone
-import me.juliana.hellomeds.data.model.enums.TimeZoneMode
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.cycle_active_days
 import me.juliana.hellomeds.shared.cycle_active_days_hint
@@ -42,39 +36,29 @@ import me.juliana.hellomeds.shared.cycle_info_calendar_days
 import me.juliana.hellomeds.shared.cycle_placebos_off_description
 import me.juliana.hellomeds.shared.cycle_placebos_on_description
 import me.juliana.hellomeds.shared.cycle_preset_label
-import me.juliana.hellomeds.shared.cycle_section_title
-import me.juliana.hellomeds.shared.timezone_anchor_description
-import me.juliana.hellomeds.shared.timezone_mode_fixed_description
-import me.juliana.hellomeds.shared.timezone_mode_fixed_hint
-import me.juliana.hellomeds.shared.timezone_mode_label
-import me.juliana.hellomeds.shared.timezone_mode_local_description
 import me.juliana.hellomeds.shared.wizard_cycle_headline
-import me.juliana.hellomeds.shared.wizard_cycle_title
+import androidx.compose.foundation.layout.padding
+import me.juliana.hellomeds.ui.components.common.ScreenHeader
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.IntegerInputTransformation
 import me.juliana.hellomeds.ui.components.list.SmartListInfoCard
-import me.juliana.hellomeds.ui.components.list.SmartListItem
 import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
 import me.juliana.hellomeds.ui.components.list.SmartListSwitchItem
 import me.juliana.hellomeds.ui.components.list.SmartListTextItem
 import me.juliana.hellomeds.ui.components.medication.CycleDayPicker
 import me.juliana.hellomeds.ui.components.medication.cyclePresets
-import me.juliana.hellomeds.ui.components.pickers.TimeZonePickerDialog
-import me.juliana.hellomeds.ui.components.pickers.formatTimeZoneForDisplay
 import me.juliana.hellomeds.ui.test.TestTags
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Step 4: Schedule settings — timezone mode + dosing cycle.
- * Timezone mode at the top, cycle config below (optional).
+ * Wizard step: cyclic-medication setup. The toggle enables cyclic dosing;
+ * an expanded config block (active/break days, current day, placebos) is
+ * shown when enabled. Time-zone behavior is no longer asked here — new
+ * medications inherit FIXED-to-current-system-tz at save time.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun MedicationCycleStep(
-    timeZoneMode: TimeZoneMode,
-    onTimeZoneModeChange: (TimeZoneMode) -> Unit,
-    anchorTimeZone: String?,
-    onAnchorTimeZoneChange: (String?) -> Unit,
     cycleEnabled: Boolean,
     cycleDaysActive: Int,
     cycleDaysBreak: Int,
@@ -87,142 +71,95 @@ internal fun MedicationCycleStep(
     onDayInCycleChange: (Int) -> Unit,
 ) {
     val cycleLength = cycleDaysActive + cycleDaysBreak
-    var showTimeZonePicker by remember { mutableStateOf(false) }
 
-    if (showTimeZonePicker) {
-        TimeZonePickerDialog(
-            selectedTimeZone = anchorTimeZone,
-            onSelect = { onAnchorTimeZoneChange(it) },
-            onDismiss = { showTimeZonePicker = false },
-        )
-    }
-
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    Column {
         ScreenHeader(
             headline = stringResource(Res.string.wizard_cycle_headline),
-            title = stringResource(Res.string.wizard_cycle_title),
+            title = stringResource(Res.string.cycle_enabled_description),
         )
 
-        // ── Timezone mode ──
-        Text(
-            text = stringResource(Res.string.timezone_mode_label),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-
-        AutoSmartList(
-            items = listOf(
-                SmartListItemConfig(visible = true) { shapes, visible ->
-                    SmartListSwitchItem(
-                        label = stringResource(Res.string.timezone_mode_label),
-                        checked = timeZoneMode == TimeZoneMode.FIXED,
-                        onCheckedChange = {
-                            val newMode = if (it) TimeZoneMode.FIXED else TimeZoneMode.LOCAL
-                            onTimeZoneModeChange(newMode)
-                            if (newMode == TimeZoneMode.FIXED && anchorTimeZone == null) {
-                                onAnchorTimeZoneChange(TimeZone.currentSystemDefault().id)
-                            }
-                        },
-                        shapes = shapes,
-                        modifier = Modifier.testTag(TestTags.TIMEZONE_TOGGLE),
-                        visible = visible,
-                        supportingText = if (timeZoneMode == TimeZoneMode.FIXED) {
-                            stringResource(Res.string.timezone_mode_fixed_description)
-                        } else {
-                            stringResource(Res.string.timezone_mode_local_description)
-                        },
-                    )
-                },
-                SmartListItemConfig(
-                    visible = timeZoneMode == TimeZoneMode.FIXED && anchorTimeZone != null,
-                ) { shapes, visible ->
-                    val (city, region) = formatTimeZoneForDisplay(anchorTimeZone ?: "")
-                    val label = if (region.isNotEmpty()) "$city, $region" else city
-                    SmartListItem(
-                        headlineContent = { Text(label) },
-                        supportingContent = { Text(stringResource(Res.string.timezone_anchor_description)) },
-                        shapes = shapes,
-                        visible = visible,
-                        onClick = { showTimeZonePicker = true },
-                    )
-                },
-                SmartListItemConfig(visible = timeZoneMode == TimeZoneMode.FIXED) { shapes, visible ->
-                    SmartListInfoCard(
-                        headlineContent = {
-                            Text(
-                                stringResource(Res.string.timezone_mode_fixed_hint),
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
-                        },
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        shapes = shapes,
-                        visible = visible,
-                    )
-                },
-            ),
-        )
-
-        // ── Dosing cycle ──
-        Text(
-            text = stringResource(Res.string.cycle_section_title),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-
-        // Enable toggle
-        AutoSmartList(
-            items = listOf(
-                SmartListItemConfig(visible = true) { shapes, visible ->
-                    SmartListSwitchItem(
-                        label = stringResource(Res.string.cycle_enabled),
-                        checked = cycleEnabled,
-                        onCheckedChange = onCycleEnabledChange,
-                        shapes = shapes,
-                        modifier = Modifier.testTag(TestTags.CYCLE_TOGGLE),
-                        visible = visible,
-                        supportingText = stringResource(Res.string.cycle_enabled_description),
-                    )
-                },
-                SmartListItemConfig(visible = cycleEnabled) { shapes, visible ->
-                    SmartListInfoCard(
-                        headlineContent = {
-                            Text(
-                                stringResource(Res.string.cycle_info_calendar_days),
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
-                        },
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        shapes = shapes,
-                        visible = visible,
-                    )
-                },
-            ),
-        )
-
-        // Expanded cycle config (only shown when enabled)
-        AnimatedVisibility(
-            visible = cycleEnabled,
-            enter = expandVertically(expandFrom = Alignment.CenterVertically) + fadeIn(),
-            exit = shrinkVertically(shrinkTowards = Alignment.CenterVertically) + fadeOut(),
-            modifier = Modifier.testTag(TestTags.CYCLE_CONFIG),
+        Column(
+            modifier = Modifier.padding(horizontal = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            CycleConfigFields(
-                cycleDaysActive = cycleDaysActive,
-                cycleDaysBreak = cycleDaysBreak,
-                cycleHasPlacebos = cycleHasPlacebos,
-                cycleDayInCycle = cycleDayInCycle,
-                cycleLength = cycleLength,
-                onDaysActiveChange = onDaysActiveChange,
-                onDaysBreakChange = onDaysBreakChange,
-                onHasPlacebosChange = onHasPlacebosChange,
-                onDayInCycleChange = onDayInCycleChange,
+            CycleEnableToggle(
+                cycleEnabled = cycleEnabled,
+                onCycleEnabledChange = onCycleEnabledChange,
+                showDescription = false,
             )
+
+            // Expanded cycle config (only shown when enabled)
+            AnimatedVisibility(
+                visible = cycleEnabled,
+                enter = expandVertically(expandFrom = Alignment.CenterVertically) + fadeIn(),
+                exit = shrinkVertically(shrinkTowards = Alignment.CenterVertically) + fadeOut(),
+                modifier = Modifier.testTag(TestTags.CYCLE_CONFIG),
+            ) {
+                CycleConfigFields(
+                    cycleDaysActive = cycleDaysActive,
+                    cycleDaysBreak = cycleDaysBreak,
+                    cycleHasPlacebos = cycleHasPlacebos,
+                    cycleDayInCycle = cycleDayInCycle,
+                    cycleLength = cycleLength,
+                    onDaysActiveChange = onDaysActiveChange,
+                    onDaysBreakChange = onDaysBreakChange,
+                    onHasPlacebosChange = onHasPlacebosChange,
+                    onDayInCycleChange = onDayInCycleChange,
+                )
+            }
         }
     }
+}
+
+/**
+ * Switch + "calendar days" info card for cyclic-medication onboarding.
+ *
+ * @param showDescription when true, the switch row shows the long-form
+ *   "Adjusts your schedule…" supporting text. The wizard step hides it
+ *   because the step's [ScreenHeader] already carries that copy; the edit
+ *   screen leaves it on.
+ */
+@Composable
+fun CycleEnableToggle(
+    cycleEnabled: Boolean,
+    onCycleEnabledChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    showDescription: Boolean = true,
+) {
+    AutoSmartList(
+        modifier = modifier,
+        items = listOf(
+            SmartListItemConfig(visible = true) { shapes, visible ->
+                SmartListSwitchItem(
+                    label = stringResource(Res.string.cycle_enabled),
+                    checked = cycleEnabled,
+                    onCheckedChange = onCycleEnabledChange,
+                    shapes = shapes,
+                    modifier = Modifier.testTag(TestTags.CYCLE_TOGGLE),
+                    visible = visible,
+                    supportingText = if (showDescription) {
+                        stringResource(Res.string.cycle_enabled_description)
+                    } else {
+                        null
+                    },
+                )
+            },
+            SmartListItemConfig(visible = cycleEnabled) { shapes, visible ->
+                SmartListInfoCard(
+                    headlineContent = {
+                        Text(
+                            stringResource(Res.string.cycle_info_calendar_days),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    shapes = shapes,
+                    visible = visible,
+                )
+            },
+        ),
+    )
 }
 
 /**

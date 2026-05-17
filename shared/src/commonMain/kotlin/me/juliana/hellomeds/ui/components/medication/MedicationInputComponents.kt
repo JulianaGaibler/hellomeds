@@ -27,7 +27,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -72,7 +71,6 @@ import me.juliana.hellomeds.shared.color_yellow
 import me.juliana.hellomeds.shared.medication_color_primary
 import me.juliana.hellomeds.shared.medication_shape_background
 import me.juliana.hellomeds.shared.medication_shape_foreground
-import me.juliana.hellomeds.shared.medication_skip_step
 import me.juliana.hellomeds.shared.medication_strength_placeholder
 import me.juliana.hellomeds.ui.compat.MaterialShapes
 import me.juliana.hellomeds.ui.compat.MedicationIconPreviewContent
@@ -175,7 +173,6 @@ fun StrengthInputFields(
     strengthUnit: MedicationStrengthUnit,
     onStrengthValueChange: (String) -> Unit,
     onStrengthUnitChange: (MedicationStrengthUnit) -> Unit,
-    onSkip: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val units = MedicationStrengthUnit.entries.map { unit ->
@@ -186,15 +183,6 @@ fun StrengthInputFields(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        if (onSkip != null) {
-            OutlinedButton(
-                onClick = onSkip,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-            ) {
-                Text(stringResource(Res.string.medication_skip_step))
-            }
-        }
-
         TextField(
             value = strengthValue,
             onValueChange = { newValue ->

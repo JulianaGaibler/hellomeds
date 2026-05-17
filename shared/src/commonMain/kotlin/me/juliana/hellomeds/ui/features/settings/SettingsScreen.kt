@@ -16,6 +16,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.ui.Alignment
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,6 +40,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.contentDescription
@@ -66,8 +71,13 @@ import me.juliana.hellomeds.shared.settings_closed_beta_cta
 import me.juliana.hellomeds.shared.settings_closed_beta_support_cta
 import me.juliana.hellomeds.shared.settings_closed_beta_title
 import me.juliana.hellomeds.shared.settings_closed_beta_url
+// BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
+import me.juliana.hellomeds.shared.closed_beta_survey_settings_label
+import me.juliana.hellomeds.shared.closed_beta_survey_settings_description
+import me.juliana.hellomeds.shared.closed_beta_survey_url
 import me.juliana.hellomeds.shared.settings_appearance_dynamic_color
 import me.juliana.hellomeds.shared.settings_appearance_dynamic_color_description
+import me.juliana.hellomeds.shared.auto_backup_disabled_banner
 import me.juliana.hellomeds.shared.settings_auto_backup
 import me.juliana.hellomeds.shared.settings_auto_backup_disabled
 import me.juliana.hellomeds.shared.settings_auto_backup_enabled
@@ -199,6 +209,16 @@ fun SettingsScreen(
             item {
                 val betaUriHandler = LocalUriHandler.current
                 val closedBetaUrl = stringResource(Res.string.settings_closed_beta_url)
+                // BETA: Closed-beta survey nudge — gate the survey link on 10-day window.
+                val onboardingTimestamp by autoBackupPrefs.onboardingCompletedTimestamp
+                    .collectAsStateWithLifecycle(0L)
+                val tenDaysMs = 10 * 24 * 60 * 60 * 1000L
+                val showSurveyLink = onboardingTimestamp > 0L &&
+                    (
+                        kotlin.time.Clock.System.now().toEpochMilliseconds() -
+                            onboardingTimestamp
+                        ) >= tenDaysMs
+                val surveyUrl = stringResource(Res.string.closed_beta_survey_url)
                 AutoSmartList(
                     items = listOf(
                         SmartListItemConfig(visible = true) { shapes, visible ->
@@ -242,6 +262,22 @@ fun SettingsScreen(
                                 visible = visible,
                             )
                         },
+                        // BETA: Closed-beta survey link — appears 10 days after onboarding so testers
+                        // always have a way to find the survey even if they dismissed the dialog.
+                        // Remove per BETA_ROLLBACK.md before public release.
+                        SmartListItemConfig(visible = showSurveyLink) { shapes, visible ->
+                            SmartListItem(
+                                headlineContent = {
+                                    Text(stringResource(Res.string.closed_beta_survey_settings_label))
+                                },
+                                supportingContent = {
+                                    Text(stringResource(Res.string.closed_beta_survey_settings_description))
+                                },
+                                shapes = shapes,
+                                visible = visible,
+                                onClick = { betaUriHandler.openUri(surveyUrl) },
+                            )
+                        },
                     ),
                 )
             }
@@ -263,6 +299,7 @@ fun SettingsScreen(
                                 shapes = shapes,
                                 visible = visible,
                                 supportingText = stringResource(Res.string.importance_labels_section_description),
+                                modifier = Modifier.testTag(ScreenshotTestTags.SETTINGS_IMPORTANCE_LABELS),
                             )
                         },
                     ),
@@ -447,6 +484,40 @@ fun SettingsScreen(
                 SettingsHeader(text = stringResource(Res.string.settings_data_title))
             }
 
+            // Disabled banner shown above the auto-backup entry when backups are off.
+            item {
+                AutoSmartList(
+                    items = listOf(
+                        SmartListItemConfig(visible = !autoBackupEnabled) { shapes, visible ->
+                            SmartListInfoCard(
+                                headlineContent = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.ErrorOutline,
+                                            contentDescription = null,
+                                        )
+                                        Text(stringResource(Res.string.auto_backup_disabled_banner))
+                                    }
+                                },
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                                shapes = shapes,
+                                visible = visible,
+                            )
+                        },
+                    ),
+                )
+            }
+
+            // Conditional gap between the banner and the auto-backup entry — only when the
+            // banner is shown, so the entry sits flush against the data group otherwise.
+            if (!autoBackupEnabled) {
+                item { Spacer(modifier = Modifier.height(8.dp)) }
+            }
+
             item {
                 AutoSmartList(
                     items = listOf(
@@ -460,6 +531,16 @@ fun SettingsScreen(
                                     stringResource(Res.string.settings_auto_backup_enabled)
                                 } else {
                                     stringResource(Res.string.settings_auto_backup_disabled)
+                                },
+                                trailingIcon = if (autoBackupEnabled) {
+                                    {
+                                        Icon(
+                                            imageVector = Icons.Filled.Check,
+                                            contentDescription = null,
+                                        )
+                                    }
+                                } else {
+                                    null
                                 },
                             )
                         },

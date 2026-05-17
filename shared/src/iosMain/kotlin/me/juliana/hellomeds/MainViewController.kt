@@ -16,18 +16,26 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import me.juliana.hellomeds.data.util.DiagnosticLog
 import me.juliana.hellomeds.data.di.dataModule
 import me.juliana.hellomeds.data.interfaces.ScheduleReconciler
 import me.juliana.hellomeds.data.repository.MedicationHistoryRepository
 import me.juliana.hellomeds.data.service.ScheduleProjector
 import me.juliana.hellomeds.notifications.IOSNotificationSessionManager
+import me.juliana.hellomeds.notifications.NotificationActionStrings
 import me.juliana.hellomeds.notifications.NotificationDeepLinkState
 import me.juliana.hellomeds.notifications.NotificationHandlerHolder
 import me.juliana.hellomeds.notifications.createIosNotificationModule
 import me.juliana.hellomeds.notifications.isAlarmKitAuthorized
 import me.juliana.hellomeds.notifications.isAlarmKitAvailable
 import me.juliana.hellomeds.notifications.registerNotificationCategory
+import me.juliana.hellomeds.shared.Res
+import me.juliana.hellomeds.shared.depletion_notification_action_mark_depleted
+import me.juliana.hellomeds.shared.notification_action_skipped
+import me.juliana.hellomeds.shared.notification_action_snooze
+import me.juliana.hellomeds.shared.notification_action_taken
+import org.jetbrains.compose.resources.getString
 import me.juliana.hellomeds.notifications.startAlarmSound
 import me.juliana.hellomeds.notifications.stopAlarmSound
 import me.juliana.hellomeds.ui.HelloMedsApp
@@ -256,8 +264,22 @@ fun MainViewController(): UIViewController {
  * via IOSNotificationPermissionScreen, not at app startup.
  */
 private fun setupNotifications() {
+    // Pre-resolve localized action-button titles via CMP resources. Registration
+    // itself must be synchronous (iOS requires the category to exist before any
+    // notification using it is scheduled), but CMP's `getString` is `suspend`.
+    // `runBlocking(Dispatchers.Default)` parks the Main thread on Default so a
+    // potential internal Main dispatch inside `getString` can't deadlock us.
+    val actionStrings = runBlocking(Dispatchers.Default) {
+        NotificationActionStrings(
+            take = getString(Res.string.notification_action_taken),
+            skip = getString(Res.string.notification_action_skipped),
+            snooze = getString(Res.string.notification_action_snooze),
+            markDepleted = getString(Res.string.depletion_notification_action_mark_depleted),
+        )
+    }
+
     // Register the notification category (must happen before scheduling)
-    registerNotificationCategory()
+    registerNotificationCategory(actionStrings)
 
     // Query actual notification authorization status early so the cache is warm
     // before any UI reads it. The composable isNotificationPermissionGranted() also

@@ -209,8 +209,7 @@ class TrackingViewModel(
 
     fun saveScheduledLogs(logs: List<ScheduledMedicationLog>) {
         viewModelScope.launch {
-            val logsToProcess =
-                logs.filter { it.status != LogStatus.NOT_YET }
+            val logsToProcess = logs.filter { it.included }
 
             AppLogger.d(
                 "TrackingViewModel",
@@ -247,10 +246,6 @@ class TrackingViewModel(
                         LogStatus.SKIPPED -> {
                             historyRepository.markAsSkipped(event)
                             AppLogger.d("TrackingViewModel", "Marked as SKIPPED: schedule=${event.scheduleId}")
-                        }
-
-                        LogStatus.NOT_YET -> {
-                            // Don't do anything for NOT_YET status
                         }
                     }
                 } catch (e: Exception) {
@@ -409,15 +404,13 @@ class TrackingViewModel(
 
     fun updateLoggedItem(event: ProjectedEvent, time: LocalTime, dose: Double, status: LogStatus?) {
         viewModelScope.launch {
-            if (status != LogStatus.NOT_YET && !validateTwoDayWindow(event, "updateLoggedItem")) {
+            if (!validateTwoDayWindow(event, "updateLoggedItem")) {
                 return@launch
             }
 
-            val historyId = event.historyRecord?.id ?: return@launch
-
             AppLogger.d(
                 "TrackingViewModel",
-                "Updating logged item: historyId=$historyId, status=$status, dose=$dose, time=$time",
+                "Updating logged item: historyId=${event.historyRecord?.id}, status=$status, dose=$dose, time=$time",
             )
             try {
                 val timeMillis = LocalDateTime(_selectedDate.value, time)
@@ -425,24 +418,14 @@ class TrackingViewModel(
                     .toEpochMilliseconds()
 
                 when (status) {
-                    LogStatus.TAKEN -> {
-                        historyRepository.updateTaken(
-                            historyId = historyId,
-                            actualDose = dose,
-                            takenTime = timeMillis,
-                        )
-                    }
-
                     LogStatus.SKIPPED -> {
+                        val historyId = event.historyRecord?.id ?: return@launch
                         historyRepository.updateSkipped(historyId)
                     }
 
-                    LogStatus.NOT_YET -> {
-                        historyRepository.deleteHistoryRecord(historyId)
-                        AppLogger.d("TrackingViewModel", "NOT_YET: Reverted event to pending")
-                    }
-
-                    null -> {
+                    // TAKEN, or null for as-needed entries
+                    else -> {
+                        val historyId = event.historyRecord?.id ?: return@launch
                         historyRepository.updateTaken(
                             historyId = historyId,
                             actualDose = dose,
@@ -460,24 +443,22 @@ class TrackingViewModel(
 
     fun deleteLoggedItem(event: ProjectedEvent) {
         viewModelScope.launch {
-            val historyId = event.historyRecord?.id ?: return@launch
-
             AppLogger.d(
                 "TrackingViewModel",
-                "deleteLoggedItem: START - historyId=$historyId, " +
+                "deleteLoggedItem: START - historyId=${event.historyRecord?.id}, " +
                     "scheduleId=${event.scheduleId}, scheduledTime=${event.scheduledTime}",
             )
 
             try {
-                historyRepository.deleteHistoryRecord(historyId)
+                historyRepository.deleteHistoryRecord(event)
                 AppLogger.i(
                     "TrackingViewModel",
-                    "deleteLoggedItem: SUCCESS - Deleted history id=$historyId",
+                    "deleteLoggedItem: SUCCESS - scheduleId=${event.scheduleId} scheduledTime=${event.scheduledTime}",
                 )
             } catch (e: Exception) {
                 AppLogger.e(
                     "TrackingViewModel",
-                    "deleteLoggedItem: ERROR - historyId=$historyId, error=${e.message}",
+                    "deleteLoggedItem: ERROR - scheduleId=${event.scheduleId}, error=${e.message}",
                     e,
                 )
                 _errorEvents.tryEmit("Failed to delete medication log")

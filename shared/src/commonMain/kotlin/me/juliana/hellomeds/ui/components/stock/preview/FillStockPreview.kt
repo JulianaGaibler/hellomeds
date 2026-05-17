@@ -174,6 +174,9 @@ fun FillStockPreview(medication: Medication, currentStock: Double, modifier: Mod
     // Load paths from vector drawables
     val fillMaskPath = rememberVectorPath(containerShape.fillMaskDrawable)
     val decorationPath = rememberVectorPath(containerShape.decorationDrawable)
+    val behindDecorationPath = containerShape.behindDecorationDrawable?.let {
+        rememberVectorPath(it)
+    }
 
     val fillDescription = stringResource(Res.string.stock_preview_fill, fillPercentage.toInt())
 
@@ -203,6 +206,13 @@ fun FillStockPreview(medication: Medication, currentStock: Double, modifier: Mod
             transform(Matrix().apply { scale(scaleX, scaleY) })
         }
 
+        val scaledBehindDecoration = behindDecorationPath?.let { path ->
+            Path().apply {
+                addPath(path)
+                transform(Matrix().apply { scale(scaleX, scaleY) })
+            }
+        }
+
         // Scale bounds
         val scaledFillBounds = Rect(
             left = containerShape.fillMaskBounds.left * scaleX,
@@ -217,6 +227,14 @@ fun FillStockPreview(medication: Medication, currentStock: Double, modifier: Mod
             right = fillClipRect.right * scaleX,
             bottom = fillClipRect.bottom * scaleY,
         )
+
+        // Layer 0: Draw behind-decoration (e.g. inhaler cap that sits under the canister body)
+        scaledBehindDecoration?.let { path ->
+            drawPath(
+                path = path,
+                color = onPrimaryContainer,
+            )
+        }
 
         // Layer 1: Draw container background
         drawPath(

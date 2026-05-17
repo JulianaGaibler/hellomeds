@@ -354,8 +354,8 @@
 		<item quantity="other">%1$d Zeitpläne</item>
 	</plurals>
 	<plurals name="backup_labels_count">
-		<item quantity="one">%1$d Prioritätsstufe</item>
-		<item quantity="other">%1$d Prioritätsstufen</item>
+		<item quantity="one">%1$d Erinnerungstyp</item>
+		<item quantity="other">%1$d Erinnerungstypen</item>
 	</plurals>
 	<plurals name="backup_import_summary_medications_imported">
 		<item quantity="one">%1$d Medikament importiert</item>
@@ -374,8 +374,8 @@
 		<item quantity="other">%1$d Zeitpläne importiert</item>
 	</plurals>
 	<plurals name="backup_import_summary_labels_created">
-		<item quantity="one">%1$d Prioritätsstufe erstellt</item>
-		<item quantity="other">%1$d Prioritätsstufen erstellt</item>
+		<item quantity="one">%1$d Erinnerungstyp erstellt</item>
+		<item quantity="other">%1$d Erinnerungstypen erstellt</item>
 	</plurals>
 	<plurals name="backup_import_summary_history_imported">
 		<item quantity="one">%1$d Verlaufseintrag importiert</item>
@@ -403,9 +403,9 @@
 		<item quantity="one">%1$d Zeitplan</item>
 		<item quantity="other">%1$d Zeitpläne</item>
 	</plurals>
-	<plurals name="importance_label_follow_ups_plural">
-		<item quantity="one">Erinnert mit %1$d Folgeerinnerung</item>
-		<item quantity="other">Erinnert mit %1$d Folgeerinnerungen</item>
+	<plurals name="importance_desc_follow_ups">
+		<item quantity="one">Erinnert Sie und wiederholt die Erinnerung danach noch %1$d Mal im Abstand von %2$d Minuten.</item>
+		<item quantity="other">Erinnert Sie und wiederholt die Erinnerung danach noch %1$d Mal im Abstand von %2$d Minuten.</item>
 	</plurals>
 
 	<!-- Notification Plurals (replace separate one/two/three/many strings) -->
@@ -428,6 +428,18 @@
 	<plurals name="auto_backup_retention_count">
 		<item quantity="one">%1$d Sicherung</item>
 		<item quantity="other">%1$d Sicherungen</item>
+	</plurals>
+	<plurals name="auto_backup_minutes_ago">
+		<item quantity="one">Letzte Sicherung vor %1$d Minute</item>
+		<item quantity="other">Letzte Sicherung vor %1$d Minuten</item>
+	</plurals>
+	<plurals name="auto_backup_hours_ago">
+		<item quantity="one">Letzte Sicherung vor %1$d Stunde</item>
+		<item quantity="other">Letzte Sicherung vor %1$d Stunden</item>
+	</plurals>
+	<plurals name="auto_backup_days_ago">
+		<item quantity="one">Letzte Sicherung vor %1$d Tag</item>
+		<item quantity="other">Letzte Sicherung vor %1$d Tagen</item>
 	</plurals>
 
 	<!-- Notification Titles -->
@@ -458,5 +470,62 @@
 	<plurals name="stock_prediction_per_container_days">
 		<item quantity="one">~%1$d Tag pro Behälter</item>
 		<item quantity="other">~%1$d Tage pro Behälter</item>
+	</plurals>
+
+	<!-- Stock Summary: "N full <container> remaining" — adjective "voll" inflects by gender in singular -->
+
+	<plurals name="stock_summary_full_package">
+		<item quantity="one">%1$d volle Packung übrig</item>
+		<item quantity="other">%1$d volle Packungen übrig</item>
+	</plurals>
+
+	<plurals name="stock_summary_full_bottle">
+		<item quantity="one">%1$d volle Flasche übrig</item>
+		<item quantity="other">%1$d volle Flaschen übrig</item>
+	</plurals>
+
+	<plurals name="stock_summary_full_dispenser">
+		<item quantity="one">%1$d voller Spender übrig</item>
+		<item quantity="other">%1$d volle Spender übrig</item>
+	</plurals>
+
+	<plurals name="stock_summary_full_blister_pack">
+		<item quantity="one">%1$d volle Blisterpackung übrig</item>
+		<item quantity="other">%1$d volle Blisterpackungen übrig</item>
+	</plurals>
+
+	<plurals name="stock_summary_full_tube">
+		<item quantity="one">%1$d volle Tube übrig</item>
+		<item quantity="other">%1$d volle Tuben übrig</item>
+	</plurals>
+
+	<plurals name="stock_summary_full_vial">
+		<item quantity="one">%1$d volles Fläschchen übrig</item>
+		<item quantity="other">%1$d volle Fläschchen übrig</item>
+	</plurals>
+
+	<plurals name="stock_summary_full_inhaler">
+		<item quantity="one">%1$d voller Inhalator übrig</item>
+		<item quantity="other">%1$d volle Inhalatoren übrig</item>
+	</plurals>
+
+	<plurals name="stock_summary_full_pen">
+		<item quantity="one">%1$d voller Pen übrig</item>
+		<item quantity="other">%1$d volle Pens übrig</item>
+	</plurals>
+
+	<plurals name="stock_summary_full_ampoule">
+		<item quantity="one">%1$d volle Ampulle übrig</item>
+		<item quantity="other">%1$d volle Ampullen übrig</item>
+	</plurals>
+
+	<plurals name="stock_summary_full_canister">
+		<item quantity="one">%1$d volle Dose übrig</item>
+		<item quantity="other">%1$d volle Dosen übrig</item>
+	</plurals>
+
+	<plurals name="stock_summary_full_jar">
+		<item quantity="one">%1$d voller Behälter übrig</item>
+		<item quantity="other">%1$d volle Behälter übrig</item>
 	</plurals>
 </resources>

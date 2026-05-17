@@ -5,6 +5,7 @@ package me.juliana.hellomeds.notifications
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import me.juliana.hellomeds.data.dao.MedicationDao
@@ -12,9 +13,10 @@ import me.juliana.hellomeds.data.model.ProjectedEvent
 import me.juliana.hellomeds.data.model.enums.LockScreenVisibility
 import me.juliana.hellomeds.data.preferences.NotificationPreferences
 import me.juliana.hellomeds.data.repository.MedicationHistoryRepository
+import me.juliana.hellomeds.data.repository.StockTrackingRepository
 import me.juliana.hellomeds.data.service.ScheduleProjector
 import me.juliana.hellomeds.data.util.AppLogger
-import me.juliana.hellomeds.data.util.currentTimeMillis
+import kotlin.time.Clock
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.notification_text_time_log_generic
 import me.juliana.hellomeds.shared.notification_text_time_log_named
@@ -23,6 +25,7 @@ import org.jetbrains.compose.resources.getPluralString
 import org.koin.mp.KoinPlatform
 import platform.Foundation.NSDate
 import platform.Foundation.NSDateFormatter
+import platform.Foundation.NSString
 import platform.Foundation.dateWithTimeIntervalSince1970
 import platform.UIKit.UIApplication
 import platform.UIKit.UIBackgroundTaskInvalid
@@ -68,8 +71,21 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
     private val notificationPrefs: NotificationPreferences by lazy { KoinPlatform.getKoin().get() }
     private val sessionManager: IOSNotificationSessionManager by lazy { KoinPlatform.getKoin().get() }
     private val medicationDao: MedicationDao by lazy { KoinPlatform.getKoin().get() }
+    private val stockTrackingRepo: StockTrackingRepository by lazy { KoinPlatform.getKoin().get() }
+
+    // Property rather than constructor parameter because this class is an NSObject
+    // subclass with a parameterless constructor (delegate is created at cold launch
+    // before Koin builds the AppDatabase — see comment above on lazy deps).
+    private val clock: Clock = Clock.System
 
     private val scope = CoroutineScope(Dispatchers.Main)
+
+    // Background-launched notification actions (e.g. Mark Depleted from a dead-state
+    // app) need a scope that won't be torn down by transient UI lifecycle changes.
+    // Default dispatcher because Kotlin/Native's `Dispatchers.IO` is internal —
+    // Default is the closest publicly-available pool. Supervised so a failure
+    // here can't poison the medication-reminder scope above.
+    private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     /**
      * Called when the user interacts with a notification (tap, or action button).
@@ -86,10 +102,27 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
 
         // Extract event metadata from notification userInfo
         val type = userInfo["type"] as? String
-        if (type != "medication_reminder") {
-            AppLogger.d(DELEGATE_TAG, "Ignoring non-medication notification action")
-            withCompletionHandler()
-            return
+
+        when (type) {
+            NOTIFICATION_TYPE_DEPLETION_REMINDER -> {
+                handleDepletionResponse(actionId, userInfo, withCompletionHandler)
+                return
+            }
+            NOTIFICATION_TYPE_LOW_STOCK -> {
+                // No interactive actions on the low-stock notification. Default
+                // tap just opens the app; nothing to do here beyond completing.
+                AppLogger.d(DELEGATE_TAG, "Low-stock notification tapped — opening app")
+                withCompletionHandler()
+                return
+            }
+            NOTIFICATION_TYPE_MEDICATION_REMINDER -> {
+                // Fall through to the medication-reminder handling below.
+            }
+            else -> {
+                AppLogger.d(DELEGATE_TAG, "Ignoring notification action with unknown type: $type")
+                withCompletionHandler()
+                return
+            }
         }
 
         val scheduledTime = (userInfo["scheduledTime"] as? Long)
@@ -233,11 +266,61 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
      * Marks all events at the given time slot as taken.
      * Also cancels any pre-scheduled follow-ups and cleans up the session.
      */
+    /**
+     * Routes depletion-reminder notification responses. The only interactive
+     * action is "Mark Depleted"; the default tap just opens the app.
+     *
+     * Runs the DB write on [backgroundScope] (IO dispatcher, supervised) so
+     * that a background-launched action survives transient UI lifecycle
+     * changes that would cancel [scope].
+     */
+    private fun handleDepletionResponse(actionId: String, userInfo: Map<Any?, *>, withCompletionHandler: () -> Unit) {
+        // Defensive double-cast: NSDictionary bridging may surface the value
+        // as NSString rather than a Kotlin String depending on how the entry
+        // was inserted on the originating side.
+        val medIdString = (userInfo["medicationId"] as? String)
+            ?: (userInfo["medicationId"] as? NSString)?.toString()
+        val medicationId = medIdString?.toIntOrNull()
+
+        if (actionId != NOTIFICATION_ACTION_MARK_DEPLETED) {
+            // Default tap or unknown action — just open the app.
+            AppLogger.d(DELEGATE_TAG, "Depletion notification tapped (action=$actionId)")
+            withCompletionHandler()
+            return
+        }
+
+        if (medicationId == null) {
+            AppLogger.e(DELEGATE_TAG, "Mark Depleted action missing medicationId in userInfo")
+            withCompletionHandler()
+            return
+        }
+
+        var taskId = UIBackgroundTaskInvalid
+        taskId = UIApplication.sharedApplication.beginBackgroundTaskWithExpirationHandler {
+            withCompletionHandler()
+            UIApplication.sharedApplication.endBackgroundTask(taskId)
+        }
+
+        backgroundScope.launch {
+            try {
+                stockTrackingRepo.recordContainerDepleted(medicationId)
+                AppLogger.i(DELEGATE_TAG, "Recorded CONTAINER_DEPLETED for medicationId=$medicationId")
+            } catch (e: Exception) {
+                AppLogger.e(DELEGATE_TAG, "Failed to record container depleted for $medicationId", e)
+            } finally {
+                withCompletionHandler()
+                if (taskId != UIBackgroundTaskInvalid) {
+                    UIApplication.sharedApplication.endBackgroundTask(taskId)
+                }
+            }
+        }
+    }
+
     private suspend fun handleTaken(scheduledTime: Long, scheduleIds: List<Int>) {
         AppLogger.d(DELEGATE_TAG, "Processing TAKE for ${scheduleIds.size} schedules at $scheduledTime")
 
         val events = findMatchingEvents(scheduledTime, scheduleIds)
-        val now = currentTimeMillis()
+        val now = clock.now().toEpochMilliseconds()
 
         for (event in events) {
             if (event.isPending) {
@@ -309,7 +392,7 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
         isAlarm: Boolean = false,
     ) {
         val snoozeMinutes = notificationPrefs.snoozeIntervalMinutes.first()
-        val now = currentTimeMillis()
+        val now = clock.now().toEpochMilliseconds()
         val snoozeUntil = now + (snoozeMinutes * 60 * 1000L)
 
         AppLogger.d(

@@ -20,6 +20,9 @@ data class ProjectedEvent(
     /** True when this event falls on a break day with placebo pills in a cyclic schedule. */
     val isPlacebo: Boolean = false,
 ) {
+    /** True when this event corresponds to a real Schedule row (not a PRN dummy). */
+    val isScheduled: Boolean get() = scheduleId != 0
+
     /** True when the user has not yet acted on this event. */
     val isPending: Boolean get() = historyRecord == null
 

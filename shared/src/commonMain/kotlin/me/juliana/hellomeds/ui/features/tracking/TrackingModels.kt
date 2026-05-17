@@ -10,6 +10,7 @@ import me.juliana.hellomeds.ui.components.medication.LogStatus
 
 data class ScheduledMedicationLog(
     val eventWithMedication: ProjectedEventWithMedication,
+    val included: Boolean,
     val status: LogStatus,
     val dose: Double,
     val time: LocalTime,

@@ -3,7 +3,6 @@
 
 package me.juliana.hellomeds.data.repository
 
-import androidx.room.RoomDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -25,19 +24,20 @@ import me.juliana.hellomeds.data.service.StockPrediction
 import me.juliana.hellomeds.data.service.StockPredictionEngine
 import me.juliana.hellomeds.data.util.AppLogger
 import me.juliana.hellomeds.data.util.StockThresholdCalculator
-import me.juliana.hellomeds.data.util.currentTimeMillis
-import me.juliana.hellomeds.data.util.performTransaction
+import me.juliana.hellomeds.data.util.TransactionRunner
+import kotlin.time.Clock
 import kotlin.math.roundToInt
 
 class StockTrackingRepository(
     private val medicationDao: MedicationDao,
     private val stockAdjustmentDao: StockAdjustmentDao,
-    private val database: RoomDatabase,
+    private val transactionRunner: TransactionRunner,
     private val scheduleDao: ScheduleDao,
     private val lowStockNotifier: LowStockChecker,
     private val predictionEngine: StockPredictionEngine,
     private val medicationHistoryDao: MedicationHistoryDao,
     private val depletionReminderNotifier: DepletionChecker,
+    private val clock: Clock = Clock.System,
 ) : StockContainerAnchor {
 
     companion object {
@@ -80,7 +80,7 @@ class StockTrackingRepository(
             // ESTIMATED: doses don't decrement stock
             if (medication.trackingPrecision == TrackingPrecision.ESTIMATED) return
 
-            database.performTransaction {
+            transactionRunner.run {
                 stockAdjustmentDao.insert(
                     StockAdjustment(
                         medicationId = medicationId,
@@ -105,7 +105,7 @@ class StockTrackingRepository(
      * ESTIMATED: positive ledger entry (default = 1 container).
      */
     suspend fun recordRefill(medicationId: Int, quantity: Double, notes: String? = null) {
-        database.performTransaction {
+        transactionRunner.run {
             val medication = medicationDao.getById(medicationId).first()
                 ?: throw IllegalArgumentException("Medication not found: $medicationId")
 
@@ -148,7 +148,7 @@ class StockTrackingRepository(
      * Both modes: ledger delta to reach newQuantity.
      */
     suspend fun recordCorrection(medicationId: Int, newQuantity: Double, notes: String? = null) {
-        database.performTransaction {
+        transactionRunner.run {
             val currentStock = stockAdjustmentDao.getCurrentStock(medicationId) ?: 0.0
             val delta = newQuantity - currentStock
             stockAdjustmentDao.insert(
@@ -180,7 +180,7 @@ class StockTrackingRepository(
      * Creates a CONTAINER_DEPLETED entry with quantityChange = -1.
      */
     suspend fun recordContainerDepleted(medicationId: Int) {
-        database.performTransaction {
+        transactionRunner.run {
             stockAdjustmentDao.insert(
                 StockAdjustment(
                     medicationId = medicationId,
@@ -194,7 +194,7 @@ class StockTrackingRepository(
             // Reset container start date — new container starts now
             val medication = medicationDao.getById(medicationId).first()
             if (medication != null) {
-                medicationDao.update(medication.copy(containerStartedAt = currentTimeMillis()))
+                medicationDao.update(medication.copy(containerStartedAt = clock.now().toEpochMilliseconds()))
             }
             AppLogger.d(TAG, "Recorded container depletion: medicationId=$medicationId")
         }
@@ -225,7 +225,7 @@ class StockTrackingRepository(
         depletionReminderEnabled: Boolean = false,
         containerStartedAt: Long? = null,
     ) {
-        database.performTransaction {
+        transactionRunner.run {
             val totalStock = if (trackingPrecision == TrackingPrecision.EXACT) {
                 initialQuantity + (sealedContainerCount * (packagingQuantity ?: 0.0))
             } else {
@@ -241,7 +241,7 @@ class StockTrackingRepository(
                 packagingQuantity = packagingQuantity,
                 medicationContainer = medicationContainer,
                 depletionReminderEnabled = depletionReminderEnabled,
-                containerStartedAt = containerStartedAt ?: currentTimeMillis(),
+                containerStartedAt = containerStartedAt ?: clock.now().toEpochMilliseconds(),
             )
             medicationDao.update(updated)
 
@@ -380,8 +380,8 @@ class StockTrackingRepository(
      * Update an existing stock adjustment's quantity.
      */
     suspend fun updateAdjustment(adjustmentId: Int, newQuantityChange: Double) {
-        database.performTransaction {
-            val adj = stockAdjustmentDao.getById(adjustmentId) ?: return@performTransaction
+        transactionRunner.run {
+            val adj = stockAdjustmentDao.getById(adjustmentId) ?: return@run
 
             val updated = adj.copy(quantityChange = newQuantityChange)
             stockAdjustmentDao.update(updated)
@@ -395,7 +395,7 @@ class StockTrackingRepository(
      * Reverse stock adjustment when deleting a history record.
      */
     suspend fun reverseStockAdjustment(historyId: Int) {
-        database.performTransaction {
+        transactionRunner.run {
             val medicationId = stockAdjustmentDao.getByHistoryId(historyId)?.medicationId
 
             stockAdjustmentDao.deleteByHistoryId(historyId)
@@ -437,7 +437,7 @@ class StockTrackingRepository(
      * Delete all stock tracking records for a medication.
      */
     suspend fun deleteAllTrackingData(medicationId: Int) {
-        database.performTransaction {
+        transactionRunner.run {
             stockAdjustmentDao.deleteByMedicationId(medicationId)
         }
     }
@@ -498,11 +498,11 @@ class StockTrackingRepository(
     }
 
     suspend fun setSealedContainerCount(medicationId: Int, desiredCount: Int) {
-        database.performTransaction {
+        transactionRunner.run {
             val medication = medicationDao.getById(medicationId).first()
-                ?: return@performTransaction
+                ?: return@run
 
-            val packagingQty = medication.packagingQuantity ?: return@performTransaction
+            val packagingQty = medication.packagingQuantity ?: return@run
             val currentStock = stockAdjustmentDao.getCurrentStock(medicationId) ?: 0.0
 
             if (medication.trackingPrecision == TrackingPrecision.ESTIMATED) {
@@ -574,9 +574,9 @@ class StockTrackingRepository(
         newPackagingQuantity: Double,
         newDesiredRemaining: Double,
     ) {
-        database.performTransaction {
+        transactionRunner.run {
             val medication = medicationDao.getById(medicationId).first()
-                ?: return@performTransaction
+                ?: return@run
 
             val schedules = scheduleDao.getByMedicationId(medicationId).first()
                 .filter { !it.isEffectivelyArchived() }

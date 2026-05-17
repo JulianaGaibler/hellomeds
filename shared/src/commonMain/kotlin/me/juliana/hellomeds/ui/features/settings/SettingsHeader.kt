@@ -31,19 +31,26 @@ fun Modifier.settingsContentPadding(): Modifier = this.padding(horizontal = Sett
 /**
  * Section header used across the Settings screen and its subpages.
  * Larger, bolder than the default list header to give clear visual grouping.
+ *
+ * The default paddings assume the LazyColumn has no [androidx.compose.foundation.layout.Arrangement.spacedBy].
+ * Screens that do use `spacedBy` should pass smaller overrides (e.g., `bottomPadding = 0.dp`) so the
+ * arrangement spacing doesn't stack on top of the header's own padding.
  */
 @Composable
-fun SettingsHeader(text: String, isFirst: Boolean = false, modifier: Modifier = Modifier) {
+fun SettingsHeader(
+    text: String,
+    isFirst: Boolean = false,
+    topPadding: Dp = if (isFirst) 8.dp else 48.dp,
+    bottomPadding: Dp = 12.dp,
+    modifier: Modifier = Modifier,
+) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
         color = MaterialTheme.colorScheme.onSurface,
         modifier = modifier
             .settingsContentPadding()
-            .padding(
-                top = if (isFirst) 8.dp else 48.dp,
-                bottom = 12.dp,
-            )
+            .padding(top = topPadding, bottom = bottomPadding)
             .semantics { heading() },
     )
 }

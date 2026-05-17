@@ -9,10 +9,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
  * A menu item for [ExpandableFabMenu].
+ *
+ * @param testTag optional testTag applied to the rendered menu item — used by
+ *   the Fastlane Screengrab instrumentation tests to drive the menu reliably
+ *   across locales.
  */
 data class FabMenuItem(
     val icon: ImageVector,
     val label: String,
+    val testTag: String? = null,
 )
 
 /**
@@ -22,6 +27,8 @@ data class FabMenuItem(
  * [ToggleFloatingActionButton], and [FloatingActionButtonMenuItem].
  *
  * On iOS this renders as a simple FAB that shows a dropdown menu when tapped.
+ *
+ * @param toggleTestTag optional testTag for the toggle FAB itself.
  */
 @Composable
 expect fun ExpandableFabMenu(
@@ -36,4 +43,5 @@ expect fun ExpandableFabMenu(
     collapsedLabel: String = "",
     toggleMenuLabel: String = "",
     closeMenuLabel: String = "",
+    toggleTestTag: String? = null,
 )

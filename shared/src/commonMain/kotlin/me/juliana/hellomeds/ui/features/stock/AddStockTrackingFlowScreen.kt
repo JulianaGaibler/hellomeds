@@ -5,8 +5,10 @@ package me.juliana.hellomeds.ui.features.stock
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -17,7 +19,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
@@ -86,7 +88,7 @@ import me.juliana.hellomeds.ui.components.list.SmartListSwitchItem
 import me.juliana.hellomeds.ui.components.list.SmartListTextItem
 import me.juliana.hellomeds.ui.components.medication.ContainerSelector
 import me.juliana.hellomeds.ui.components.stock.CalculatorBottomSheet
-import me.juliana.hellomeds.ui.features.medication.steps.ScreenHeader
+import me.juliana.hellomeds.ui.components.common.ScreenHeader
 import me.juliana.hellomeds.ui.features.stock.steps.DiscreteCurrentStockStep
 import me.juliana.hellomeds.ui.features.stock.steps.DiscreteLowStockStep
 import me.juliana.hellomeds.ui.features.stock.steps.DiscretePackagingStep
@@ -348,8 +350,7 @@ fun AddStockTrackingFlowScreen(
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
                     .imePadding()
-                    .padding(start = 32.dp, end = 32.dp, bottom = 80.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(bottom = 80.dp),
             ) {
                 when {
                     currentStep == 0 -> {
@@ -470,38 +471,66 @@ private fun TrackingPrecisionStep(
     onPrecisionSelected: (TrackingPrecision) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         ScreenHeader(
             headline = stringResource(Res.string.stock_method_title),
             title = stringResource(Res.string.stock_method_subtitle),
         )
 
-        AutoSmartList(
-            items = listOf(
-                SmartListItemConfig(visible = true) { shapes, visible ->
-                    SmartListRadioItem(
-                        label = stringResource(Res.string.stock_method_discrete_title),
-                        supportingText = stringResource(Res.string.stock_method_discrete_desc),
-                        selected = selectedPrecision == TrackingPrecision.EXACT,
-                        onClick = { onPrecisionSelected(TrackingPrecision.EXACT) },
-                        shapes = shapes,
-                        visible = visible,
-                    )
-                },
-                SmartListItemConfig(visible = true) { shapes, visible ->
-                    SmartListRadioItem(
-                        label = stringResource(Res.string.stock_method_estimated_title),
-                        supportingText = stringResource(Res.string.stock_method_estimated_desc),
-                        selected = selectedPrecision == TrackingPrecision.ESTIMATED,
-                        onClick = { onPrecisionSelected(TrackingPrecision.ESTIMATED) },
-                        shapes = shapes,
-                        visible = visible,
-                    )
-                },
-            ),
+        Column(modifier = Modifier.padding(horizontal = 32.dp)) {
+            AutoSmartList(
+                items = listOf(
+                    SmartListItemConfig(visible = true) { shapes, visible ->
+                        SmartListRadioItem(
+                            label = stringResource(Res.string.stock_method_discrete_title),
+                            selected = selectedPrecision == TrackingPrecision.EXACT,
+                            onClick = { onPrecisionSelected(TrackingPrecision.EXACT) },
+                            shapes = shapes,
+                            visible = visible,
+                        )
+                    },
+                    SmartListItemConfig(visible = true) { shapes, visible ->
+                        SmartListRadioItem(
+                            label = stringResource(Res.string.stock_method_estimated_title),
+                            selected = selectedPrecision == TrackingPrecision.ESTIMATED,
+                            onClick = { onPrecisionSelected(TrackingPrecision.ESTIMATED) },
+                            shapes = shapes,
+                            visible = visible,
+                        )
+                    },
+                ),
+            )
+
+            Spacer(Modifier.height(48.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(32.dp)) {
+                TrackingPrecisionExplainer(
+                    label = stringResource(Res.string.stock_method_discrete_title),
+                    description = stringResource(Res.string.stock_method_discrete_desc),
+                )
+                TrackingPrecisionExplainer(
+                    label = stringResource(Res.string.stock_method_estimated_title),
+                    description = stringResource(Res.string.stock_method_estimated_desc),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TrackingPrecisionExplainer(label: String, description: String) {
+    Column {
+        Text(
+            text = label,
+            // bodyLargeEmphasized is still internal in material3-1.5.0-alpha17.
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = description,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -519,10 +548,7 @@ private fun EstimatedContainerStep(
     onContainerChange: (MedicationContainer?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         ScreenHeader(
             headline = stringResource(Res.string.stock_estimated_container_title),
             title = stringResource(Res.string.stock_estimated_container_subtitle),
@@ -531,6 +557,7 @@ private fun EstimatedContainerStep(
         ContainerSelector(
             selectedContainer = container,
             onContainerSelected = onContainerChange,
+            modifier = Modifier.padding(horizontal = 32.dp),
         )
     }
 }
@@ -563,58 +590,55 @@ private fun EstimatedDosesStep(
     // Per-container prediction so users can verify their input makes sense
     val containerRemainingDoses = dosesPerContainer
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         ScreenHeader(
             headline = stringResource(Res.string.stock_estimated_doses_title),
             title = stringResource(Res.string.stock_estimated_doses_info),
+            actionLabel = stringResource(Res.string.action_skip),
+            onAction = onSkip,
         )
 
-        FilledTonalButton(
-            onClick = onSkip,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
+        Column(
+            modifier = Modifier.padding(horizontal = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(stringResource(Res.string.action_skip))
+            AutoSmartList(
+                items = listOf(
+                    SmartListItemConfig(visible = true) { shapes, visible ->
+                        stringResource(medication.type.pluralFormRes)
+                        val containerLower = container?.let { stringResource(it.displayNameLowerRes) }
+                            ?: stringResource(Res.string.stock_container_generic)
+                        SmartListTextItem(
+                            label = stringResource(Res.string.stock_settings_doses_per_container, containerLower),
+                            value = dosesText,
+                            onValueChange = { newValue ->
+                                dosesText = newValue
+                                onDosesPerContainerChange(newValue.toDoubleOrNull())
+                            },
+                            shapes = shapes,
+                            visible = visible,
+                            inputTransformation = DecimalInputTransformation(),
+                            trailingAction = {
+                                IconButton(onClick = { showCalculatorSheet = true }) {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.calculate_24px),
+                                        contentDescription = stringResource(Res.string.stock_calculator_toggle),
+                                    )
+                                }
+                            },
+                        )
+                    },
+                ),
+            )
+
+            // Live per-container prediction preview
+            StockPredictionPreview(
+                remainingDoses = containerRemainingDoses,
+                dailyConsumption = dailyConsumption,
+                context = PredictionContext.PER_CONTAINER,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
         }
-
-        AutoSmartList(
-            items = listOf(
-                SmartListItemConfig(visible = true) { shapes, visible ->
-                    stringResource(medication.type.pluralFormRes)
-                    val containerLower = container?.let { stringResource(it.displayNameLowerRes) }
-                        ?: stringResource(Res.string.stock_container_generic)
-                    SmartListTextItem(
-                        label = stringResource(Res.string.stock_settings_doses_per_container, containerLower),
-                        value = dosesText,
-                        onValueChange = { newValue ->
-                            dosesText = newValue
-                            onDosesPerContainerChange(newValue.toDoubleOrNull())
-                        },
-                        shapes = shapes,
-                        visible = visible,
-                        inputTransformation = DecimalInputTransformation(),
-                        trailingAction = {
-                            IconButton(onClick = { showCalculatorSheet = true }) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.calculate_24px),
-                                    contentDescription = stringResource(Res.string.stock_calculator_toggle),
-                                )
-                            }
-                        },
-                    )
-                },
-            ),
-        )
-
-        // Live per-container prediction preview
-        StockPredictionPreview(
-            remainingDoses = containerRemainingDoses,
-            dailyConsumption = dailyConsumption,
-            context = PredictionContext.PER_CONTAINER,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-        )
     }
 
     if (showCalculatorSheet) {
@@ -645,29 +669,31 @@ private fun EstimatedDepletionStep(
     onDepletionReminderEnabledChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         ScreenHeader(
             headline = stringResource(Res.string.stock_depletion_reminder_label),
             title = stringResource(Res.string.stock_depletion_step_desc),
         )
 
-        AutoSmartList(
-            items = listOf(
-                SmartListItemConfig(visible = true) { shapes, visible ->
-                    SmartListSwitchItem(
-                        label = stringResource(Res.string.stock_depletion_reminder_label),
-                        supportingText = stringResource(Res.string.stock_settings_depletion_reminder_desc),
-                        checked = depletionReminderEnabled,
-                        onCheckedChange = onDepletionReminderEnabledChange,
-                        shapes = shapes,
-                        visible = visible,
-                    )
-                },
-            ),
-        )
+        Column(
+            modifier = Modifier.padding(horizontal = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            AutoSmartList(
+                items = listOf(
+                    SmartListItemConfig(visible = true) { shapes, visible ->
+                        SmartListSwitchItem(
+                            label = stringResource(Res.string.stock_depletion_reminder_label),
+                            supportingText = stringResource(Res.string.stock_settings_depletion_reminder_desc),
+                            checked = depletionReminderEnabled,
+                            onCheckedChange = onDepletionReminderEnabledChange,
+                            shapes = shapes,
+                            visible = visible,
+                        )
+                    },
+                ),
+            )
+        }
     }
 }
 
@@ -697,46 +723,48 @@ private fun EstimatedCurrentStockStep(
         me.juliana.hellomeds.ui.util.formatDate(millis)
     }
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         ScreenHeader(
             headline = stringResource(Res.string.stock_discrete_current_title),
             title = stringResource(Res.string.stock_discrete_current_subtitle),
         )
 
-        AutoSmartList(
-            items = listOf(
-                SmartListItemConfig(visible = true) { shapes, visible ->
-                    SmartListTextItem(
-                        label = containerLabel,
-                        value = countText,
-                        onValueChange = { newValue ->
-                            countText = newValue
-                            val parsed = newValue.toIntOrNull()
-                            if (parsed != null && parsed >= 0) {
-                                onContainerCountChange(parsed)
-                            }
-                        },
-                        shapes = shapes,
-                        visible = visible,
-                        inputTransformation = IntegerInputTransformation(),
-                    )
-                },
-                SmartListItemConfig(visible = true) { shapes, visible ->
-                    SmartListItem(
-                        headlineContent = { Text(stringResource(Res.string.stock_container_started_label)) },
-                        supportingContent = {
-                            Text(startedDateText ?: stringResource(Res.string.stock_container_started_default))
-                        },
-                        shapes = shapes,
-                        visible = visible,
-                        onClick = { showDatePicker = true },
-                    )
-                },
-            ),
-        )
+        Column(
+            modifier = Modifier.padding(horizontal = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            AutoSmartList(
+                items = listOf(
+                    SmartListItemConfig(visible = true) { shapes, visible ->
+                        SmartListTextItem(
+                            label = containerLabel,
+                            value = countText,
+                            onValueChange = { newValue ->
+                                countText = newValue
+                                val parsed = newValue.toIntOrNull()
+                                if (parsed != null && parsed >= 0) {
+                                    onContainerCountChange(parsed)
+                                }
+                            },
+                            shapes = shapes,
+                            visible = visible,
+                            inputTransformation = IntegerInputTransformation(),
+                        )
+                    },
+                    SmartListItemConfig(visible = true) { shapes, visible ->
+                        SmartListItem(
+                            headlineContent = { Text(stringResource(Res.string.stock_container_started_label)) },
+                            supportingContent = {
+                                Text(startedDateText ?: stringResource(Res.string.stock_container_started_default))
+                            },
+                            shapes = shapes,
+                            visible = visible,
+                            onClick = { showDatePicker = true },
+                        )
+                    },
+                ),
+            )
+        }
     }
 
     if (showDatePicker) {
@@ -800,42 +828,39 @@ private fun EstimatedLowStockStep(
         pluralStringResource(it.labelPluralRes, count)
     } ?: stringResource(Res.string.stock_container_type_label)
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         ScreenHeader(
             headline = stringResource(Res.string.stock_discrete_low_title),
             title = stringResource(Res.string.stock_discrete_low_subtitle),
+            actionLabel = stringResource(Res.string.action_skip),
+            onAction = onSkip,
         )
 
-        FilledTonalButton(
-            onClick = onSkip,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
+        Column(
+            modifier = Modifier.padding(horizontal = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(stringResource(Res.string.action_skip))
+            AutoSmartList(
+                items = listOf(
+                    SmartListItemConfig(visible = true) { shapes, visible ->
+                        SmartListTextItem(
+                            label = containerLabel,
+                            value = thresholdText,
+                            onValueChange = { newValue ->
+                                thresholdText = newValue
+                                val parsed = newValue.toIntOrNull()
+                                if (parsed != null && parsed > 0) {
+                                    onLowStockThresholdChange(parsed)
+                                }
+                            },
+                            shapes = shapes,
+                            visible = visible,
+                            inputTransformation = IntegerInputTransformation(),
+                        )
+                    },
+                ),
+            )
         }
-
-        AutoSmartList(
-            items = listOf(
-                SmartListItemConfig(visible = true) { shapes, visible ->
-                    SmartListTextItem(
-                        label = containerLabel,
-                        value = thresholdText,
-                        onValueChange = { newValue ->
-                            thresholdText = newValue
-                            val parsed = newValue.toIntOrNull()
-                            if (parsed != null && parsed > 0) {
-                                onLowStockThresholdChange(parsed)
-                            }
-                        },
-                        shapes = shapes,
-                        visible = visible,
-                        inputTransformation = IntegerInputTransformation(),
-                    )
-                },
-            ),
-        )
     }
 }
 

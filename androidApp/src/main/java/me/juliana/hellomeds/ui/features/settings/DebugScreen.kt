@@ -244,8 +244,10 @@ fun DebugScreen(
 
             item {
                 val reconcileSuccessMsg = "Reconciliation complete"
+                val nudgeSuccessMsg = "Nudge will appear on next app open"
 
                 val alarmPreviewContext = androidx.compose.ui.platform.LocalContext.current
+                val autoBackupPrefs: AutoBackupPreferences = koinInject()
                 ActionsSection(
                     onForceReconcile = {
                         viewModel.forceReconcile()
@@ -264,34 +266,26 @@ fun DebugScreen(
                         }
                         alarmPreviewContext.startActivity(intent)
                     },
-                )
-            }
-
-            item {
-                val autoBackupPrefs: AutoBackupPreferences = koinInject()
-                AutoSmartList(
-                    items = listOf(
-                        SmartListItemConfig(visible = true) { shapes, visible ->
-                            SmartListItem(
-                                headlineContent = { Text("Trigger backup nudge dialog") },
-                                supportingContent = {
-                                    Text(
-                                        "Resets nudge dismissed flag and sets onboarding timestamp to 3 days ago",
-                                    )
-                                },
-                                shapes = shapes,
-                                visible = visible,
-                                onClick = {
-                                    scope.launch {
-                                        val threeDaysAgo = System.currentTimeMillis() - (3 * 24 * 60 * 60 * 1000L)
-                                        autoBackupPrefs.setOnboardingCompletedTimestamp(threeDaysAgo)
-                                        autoBackupPrefs.setBackupNudgeDismissed(false)
-                                        snackbarHostState.showSnackbar("Nudge will appear on next app open")
-                                    }
-                                },
-                            )
-                        },
-                    ),
+                    onPreviewLowStockNotification = { viewModel.previewLowStockNotification() },
+                    onPreviewDepletionNotification = { viewModel.previewDepletionNotification() },
+                    onTriggerBackupNudge = {
+                        scope.launch {
+                            val threeDaysAgo = System.currentTimeMillis() - (3 * 24 * 60 * 60 * 1000L)
+                            autoBackupPrefs.setOnboardingCompletedTimestamp(threeDaysAgo)
+                            autoBackupPrefs.setBackupNudgeDismissed(false)
+                            snackbarHostState.showSnackbar(nudgeSuccessMsg)
+                        }
+                    },
+                    // BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
+                    onSimulateSurveyNudge = {
+                        scope.launch {
+                            val elevenDaysAgo =
+                                System.currentTimeMillis() - (11 * 24 * 60 * 60 * 1000L)
+                            autoBackupPrefs.setOnboardingCompletedTimestamp(elevenDaysAgo)
+                            autoBackupPrefs.setClosedBetaSurveyNudgeDismissed(false)
+                            snackbarHostState.showSnackbar(nudgeSuccessMsg)
+                        }
+                    },
                 )
             }
         }
@@ -967,6 +961,11 @@ private fun ActionsSection(
     onForceReconcile: () -> Unit,
     onNavigateToOnboarding: (showAllSteps: Boolean) -> Unit,
     onPreviewAlarmScreen: () -> Unit = {},
+    onPreviewLowStockNotification: () -> Unit = {},
+    onPreviewDepletionNotification: () -> Unit = {},
+    onTriggerBackupNudge: () -> Unit = {},
+    // BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
+    onSimulateSurveyNudge: () -> Unit = {},
 ) {
     AutoSmartList(
         items = listOf(
@@ -1008,6 +1007,51 @@ private fun ActionsSection(
                     shapes = shapes,
                     visible = visible,
                     onClick = onPreviewAlarmScreen,
+                )
+            },
+            SmartListItemConfig(visible = true) { shapes, visible ->
+                SmartListItem(
+                    headlineContent = { Text("Preview low-stock notification") },
+                    supportingContent = {
+                        Text("Fires the low-stock notification using the first active medication's name")
+                    },
+                    shapes = shapes,
+                    visible = visible,
+                    onClick = onPreviewLowStockNotification,
+                )
+            },
+            SmartListItemConfig(visible = true) { shapes, visible ->
+                SmartListItem(
+                    headlineContent = { Text("Preview depletion-reminder notification") },
+                    supportingContent = {
+                        Text("Fires the \"container should be empty\" reminder with a sample dose count")
+                    },
+                    shapes = shapes,
+                    visible = visible,
+                    onClick = onPreviewDepletionNotification,
+                )
+            },
+            SmartListItemConfig(visible = true) { shapes, visible ->
+                SmartListItem(
+                    headlineContent = { Text("Trigger backup nudge dialog") },
+                    supportingContent = {
+                        Text("Resets nudge dismissed flag and sets onboarding timestamp to 3 days ago")
+                    },
+                    shapes = shapes,
+                    visible = visible,
+                    onClick = onTriggerBackupNudge,
+                )
+            },
+            // BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
+            SmartListItemConfig(visible = true) { shapes, visible ->
+                SmartListItem(
+                    headlineContent = { Text("Simulate 10 days since onboarding (survey nudge)") },
+                    supportingContent = {
+                        Text("Rolls the onboarding timestamp back 11 days and clears the survey-dismissed flag")
+                    },
+                    shapes = shapes,
+                    visible = visible,
+                    onClick = onSimulateSurveyNudge,
                 )
             },
         ),

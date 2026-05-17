@@ -30,6 +30,7 @@ import me.juliana.hellomeds.shared.camera_detection_from_camera
 import me.juliana.hellomeds.shared.wizard_medication_name_headline
 import me.juliana.hellomeds.shared.wizard_medication_name_placeholder
 import me.juliana.hellomeds.shared.wizard_medication_name_title
+import me.juliana.hellomeds.ui.components.common.ScreenHeader
 import me.juliana.hellomeds.ui.components.list.SmartList
 import me.juliana.hellomeds.ui.components.list.SmartListDivider
 import me.juliana.hellomeds.ui.components.list.SmartListHeader
@@ -77,67 +78,70 @@ internal fun MedicationNameStep(
         }
     }
 
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    Column {
         ScreenHeader(
             headline = stringResource(Res.string.wizard_medication_name_headline),
             title = stringResource(Res.string.wizard_medication_name_title),
         )
 
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(4.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        Column(
+            modifier = Modifier.padding(horizontal = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            BasicTextField(
-                state = textFieldState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester)
-                    .padding(16.dp),
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onSurface,
-                ),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                decorator = { innerTextField ->
-                    if (textFieldState.text.isEmpty()) {
-                        Text(
-                            text = stringResource(Res.string.wizard_medication_name_placeholder),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    innerTextField()
-                },
-            )
-        }
-
-        // Show detected names if available
-        if (detectedNames.isNotEmpty()) {
-            Column {
-                SmartListHeader(
-                    text = stringResource(Res.string.camera_detection_from_camera),
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(4.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+            ) {
+                BasicTextField(
+                    state = textFieldState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester)
+                        .padding(16.dp),
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onSurface,
+                    ),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    decorator = { innerTextField ->
+                        if (textFieldState.text.isEmpty()) {
+                            Text(
+                                text = stringResource(Res.string.wizard_medication_name_placeholder),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        innerTextField()
+                    },
                 )
+            }
 
-                SmartList {
-                    detectedNames.forEachIndexed { index, detectedName ->
-                        val shapes = smartListSegmentedShapes(
-                            index = index,
-                            count = detectedNames.size,
-                        )
+            // Show detected names if available
+            if (detectedNames.isNotEmpty()) {
+                Column {
+                    SmartListHeader(
+                        text = stringResource(Res.string.camera_detection_from_camera),
+                    )
 
-                        SmartListItem(
-                            headlineContent = { Text(detectedName) },
-                            shapes = shapes,
-                            onClick = {
-                                onNameChange(detectedName)
-                                shouldRequestFocus = true
-                            },
-                        )
+                    SmartList {
+                        detectedNames.forEachIndexed { index, detectedName ->
+                            val shapes = smartListSegmentedShapes(
+                                index = index,
+                                count = detectedNames.size,
+                            )
 
-                        if (index < detectedNames.size - 1) {
-                            SmartListDivider()
+                            SmartListItem(
+                                headlineContent = { Text(detectedName) },
+                                shapes = shapes,
+                                onClick = {
+                                    onNameChange(detectedName)
+                                    shouldRequestFocus = true
+                                },
+                            )
+
+                            if (index < detectedNames.size - 1) {
+                                SmartListDivider()
+                            }
                         }
                     }
                 }

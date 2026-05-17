@@ -70,6 +70,11 @@ class ProhibitedTermsScanTest {
 
         // Strings that *use* prohibited terms in their negated form to disclaim
         // that the app is a medical device. Keep this list as small as possible.
-        private val ALLOWLISTED_RESOURCE_NAMES = setOf<String>()
+        private val ALLOWLISTED_RESOURCE_NAMES = setOf(
+            // iOS App Store-required medical disclaimer (gated behind
+            // PlatformCapabilities.requiresAppStoreDisclaimer()). Uses
+            // "medical advice, diagnosis, or treatment" in their negated form.
+            "onboarding_disclaimer_paragraph1",
+        )
     }
 }

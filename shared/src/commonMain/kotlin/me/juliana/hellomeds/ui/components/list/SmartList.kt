@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,7 +29,6 @@ import androidx.compose.foundation.text.input.placeCursorAtEnd
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -46,8 +46,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -57,6 +60,7 @@ import kotlinx.coroutines.delay
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.accessibility_error_invalid_input
 import me.juliana.hellomeds.shared.content_description_dropdown
+import me.juliana.hellomeds.ui.compat.GroupedOverflowDropdown
 import me.juliana.hellomeds.ui.compat.ListItemShapes
 import me.juliana.hellomeds.ui.compat.SegmentedListGap
 import me.juliana.hellomeds.ui.compat.segmentedListItemShapes
@@ -339,6 +343,7 @@ fun LazySmartListItem(
     trailingContent: (@Composable () -> Unit)? = null,
     shapes: ListItemShapes = smartListSegmentedShapes(index = 0, count = 1),
     onClick: (() -> Unit)? = null,
+    containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surfaceContainerLowest,
 ) {
     val itemModifier = modifier
         .clip(shapes.shape)
@@ -357,7 +362,7 @@ fun LazySmartListItem(
         leadingContent = leadingContent,
         trailingContent = trailingContent,
         colors = ListItemDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            containerColor = containerColor,
         ),
     )
 }
@@ -392,6 +397,7 @@ fun SmartListTextItem(
     val textFieldState = rememberTextFieldState(initialText = value)
     var hasError by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
 
     // Extract string resource for accessibility (must be in composable context)
     val errorMessage = stringResource(Res.string.accessibility_error_invalid_input)
@@ -468,6 +474,7 @@ fun SmartListTextItem(
                         state = textFieldState,
                         modifier = Modifier
                             .weight(1f, fill = false)
+                            .focusRequester(focusRequester)
                             .onFocusChanged { focusState ->
                                 isFocused = focusState.isFocused
                             }
@@ -507,7 +514,11 @@ fun SmartListTextItem(
                     }
                 }
             },
-            modifier = modifier.clip(shapes.shape),
+            modifier = modifier
+                .clip(shapes.shape)
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = { focusRequester.requestFocus() })
+                },
             colors = ListItemDefaults.colors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
             ),
@@ -572,23 +583,28 @@ fun SmartListDropdownItem(
                         )
                     }
 
-                    DropdownMenu(
+                    GroupedOverflowDropdown(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
-                    ) {
-                        options.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option) },
-                                onClick = {
-                                    onValueChange(option)
-                                    expanded = false
-                                },
-                            )
-                        }
-                    }
+                        groups = listOf(
+                            { dismiss ->
+                                options.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option) },
+                                        onClick = {
+                                            onValueChange(option)
+                                            dismiss()
+                                        },
+                                    )
+                                }
+                            },
+                        ),
+                    )
                 }
             },
-            modifier = modifier.clip(shapes.shape),
+            modifier = modifier
+                .clip(shapes.shape)
+                .clickable { expanded = true },
             colors = ListItemDefaults.colors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
             ),
@@ -726,6 +742,7 @@ fun SmartListNavigationItem(
     leadingIcon: @Composable (() -> Unit)? = null,
     supportingText: String? = null,
     trailingText: String? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
     visible: Boolean = true,
 ) {
     SmartListItem(
@@ -743,6 +760,9 @@ fun SmartListNavigationItem(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
+                if (trailingIcon != null) {
+                    trailingIcon()
                 }
             }
         },

@@ -3,11 +3,9 @@
 
 package me.juliana.hellomeds.ui.features.stock
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.selectableGroup
@@ -29,12 +26,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.testTag
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toLocalDateTime
@@ -55,6 +52,7 @@ import me.juliana.hellomeds.ui.compat.ToggleButton
 import me.juliana.hellomeds.ui.compat.ToggleButtonDefaults
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.common.AppScaffold
+import me.juliana.hellomeds.ui.components.common.EmptyState
 import me.juliana.hellomeds.ui.components.common.TopAppBarWithMenu
 import me.juliana.hellomeds.ui.components.graph.StockLevelGraph
 import me.juliana.hellomeds.ui.components.graph.models.GraphConfig
@@ -154,29 +152,11 @@ fun StockScreen(
                         .padding(16.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Image(
-                            painter = painterResource(Res.drawable.illustration_empty_tracking),
-                            contentDescription = null,
-                            modifier = Modifier.size(200.dp),
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.outlineVariant),
-                        )
-                        Spacer(Modifier.height(16.dp))
-                        Text(
-                            text = stringResource(Res.string.stock_empty_title),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = stringResource(Res.string.stock_empty_description),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                    EmptyState(
+                        title = stringResource(Res.string.stock_empty_title),
+                        description = stringResource(Res.string.stock_empty_description),
+                        illustration = painterResource(Res.drawable.illustration_empty_tracking),
+                    )
                 }
             }
             else -> {
@@ -282,6 +262,7 @@ fun StockScreen(
                             ),
                             onClick = { onNavigateToStockDetail(medication.id) },
                             modifier = Modifier
+                                .testTag(ScreenshotTestTags.stockListItem(medication.id))
                                 .padding(horizontal = 16.dp)
                                 .animateItem(),
                         )

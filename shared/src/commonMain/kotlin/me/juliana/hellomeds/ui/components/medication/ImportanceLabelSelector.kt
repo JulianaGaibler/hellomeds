@@ -25,6 +25,7 @@ import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.SmartListItem
 import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
 import me.juliana.hellomeds.ui.util.displayName
+import me.juliana.hellomeds.ui.util.formatImportanceLabelDescription
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -76,8 +77,12 @@ fun ImportanceLabelSelector(
         AutoSmartList(
             items = labels.map { label ->
                 SmartListItemConfig { shapes, visible ->
+                    val description = formatImportanceLabelDescription(label)
                     SmartListItem(
                         headlineContent = { Text(label.displayName()) },
+                        supportingContent = description
+                            .takeIf { it.isNotBlank() }
+                            ?.let { { Text(it) } },
                         leadingContent = {
                             RadioButton(
                                 selected = selectedLabelId == label.id,

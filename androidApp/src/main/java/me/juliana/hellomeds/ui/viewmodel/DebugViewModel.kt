@@ -38,6 +38,7 @@ import me.juliana.hellomeds.data.preferences.NotificationPreferences
 import me.juliana.hellomeds.data.preferences.OnboardingPreferences
 import me.juliana.hellomeds.data.service.ScheduleProjector
 import me.juliana.hellomeds.notifications.AlarmReconciler
+import me.juliana.hellomeds.notifications.NotificationBuilder
 import me.juliana.hellomeds.notifications.NotificationChannels
 import me.juliana.hellomeds.notifications.NotificationSessionManager
 import kotlin.time.Clock
@@ -55,6 +56,7 @@ class DebugViewModel(
     private val cameraPrefs: CameraPreferences,
     private val appearancePrefs: AppearancePreferences,
     private val onboardingPrefs: OnboardingPreferences,
+    private val notificationBuilder: NotificationBuilder,
 ) : ViewModel() {
 
     private val _refreshTrigger = MutableStateFlow(0)
@@ -290,6 +292,71 @@ class DebugViewModel(
             reconciler.reconcile()
             _refreshTrigger.value++
         }
+    }
+
+    /**
+     * Fire a low-stock notification using the first active medication's data,
+     * bypassing the threshold + permission gates that the real
+     * [me.juliana.hellomeds.notifications.LowStockNotifier] enforces. Pure UI
+     * preview — does NOT toggle [lowStockAlertSent], so the real notifier will
+     * still fire normally once stock actually crosses the threshold.
+     */
+    fun previewLowStockNotification(): Unit = postPreviewNotification(
+        notificationId = DEBUG_LOW_STOCK_NOTIFICATION_ID,
+        buildFromMedication = { med, visibility ->
+            notificationBuilder.buildLowStockNotification(
+                medication = med,
+                notificationId = DEBUG_LOW_STOCK_NOTIFICATION_ID,
+                discreet = false,
+                lockScreenVisibility = visibility,
+            )
+        },
+    )
+
+    /**
+     * Fire a depletion-reminder notification. See [previewLowStockNotification].
+     * Uses a sample `dosesSinceDepletion` of 33 (the threshold for a 30-dose pack).
+     */
+    fun previewDepletionNotification(): Unit = postPreviewNotification(
+        notificationId = DEBUG_DEPLETION_NOTIFICATION_ID,
+        buildFromMedication = { med, visibility ->
+            notificationBuilder.buildDepletionReminderNotification(
+                medication = med,
+                dosesSinceDepletion = 33,
+                notificationId = DEBUG_DEPLETION_NOTIFICATION_ID,
+                discreet = false,
+                lockScreenVisibility = visibility,
+            )
+        },
+    )
+
+    private fun postPreviewNotification(
+        notificationId: Int,
+        buildFromMedication: (
+            med: me.juliana.hellomeds.data.database.entities.Medication,
+            visibility: LockScreenVisibility,
+        ) -> android.app.Notification,
+    ) {
+        viewModelScope.launch {
+            val med = medicationDao.getActive().first().firstOrNull() ?: run {
+                me.juliana.hellomeds.data.util.AppLogger.w(
+                    "DebugViewModel",
+                    "No active medication available — preview notification skipped",
+                )
+                return@launch
+            }
+            val visibility = notificationPrefs.lockScreenVisibility.first()
+            val notification = buildFromMedication(med, visibility)
+            val notifMgr = context.getSystemService(android.app.NotificationManager::class.java)
+            notifMgr.notify(notificationId, notification)
+        }
+    }
+
+    companion object {
+        // Hardcoded debug-only notification IDs to avoid colliding with the
+        // real medication-based IDs that the production notifiers generate.
+        private const val DEBUG_LOW_STOCK_NOTIFICATION_ID = 0x7DEB10
+        private const val DEBUG_DEPLETION_NOTIFICATION_ID = 0x7DEB20
     }
 }
 

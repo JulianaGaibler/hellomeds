@@ -9,6 +9,7 @@ import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.stock_decoration_bottle_cap
 import me.juliana.hellomeds.shared.stock_decoration_canister_cap
 import me.juliana.hellomeds.shared.stock_decoration_dispenser_pump
+import me.juliana.hellomeds.shared.stock_decoration_inhaler_cap
 import me.juliana.hellomeds.shared.stock_decoration_inhaler_mouthpiece
 import me.juliana.hellomeds.shared.stock_decoration_jar_lid
 import me.juliana.hellomeds.shared.stock_decoration_tube_cap
@@ -135,6 +136,8 @@ object ContainerShapes {
             bottom = 186f,
         ),
         decorationDrawable = Res.drawable.stock_decoration_inhaler_mouthpiece,
+        // Cap sits behind the canister body so the fill level renders over it.
+        behindDecorationDrawable = Res.drawable.stock_decoration_inhaler_cap,
         viewportWidth = 165f,
         viewportHeight = 194f,
         aspectRatio = 165f / 194f,

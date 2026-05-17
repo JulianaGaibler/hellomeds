@@ -93,15 +93,6 @@ data object AddMedicationRoute : ModalFlowNavKey
 data class EditMedicationRoute(val medicationId: Int) : ModalFlowNavKey
 
 /**
- * Edit base data flow - edit name, type, and strength of a medication.
- * Shown as bottom sheet on phones, dialog on tablets.
- *
- * @param medicationId The ID of the medication to edit
- */
-@Serializable
-data class EditBaseDataRoute(val medicationId: Int) : ModalFlowNavKey
-
-/**
  * Edit schedule flow - manage schedules for a medication.
  * Shown as bottom sheet on phones, dialog on tablets.
  *

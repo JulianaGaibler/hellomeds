@@ -8,6 +8,5 @@ package me.juliana.hellomeds.ui.components.medication
  */
 enum class LogStatus {
     SKIPPED,
-    NOT_YET,
     TAKEN,
 }

@@ -16,6 +16,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.menu_content_description
 import me.juliana.hellomeds.shared.screen_settings
@@ -70,6 +72,7 @@ fun OverflowMenu(
                 dismiss()
                 onNavigateToSettings()
             },
+            modifier = Modifier.testTag(ScreenshotTestTags.OVERFLOW_MENU_SETTINGS),
         )
     }
     val groups = listOfNotNull(customContent, sharedGroup)
@@ -84,7 +87,10 @@ fun OverflowMenu(
             modifier = modifier,
         )
     } else {
-        IconButton(onClick = { expanded = true }, modifier = modifier) {
+        IconButton(
+            onClick = { expanded = true },
+            modifier = modifier.testTag(ScreenshotTestTags.OVERFLOW_MENU_BUTTON),
+        ) {
             Icon(
                 imageVector = Icons.Default.MoreVert,
                 contentDescription = stringResource(Res.string.menu_content_description),

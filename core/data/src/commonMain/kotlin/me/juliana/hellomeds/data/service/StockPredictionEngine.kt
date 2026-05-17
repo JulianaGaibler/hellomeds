@@ -39,7 +39,9 @@ import kotlin.time.Instant
  * Both the graph (StockLine points) and text predictions (StockStatus dates) consume the
  * same [StockPrediction] output, so they can never diverge.
  */
-class StockPredictionEngine {
+class StockPredictionEngine(
+    private val clock: Clock = Clock.System,
+) {
 
     private val TAG = "StockPrediction"
     private val dayMs = 24.0 * 60 * 60 * 1000
@@ -91,7 +93,7 @@ class StockPredictionEngine {
             markEmpty = true,
         )
 
-        val now = currentTimeMillis()
+        val now = clock.now().toEpochMilliseconds()
         val centerRunOutMs = centerResult.runOutTimestamp
         val simulatedDaysRemaining = if (centerRunOutMs != null) {
             ((centerRunOutMs - now) / (24.0 * 60 * 60 * 1000)).toInt()
@@ -291,7 +293,7 @@ class StockPredictionEngine {
         markEmpty: Boolean = false,
     ): SimulationResult {
         val points = mutableListOf<StockDataPoint>()
-        val now = currentTimeMillis()
+        val now = clock.now().toEpochMilliseconds()
 
         val containerQueue = ArrayDeque(containerBuckets)
 
@@ -339,12 +341,6 @@ class StockPredictionEngine {
                         remainingInCurrent += next.remaining
                         currentBucket = next
 
-                        AppLogger.d(
-                            TAG,
-                            "  $date: CONTAINER_SWITCH totalRemaining=${totalRemaining.coerceAtLeast(0.0)}, " +
-                                "remainingInCurrent=$remainingInCurrent",
-                        )
-
                         points.add(
                             StockDataPoint(
                                 timestamp = time,
@@ -363,11 +359,6 @@ class StockPredictionEngine {
                 }
 
                 // Emit a chart point only on consumption days
-                AppLogger.d(
-                    TAG,
-                    "  $date: totalRemaining=$totalRemaining, remainingInCurrent=$remainingInCurrent",
-                )
-
                 points.add(
                     StockDataPoint(
                         timestamp = time,

@@ -5,7 +5,13 @@ package me.juliana.hellomeds.ui.features.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
@@ -19,6 +25,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -75,6 +82,9 @@ import me.juliana.hellomeds.shared.importance_label_notification_type
 import me.juliana.hellomeds.shared.importance_label_number_of_follow_ups
 import me.juliana.hellomeds.shared.importance_label_reset_to_default
 import me.juliana.hellomeds.shared.importance_label_send_reminders
+import me.juliana.hellomeds.shared.importance_preview_follow_up
+import me.juliana.hellomeds.shared.importance_preview_initial
+import me.juliana.hellomeds.shared.importance_preview_title
 import me.juliana.hellomeds.shared.importance_label_type_alarm
 import me.juliana.hellomeds.shared.importance_label_type_alarm_description
 import me.juliana.hellomeds.shared.importance_label_type_critical
@@ -644,6 +654,20 @@ fun ImportanceLabelBottomSheet(
                 )
             }
 
+            // Timeline preview — only useful when there's a follow-up chain to
+            // visualize. A single-reminder configuration is already conveyed by
+            // the notification-type toggle above, so we hide the card.
+            if (shouldRemind && hasFollowUps) {
+                ReminderTimelinePreview(
+                    notificationType = notificationType,
+                    followUpCount = followUpCount,
+                    becomeCritical = becomeCritical,
+                    criticalAfter = criticalAfter,
+                    becomeAlarm = becomeAlarm,
+                    alarmAfter = alarmAfter,
+                )
+            }
+
             // Reset to default (for built-in labels) or Delete (for custom labels)
             if (label != null) {
                 Row(
@@ -683,6 +707,128 @@ fun ImportanceLabelBottomSheet(
                 }
             }
         }
+    }
+}
+
+/**
+ * Compact visualization of the reminder + each follow-up with its tier
+ * (regular/critical/alarm). Helps users sanity-check escalation cutoffs
+ * at a glance. Caller is responsible for showing this only when there's
+ * actually a follow-up chain to visualize.
+ */
+@Composable
+private fun ReminderTimelinePreview(
+    notificationType: NotificationType,
+    followUpCount: Int,
+    becomeCritical: Boolean,
+    criticalAfter: Int,
+    becomeAlarm: Boolean,
+    alarmAfter: Int,
+) {
+    val steps = buildList {
+        add(0) // initial reminder
+        for (k in 1..followUpCount) add(k)
+    }
+
+    SmartListInfoCard(
+        headlineContent = {
+            Text(
+                stringResource(Res.string.importance_preview_title),
+                style = MaterialTheme.typography.titleSmall,
+            )
+        },
+        supportingContent = {
+            // IntrinsicSize.Max sizes the column to the widest row's natural width,
+            // and weight(1f) on each label stretches it to fill that slot — the net
+            // effect is that all chips align to the right edge of the column,
+            // immediately after the longest label rather than across the full sheet.
+            Column(
+                modifier = Modifier.width(IntrinsicSize.Max),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                steps.forEach { k ->
+                    val tier = resolveTierAt(
+                        followUpIndex = k,
+                        notificationType = notificationType,
+                        becomeCritical = becomeCritical,
+                        criticalAfter = criticalAfter,
+                        becomeAlarm = becomeAlarm,
+                        alarmAfter = alarmAfter,
+                    )
+                    val rowLabel = if (k == 0) {
+                        stringResource(Res.string.importance_preview_initial)
+                    } else {
+                        stringResource(Res.string.importance_preview_follow_up, k)
+                    }
+                    // Merge each pair so TalkBack/VoiceOver reads
+                    // "Reminder, Regular" as one focusable element.
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics(mergeDescendants = true) {},
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = rowLabel,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f),
+                        )
+                        TierChip(tier)
+                    }
+                }
+            }
+        },
+    )
+}
+
+/**
+ * Resolve the notification tier for a given step (0 = initial reminder,
+ * 1..N = follow-ups). Mirrors how AlarmReconciler escalates the channel.
+ */
+private fun resolveTierAt(
+    followUpIndex: Int,
+    notificationType: NotificationType,
+    becomeCritical: Boolean,
+    criticalAfter: Int,
+    becomeAlarm: Boolean,
+    alarmAfter: Int,
+): NotificationType {
+    if (notificationType == NotificationType.ALARM) return NotificationType.ALARM
+    if (followUpIndex >= 1) {
+        if (becomeAlarm && alarmAfter > 0 && followUpIndex >= alarmAfter) {
+            return NotificationType.ALARM
+        }
+    }
+    if (notificationType == NotificationType.CRITICAL) return NotificationType.CRITICAL
+    if (followUpIndex >= 1) {
+        if (becomeCritical && criticalAfter > 0 && followUpIndex >= criticalAfter) {
+            return NotificationType.CRITICAL
+        }
+    }
+    return NotificationType.REGULAR
+}
+
+@Composable
+private fun TierChip(tier: NotificationType) {
+    val labelRes = when (tier) {
+        NotificationType.REGULAR -> Res.string.importance_label_type_regular
+        NotificationType.CRITICAL -> Res.string.importance_label_type_critical
+        NotificationType.ALARM -> Res.string.importance_label_type_alarm
+    }
+    // Matches the tracking dose chip — transparent surface, outlineVariant border,
+    // onSurfaceVariant text, extra-large pill shape.
+    Surface(
+        shape = MaterialTheme.shapes.extraLarge,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = Color.Transparent,
+    ) {
+        Text(
+            text = stringResource(labelRes),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+        )
     }
 }
 

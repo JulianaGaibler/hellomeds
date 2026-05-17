@@ -29,7 +29,7 @@
     <color name="medication_foreground_blue">#FF485E92</color>
     <color name="medication_foreground_indigo">#FF5B5992</color>
     <color name="medication_foreground_purple">#FF6B548D</color>
-    <color name="medication_foreground_monochrome">#FFFFFF</color>
+    <color name="medication_foreground_monochrome">#586071</color>
 
     <!-- Medication background colors (light mode) -->
     <color name="medication_background_rose">#FFFDA6B3</color>
@@ -44,5 +44,5 @@
     <color name="medication_background_blue">#FFADC3FE</color>
     <color name="medication_background_indigo">#FFC1BDFE</color>
     <color name="medication_background_purple">#FFD9BDFE</color>
-    <color name="medication_background_monochrome">#BDBDBD</color>
+    <color name="medication_background_monochrome">#BFC5D2</color>
 </resources>

@@ -24,7 +24,6 @@ import me.juliana.hellomeds.domain.ml.MedicationDetectionResult
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.graph.models.StockLine
 import me.juliana.hellomeds.ui.features.medication.AddMedicationFlowScreen
-import me.juliana.hellomeds.ui.features.medication.EditBaseDataScreen
 import me.juliana.hellomeds.ui.features.medication.EditMedicationScreen
 import me.juliana.hellomeds.ui.features.medication.MedicationDetailScreen
 import me.juliana.hellomeds.ui.features.medication.MedicationListScreen
@@ -152,72 +151,33 @@ fun AddMedicationScreenEntry(
     onMedicationAdded: (Long, String, me.juliana.hellomeds.ui.features.medication.AddMedicationState) -> Unit,
     detectionData: MedicationDetectionResult? = null,
 ) {
-    val context = platformContext()
-    val coroutineScope = rememberCoroutineScope()
     val medicationViewModel: MedicationViewModel = koinViewModel()
     val labelViewModel: ImportanceLabelViewModel = koinViewModel()
-    val notificationPrefs: NotificationPreferences = koinInject()
     val labels by labelViewModel.allLabels.collectAsStateWithLifecycle()
 
-    var showCriticalChannelDialog by remember { mutableStateOf(false) }
-    var pendingCompletion by remember {
-        mutableStateOf<Pair<Long, me.juliana.hellomeds.ui.features.medication.AddMedicationState>?>(null)
-    }
-
+    // Add flow always defaults to the non-critical FOLLOW_UPS label, so the
+    // critical-channel education dialog is unreachable from here. The
+    // equivalent flow still lives in EditLabelScreenEntry for users who later
+    // pick a critical label.
     AddMedicationFlowScreen(
         importanceLabels = labels,
         onClose = onClose,
         onMedicationAdded = { medicationId, state ->
-            // Check if the selected label is critical
-            val selectedLabel = labels.find { it.id == state.importanceLabelId }
-            val isCriticalLabel = selectedLabel != null &&
-                (selectedLabel.isCritical || selectedLabel.criticalAfterFollowUp != null)
-
-            if (isCriticalLabel && !canCriticalChannelBypassDnd(context)) {
-                coroutineScope.launch {
-                    val hasSeen = notificationPrefs.hasSeenCriticalChannelDialog.first()
-                    if (!hasSeen) {
-                        pendingCompletion = medicationId to state
-                        showCriticalChannelDialog = true
-                        notificationPrefs.setHasSeenCriticalChannelDialog(true)
-                    } else {
-                        onClose()
-                        onMedicationAdded(medicationId, state.name, state)
-                    }
-                }
-            } else {
-                onClose()
-                onMedicationAdded(medicationId, state.name, state)
-            }
+            onClose()
+            onMedicationAdded(medicationId, state.name, state)
         },
         initialState = detectionData?.toAddMedicationState(),
         modifier = Modifier.fillMaxSize(),
         medicationViewModel = medicationViewModel,
     )
-
-    if (showCriticalChannelDialog) {
-        CriticalChannelSetupDialog(
-            onDismiss = {
-                showCriticalChannelDialog = false
-                pendingCompletion?.let { (id, state) ->
-                    onClose()
-                    onMedicationAdded(id, state.name, state)
-                }
-            },
-        )
-    }
 }
 
 /**
  * Entry point for the Edit Medication screen.
- * Allows editing visual appearance (display name, shapes, colors) of a medication.
+ * Allows editing name, type, strength, display name, timezone, cycle, and visual appearance.
  */
 @Composable
-fun EditMedicationScreenEntry(
-    medicationId: Int,
-    onNavigateBack: () -> Unit,
-    onEditBaseData: (medicationId: Int) -> Unit,
-) {
+fun EditMedicationScreenEntry(medicationId: Int, onNavigateBack: () -> Unit) {
     val medicationViewModel: MedicationViewModel = koinViewModel()
     val medication by medicationViewModel.getMedicationById(medicationId)
         .collectAsStateWithLifecycle(initial = null)
@@ -240,46 +200,6 @@ fun EditMedicationScreenEntry(
             onSave = { updatedMedication ->
                 medicationViewModel.updateMedication(updatedMedication)
             },
-            onEditBaseData = { onEditBaseData(medicationId) },
-        )
-    }
-}
-
-/**
- * Entry point for the Edit Base Data screen.
- * Allows editing core medication properties (name, type, strength).
- */
-@Composable
-fun EditBaseDataScreenEntry(medicationId: Int, onNavigateBack: () -> Unit) {
-    val medicationViewModel: MedicationViewModel = koinViewModel()
-    val medication by medicationViewModel.getMedicationById(medicationId)
-        .collectAsStateWithLifecycle(initial = null)
-
-    var hasLoaded by remember { mutableStateOf(false) }
-
-    LaunchedEffect(medication) {
-        if (medication != null) {
-            hasLoaded = true
-        } else if (hasLoaded) {
-            onNavigateBack()
-        }
-    }
-
-    medication?.let { med ->
-        EditBaseDataScreen(
-            medication = med,
-            modifier = Modifier.fillMaxSize(),
-            onNavigateBack = onNavigateBack,
-            onSave = { name, type, strengthValue, strengthUnit ->
-                val updated = med.copy(
-                    name = name.trim(),
-                    type = type,
-                    strengthValue = strengthValue,
-                    strengthUnit = strengthUnit,
-                )
-                medicationViewModel.updateMedication(updated)
-                onNavigateBack()
-            },
         )
     }
 }
@@ -289,13 +209,21 @@ fun EditBaseDataScreenEntry(medicationId: Int, onNavigateBack: () -> Unit) {
  * Manages schedules for a specific medication.
  */
 @Composable
-fun EditScheduleScreenEntry(medicationId: Int, onNavigateBack: () -> Unit) {
+fun EditScheduleScreenEntry(
+    medicationId: Int,
+    onNavigateBack: () -> Unit,
+    onNavigateToEditLabel: (medicationId: Int) -> Unit,
+) {
     val medicationViewModel: MedicationViewModel = koinViewModel()
     val scheduleViewModel: ScheduleViewModel = koinViewModel()
+    val notificationPrefs: NotificationPreferences = koinInject()
+    val coroutineScope = rememberCoroutineScope()
     val medication by medicationViewModel.getMedicationById(medicationId)
         .collectAsStateWithLifecycle(initial = null)
     val schedules by scheduleViewModel.getSchedulesByMedicationId(medicationId)
         .collectAsStateWithLifecycle(initial = emptyList())
+    val hasSeenReminderHint by notificationPrefs.hasSeenReminderTypeHint
+        .collectAsStateWithLifecycle(initial = true) // assume seen until pref loads to avoid flash
 
     var hasLoaded by remember { mutableStateOf(false) }
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -324,6 +252,13 @@ fun EditScheduleScreenEntry(medicationId: Int, onNavigateBack: () -> Unit) {
                 showBottomSheet = true
             },
             medication = med,
+            showReminderTypeHint = !hasSeenReminderHint,
+            onEditReminderType = { onNavigateToEditLabel(medicationId) },
+            onDismissReminderTypeHint = {
+                coroutineScope.launch {
+                    notificationPrefs.setHasSeenReminderTypeHint(true)
+                }
+            },
         )
 
         if (showBottomSheet) {

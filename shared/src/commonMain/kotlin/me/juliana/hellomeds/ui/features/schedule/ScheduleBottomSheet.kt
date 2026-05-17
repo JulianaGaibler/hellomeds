@@ -31,6 +31,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.LocalTime
@@ -95,6 +97,7 @@ import me.juliana.hellomeds.ui.components.list.SmartListTextItem
 import me.juliana.hellomeds.ui.components.list.SmartListTimePickerItem
 import me.juliana.hellomeds.ui.theme.HelloMedsTheme
 import me.juliana.hellomeds.ui.util.formatDecimal
+import me.juliana.hellomeds.ui.util.formatDecimalPlain
 import me.juliana.hellomeds.ui.util.formatShortDate
 import me.juliana.hellomeds.ui.util.formatTime
 import me.juliana.hellomeds.ui.util.getDoseUnitPluralRes
@@ -437,6 +440,7 @@ fun ScheduleBottomSheet(
                             } else {
                                 null
                             },
+                            modifier = Modifier.testTag(ScreenshotTestTags.SCHEDULE_FREQ_DAYS_OF_WEEK),
                         )
                     },
                 ),
@@ -530,7 +534,9 @@ fun ScheduleBottomSheet(
                                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                                 },
                                 enabled = !isManuallyArchived,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag(ScreenshotTestTags.scheduleDayChip(day.name)),
                             ) {
                                 Text(stringResource(day.shortNameRes))
                             }
@@ -577,7 +583,7 @@ fun ScheduleBottomSheet(
                         if (!isManuallyArchived) {
                             SmartListTextItem(
                                 label = doseLabel,
-                                value = if (dose == 0.0) "" else formatDecimal(dose),
+                                value = if (dose == 0.0) "" else formatDecimalPlain(dose),
                                 onValueChange = { value ->
                                     dose = value.toDoubleOrNull() ?: 0.0
                                 },

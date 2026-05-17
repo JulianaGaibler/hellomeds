@@ -240,6 +240,7 @@ fun IOSDebugScreen(
             }
             item {
                 val reconcileMessage = stringResource(Res.string.debug_action_success_reconcile)
+                val autoBackupPrefs: AutoBackupPreferences = koinInject()
                 AutoSmartList(
                     items = listOf(
                         SmartListItemConfig(visible = true) { shapes, _ ->
@@ -277,14 +278,32 @@ fun IOSDebugScreen(
                                 onClick = { onNavigateToOnboarding(true) },
                             )
                         },
-                    ),
-                )
-            }
-
-            item {
-                val autoBackupPrefs: AutoBackupPreferences = koinInject()
-                AutoSmartList(
-                    items = listOf(
+                        SmartListItemConfig(visible = true) { shapes, _ ->
+                            SmartListItem(
+                                headlineContent = { Text("Preview low-stock notification") },
+                                supportingContent = {
+                                    Text("Fires the low-stock notification using the first active medication's name")
+                                },
+                                shapes = shapes,
+                                onClick = {
+                                    viewModel.previewLowStockNotification()
+                                    scope.launch { snackbarHostState.showSnackbar("Notification posted") }
+                                },
+                            )
+                        },
+                        SmartListItemConfig(visible = true) { shapes, _ ->
+                            SmartListItem(
+                                headlineContent = { Text("Preview depletion-reminder notification") },
+                                supportingContent = {
+                                    Text("Fires the \"container should be empty\" reminder with a sample dose count")
+                                },
+                                shapes = shapes,
+                                onClick = {
+                                    viewModel.previewDepletionNotification()
+                                    scope.launch { snackbarHostState.showSnackbar("Notification posted") }
+                                },
+                            )
+                        },
                         SmartListItemConfig(visible = true) { shapes, _ ->
                             SmartListItem(
                                 headlineContent = { Text("Trigger backup nudge dialog") },
@@ -301,6 +320,31 @@ fun IOSDebugScreen(
                                         autoBackupPrefs.setOnboardingCompletedTimestamp(threeDaysAgo)
                                         autoBackupPrefs.setBackupNudgeDismissed(false)
                                         snackbarHostState.showSnackbar("Nudge will appear on next app open")
+                                    }
+                                },
+                            )
+                        },
+                        // BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
+                        SmartListItemConfig(visible = true) { shapes, _ ->
+                            SmartListItem(
+                                headlineContent = {
+                                    Text("Simulate 10 days since onboarding (survey nudge)")
+                                },
+                                supportingContent = {
+                                    Text(
+                                        "Rolls the onboarding timestamp back 11 days and clears the survey-dismissed flag",
+                                    )
+                                },
+                                shapes = shapes,
+                                onClick = {
+                                    scope.launch {
+                                        val elevenDaysAgo = kotlin.time.Clock.System.now()
+                                            .toEpochMilliseconds() - (11 * 24 * 60 * 60 * 1000L)
+                                        autoBackupPrefs.setOnboardingCompletedTimestamp(elevenDaysAgo)
+                                        autoBackupPrefs.setClosedBetaSurveyNudgeDismissed(false)
+                                        snackbarHostState.showSnackbar(
+                                            "Survey nudge will appear on next app open",
+                                        )
                                     }
                                 },
                             )

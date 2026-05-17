@@ -3,6 +3,8 @@
 
 package me.juliana.hellomeds.ui.navigation3
 
+import androidx.compose.ui.platform.testTag
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -239,6 +241,7 @@ fun AdaptiveMainScreen(
                                             colorScheme.surfaceContainerLow
                                         },
                                     ),
+                                    modifier = Modifier.testTag(ScreenshotTestTags.navTab(destination.name)),
                                 )
                             }
                         }
@@ -299,6 +302,7 @@ fun AdaptiveMainScreen(
                                                 colorScheme.surfaceContainerLow
                                             },
                                         ),
+                                        modifier = Modifier.testTag(ScreenshotTestTags.navTab(destination.name)),
                                     )
                                 }
                             }

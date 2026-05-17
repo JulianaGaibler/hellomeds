@@ -11,18 +11,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -33,6 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -42,6 +44,8 @@ import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.model.enums.CycleType
 import me.juliana.hellomeds.data.model.enums.MedicationBackgroundShape
 import me.juliana.hellomeds.data.model.enums.MedicationForegroundShape
+import me.juliana.hellomeds.data.model.enums.MedicationStrengthUnit
+import me.juliana.hellomeds.data.model.enums.MedicationType
 import me.juliana.hellomeds.data.model.enums.TimeZoneMode
 import me.juliana.hellomeds.data.model.getCycleDay
 import me.juliana.hellomeds.domain.validation.MedicationValidation
@@ -49,17 +53,20 @@ import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_save
 import me.juliana.hellomeds.shared.content_description_back
 import me.juliana.hellomeds.shared.content_description_clear_display_name
-import me.juliana.hellomeds.shared.cycle_enabled
-import me.juliana.hellomeds.shared.cycle_enabled_description
-import me.juliana.hellomeds.shared.cycle_info_calendar_days
 import me.juliana.hellomeds.shared.cycle_section_title
 import me.juliana.hellomeds.shared.medication_display_name_description
 import me.juliana.hellomeds.shared.medication_display_name_label
-import me.juliana.hellomeds.shared.medication_edit_base_data
+import me.juliana.hellomeds.shared.medication_name_description
 import me.juliana.hellomeds.shared.medication_edit_title_format
+import me.juliana.hellomeds.shared.medication_has_strength
 import me.juliana.hellomeds.shared.medication_icon_label
 import me.juliana.hellomeds.shared.medication_name_label
 import me.juliana.hellomeds.shared.medication_name_section
+import me.juliana.hellomeds.shared.medication_strength_section
+import me.juliana.hellomeds.shared.medication_strength_unit
+import me.juliana.hellomeds.shared.medication_strength_value
+import me.juliana.hellomeds.shared.medication_type_label
+import me.juliana.hellomeds.shared.medication_type_section
 import me.juliana.hellomeds.shared.timezone_anchor_description
 import me.juliana.hellomeds.shared.timezone_mode_fixed_description
 import me.juliana.hellomeds.shared.timezone_mode_fixed_hint
@@ -67,29 +74,45 @@ import me.juliana.hellomeds.shared.timezone_mode_label
 import me.juliana.hellomeds.shared.timezone_mode_local_description
 import me.juliana.hellomeds.ui.components.common.AppScaffold
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
+import me.juliana.hellomeds.ui.components.list.DecimalInputTransformation
+import me.juliana.hellomeds.ui.components.list.SmartListDropdownItem
 import me.juliana.hellomeds.ui.components.list.SmartListInfoCard
 import me.juliana.hellomeds.ui.components.list.SmartListItem
 import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
 import me.juliana.hellomeds.ui.components.list.SmartListSwitchItem
-import me.juliana.hellomeds.ui.components.medication.MedicationColorPickers
-import me.juliana.hellomeds.ui.components.medication.MedicationIconPreview
-import me.juliana.hellomeds.ui.components.medication.MedicationShapePickers
+import me.juliana.hellomeds.ui.components.list.SmartListTextItem
+import me.juliana.hellomeds.ui.components.medication.MedicationIconCustomizer
+import me.juliana.hellomeds.ui.components.medication.MedicationIconStickyPreview
+import me.juliana.hellomeds.ui.util.displayNameRes
 import me.juliana.hellomeds.ui.components.pickers.TimeZonePickerDialog
 import me.juliana.hellomeds.ui.components.pickers.formatTimeZoneForDisplay
+import me.juliana.hellomeds.ui.features.settings.SettingsHeader
+import me.juliana.hellomeds.ui.features.settings.settingsContentPadding
 import me.juliana.hellomeds.ui.theme.MedicationColor
 import org.jetbrains.compose.resources.stringResource
+import me.juliana.hellomeds.ui.util.formatDecimalPlain
 import kotlin.time.Clock
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun EditMedicationScreen(
     medication: Medication,
     onNavigateBack: () -> Unit,
     onSave: (Medication) -> Unit,
-    onEditBaseData: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var showEditBaseDataDialog by remember { mutableStateOf(false) }
+    var name by remember(medication) { mutableStateOf(medication.name) }
+    var type by remember(medication) { mutableStateOf(medication.type) }
+    var hasStrength by remember(medication) { mutableStateOf(medication.strengthValue != null) }
+    var strengthValue by remember(medication) {
+        mutableStateOf(medication.strengthValue?.let { formatDecimalPlain(it) } ?: "")
+    }
+    var strengthUnit by remember(medication) {
+        mutableStateOf(medication.strengthUnit ?: MedicationStrengthUnit.MG)
+    }
+
+    val nameError = MedicationValidation.validateMedicationName(name)
+    val strengthError = MedicationValidation.validateStrengthValue(strengthValue, hasStrength)
 
     var displayName by remember(medication) {
         mutableStateOf(medication.displayName ?: "")
@@ -148,6 +171,10 @@ fun EditMedicationScreen(
         }
 
         return medication.copy(
+            name = name.trim(),
+            type = type,
+            strengthValue = if (hasStrength) strengthValue.toDoubleOrNull() else null,
+            strengthUnit = if (hasStrength) strengthUnit else null,
             displayName = displayName.trim().ifBlank { null },
             foregroundShape = foregroundShape.name,
             backgroundShape = backgroundShape.name,
@@ -173,7 +200,7 @@ fun EditMedicationScreen(
     AppScaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(Res.string.medication_edit_title_format, medication.name)) },
+                title = { Text(stringResource(Res.string.medication_edit_title_format, name)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -183,7 +210,9 @@ fun EditMedicationScreen(
                     }
                 },
                 actions = {
-                    val canSave = !cycleEnabled || (cycleDaysActive > 0 && cycleDayInCycle in 1..cycleLength && cycleLength <= 365)
+                    val cycleValid = !cycleEnabled ||
+                        (cycleDaysActive > 0 && cycleDayInCycle in 1..cycleLength && cycleLength <= 365)
+                    val canSave = cycleValid && nameError == null && strengthError == null
                     Button(
                         onClick = {
                             onSave(buildUpdatedMedication())
@@ -207,25 +236,34 @@ fun EditMedicationScreen(
                 .padding(paddingValues)
                 .imePadding(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Name section header
+            // ── Name section ──
+            // Headers use compact paddings since this LazyColumn has spacedBy(8.dp) which
+            // would otherwise stack on top of the SettingsHeader defaults. The first header sits
+            // closer to the top edge; subsequent headers get extra topPadding for visual breathing.
             item {
-                Text(
+                SettingsHeader(
                     text = stringResource(Res.string.medication_name_section),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(top = 8.dp),
+                    topPadding = 8.dp,
+                    bottomPadding = 4.dp,
                 )
             }
 
-            // Medication name (readonly)
+            // Editable medication name
             item {
                 OutlinedTextField(
-                    value = medication.name,
-                    onValueChange = {},
+                    value = name,
+                    onValueChange = {
+                        if (it.length <= MedicationValidation.MAX_NAME_LENGTH) {
+                            name = it
+                        }
+                    },
                     label = { Text(stringResource(Res.string.medication_name_label)) },
-                    enabled = false,
+                    isError = nameError != null,
+                    supportingText = {
+                        Text(nameError ?: stringResource(Res.string.medication_name_description))
+                    },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -261,11 +299,10 @@ fun EditMedicationScreen(
 
             // ── Timezone mode section ──
             item {
-                Text(
+                SettingsHeader(
                     text = stringResource(Res.string.timezone_mode_label),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(top = 8.dp),
+                    topPadding = 24.dp,
+                    bottomPadding = 0.dp,
                 )
             }
 
@@ -325,43 +362,18 @@ fun EditMedicationScreen(
 
             // ── Dosing Cycle section ──
             item {
-                Text(
+                SettingsHeader(
                     text = stringResource(Res.string.cycle_section_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(top = 8.dp),
+                    topPadding = 24.dp,
+                    bottomPadding = 0.dp,
                 )
             }
 
             // Enable toggle with explanation
             item {
-                AutoSmartList(
-                    items = listOf(
-                        SmartListItemConfig(visible = true) { shapes, visible ->
-                            SmartListSwitchItem(
-                                label = stringResource(Res.string.cycle_enabled),
-                                checked = cycleEnabled,
-                                onCheckedChange = { cycleEnabled = it },
-                                shapes = shapes,
-                                visible = visible,
-                                supportingText = stringResource(Res.string.cycle_enabled_description),
-                            )
-                        },
-                        SmartListItemConfig(visible = cycleEnabled) { shapes, visible ->
-                            SmartListInfoCard(
-                                headlineContent = {
-                                    Text(
-                                        stringResource(Res.string.cycle_info_calendar_days),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
-                                },
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                shapes = shapes,
-                                visible = visible,
-                            )
-                        },
-                    ),
+                me.juliana.hellomeds.ui.features.medication.steps.CycleEnableToggle(
+                    cycleEnabled = cycleEnabled,
+                    onCycleEnabledChange = { cycleEnabled = it },
                 )
             }
 
@@ -394,72 +406,134 @@ fun EditMedicationScreen(
                 }
             }
 
-            // ── Icon section ──
+            // ── Type section ──
             item {
-                Text(
-                    text = stringResource(Res.string.medication_icon_label),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(top = 8.dp),
+                SettingsHeader(
+                    text = stringResource(Res.string.medication_type_section),
+                    topPadding = 24.dp,
+                    bottomPadding = 0.dp,
                 )
             }
 
-            // Sticky preview with morphing animation
-            stickyHeader {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.surfaceContainer,
-                ) {
-                    MedicationIconPreview(
-                        foregroundShape = foregroundShape,
-                        backgroundShape = backgroundShape,
-                        color1 = color1,
+            item {
+                val typeEntries = remember { MedicationType.entries }
+                val typeDisplayNames = typeEntries.map { stringResource(it.displayNameRes) }
+                val selectedTypeDisplay = stringResource(type.displayNameRes)
+
+                AutoSmartList(
+                    items = listOf(
+                        SmartListItemConfig(visible = true) { shapes, visible ->
+                            SmartListDropdownItem(
+                                label = stringResource(Res.string.medication_type_label),
+                                selectedValue = selectedTypeDisplay,
+                                options = typeDisplayNames,
+                                onValueChange = { picked ->
+                                    val idx = typeDisplayNames.indexOf(picked)
+                                    if (idx >= 0) type = typeEntries[idx]
+                                },
+                                shapes = shapes,
+                                visible = visible,
+                            )
+                        },
+                    ),
+                )
+            }
+
+            // ── Strength section ──
+            item {
+                SettingsHeader(
+                    text = stringResource(Res.string.medication_strength_section),
+                    topPadding = 24.dp,
+                    bottomPadding = 0.dp,
+                )
+            }
+
+            item {
+                AutoSmartList(
+                    items = listOf(
+                        SmartListItemConfig(visible = true) { shapes, visible ->
+                            SmartListItem(
+                                headlineContent = { Text(stringResource(Res.string.medication_has_strength)) },
+                                trailingContent = {
+                                    Switch(
+                                        checked = hasStrength,
+                                        onCheckedChange = { hasStrength = it },
+                                    )
+                                },
+                                shapes = shapes,
+                                visible = visible,
+                            )
+                        },
+                        SmartListItemConfig(visible = hasStrength) { shapes, visible ->
+                            SmartListTextItem(
+                                label = stringResource(Res.string.medication_strength_value),
+                                value = strengthValue,
+                                onValueChange = { strengthValue = it },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                shapes = shapes,
+                                visible = visible,
+                                validator = { text ->
+                                    text.isEmpty() || text.toDoubleOrNull()?.let { it > 0 } == true
+                                },
+                                inputTransformation = DecimalInputTransformation(),
+                            )
+                        },
+                        SmartListItemConfig(visible = hasStrength) { shapes, visible ->
+                            SmartListDropdownItem(
+                                label = stringResource(Res.string.medication_strength_unit),
+                                selectedValue = strengthUnit.value,
+                                options = MedicationStrengthUnit.allDisplayValues(),
+                                onValueChange = {
+                                    strengthUnit =
+                                        MedicationStrengthUnit.fromValue(it) ?: MedicationStrengthUnit.MG
+                                },
+                                shapes = shapes,
+                                visible = visible,
+                            )
+                        },
+                    ),
+                )
+            }
+
+            if (hasStrength && strengthError != null) {
+                item {
+                    Text(
+                        text = strengthError,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.settingsContentPadding(),
                     )
                 }
             }
 
-            // Shape pickers
+            // ── Icon section ──
             item {
-                MedicationShapePickers(
+                SettingsHeader(
+                    text = stringResource(Res.string.medication_icon_label),
+                    topPadding = 24.dp,
+                    bottomPadding = 0.dp,
+                )
+            }
+
+            stickyHeader {
+                MedicationIconStickyPreview(
                     foregroundShape = foregroundShape,
                     backgroundShape = backgroundShape,
+                    color1 = color1,
+                )
+            }
+
+            item {
+                MedicationIconCustomizer(
+                    foregroundShape = foregroundShape,
+                    backgroundShape = backgroundShape,
+                    color1 = color1,
                     onForegroundShapeChange = { foregroundShape = it },
                     onBackgroundShapeChange = { backgroundShape = it },
-                )
-            }
-
-            // Color pickers
-            item {
-                MedicationColorPickers(
-                    color1 = color1,
                     onColor1Change = { color1 = it },
+                    showPreview = false,
                 )
             }
-
-            // Edit base data button
-            item {
-                Button(
-                    onClick = { showEditBaseDataDialog = true },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(Res.string.medication_edit_base_data))
-                }
-            }
-        }
-
-        // Show edit base data dialog if requested
-        if (showEditBaseDataDialog) {
-            EditBaseDataDialog(
-                onDismiss = { showEditBaseDataDialog = false },
-                onConfirm = {
-                    showEditBaseDataDialog = false
-                    onEditBaseData()
-                },
-            )
         }
     }
 }

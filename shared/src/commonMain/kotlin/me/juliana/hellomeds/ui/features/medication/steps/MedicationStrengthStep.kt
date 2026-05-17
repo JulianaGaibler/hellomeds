@@ -19,8 +19,10 @@ import me.juliana.hellomeds.data.model.enums.MedicationStrengthUnit
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.camera_detection_from_camera
 import me.juliana.hellomeds.shared.camera_detection_strength_warning
+import me.juliana.hellomeds.shared.medication_skip_step
 import me.juliana.hellomeds.shared.wizard_medication_strength_headline
 import me.juliana.hellomeds.shared.wizard_medication_strength_title
+import me.juliana.hellomeds.ui.components.common.ScreenHeader
 import me.juliana.hellomeds.ui.components.medication.StrengthInputFields
 import org.jetbrains.compose.resources.stringResource
 
@@ -45,46 +47,50 @@ internal fun MedicationStrengthStep(
         }
     }
 
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    Column {
         ScreenHeader(
             headline = stringResource(Res.string.wizard_medication_strength_headline),
             title = stringResource(Res.string.wizard_medication_strength_title),
+            actionLabel = stringResource(Res.string.medication_skip_step),
+            onAction = onSkip,
         )
 
-        // Show info box if detected strength is available
-        if (detectedStrengthValue != null && detectedStrengthUnit != null) {
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                ),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+        Column(
+            modifier = Modifier.padding(horizontal = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            // Show info box if detected strength is available
+            if (detectedStrengthValue != null && detectedStrengthUnit != null) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(
-                        text = stringResource(Res.string.camera_detection_from_camera),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer,
-                    )
-                    Text(
-                        text = stringResource(Res.string.camera_detection_strength_warning),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer,
-                    )
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.camera_detection_from_camera),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        )
+                        Text(
+                            text = stringResource(Res.string.camera_detection_strength_warning),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        )
+                    }
                 }
             }
-        }
 
-        StrengthInputFields(
-            strengthValue = strengthValue,
-            strengthUnit = strengthUnit,
-            onStrengthValueChange = onStrengthValueChange,
-            onStrengthUnitChange = onStrengthUnitChange,
-            onSkip = onSkip,
-        )
+            StrengthInputFields(
+                strengthValue = strengthValue,
+                strengthUnit = strengthUnit,
+                onStrengthValueChange = onStrengthValueChange,
+                onStrengthUnitChange = onStrengthUnitChange,
+            )
+        }
     }
 }

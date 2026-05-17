@@ -29,6 +29,7 @@ actual object PlatformCapabilities {
     var alarmKitAuthorized: Boolean = false
     actual fun isNativeAlarmSupported(): Boolean = me.juliana.hellomeds.notifications.isAlarmKitAvailable()
     actual fun isAlarmKitAuthorized(): Boolean = alarmKitAuthorized
+    actual fun requiresAppStoreDisclaimer(): Boolean = true // App Store guidelines 5.1.1 / 5.5
 
     actual fun appVersionString(): String {
         val info = NSBundle.mainBundle.infoDictionary ?: return "Unknown"

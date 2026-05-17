@@ -45,7 +45,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.TimeZone
@@ -291,7 +294,7 @@ fun MedicationDetailScreen(
                 // Medication name (display name if set, otherwise actual name)
                 Text(
                     text = MedicationValidation.getEffectiveDisplayName(medication),
-                    style = MaterialTheme.typography.headlineLarge,
+                    style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Medium),
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
                 )
@@ -348,6 +351,7 @@ fun MedicationDetailScreen(
                         )
                     },
                     label = stringResource(Res.string.medication_action_schedule),
+                    modifier = Modifier.testTag(ScreenshotTestTags.MEDICATION_ACTION_SCHEDULE),
                 )
 
                 // Edit button
@@ -390,6 +394,7 @@ fun MedicationDetailScreen(
                         )
                     },
                     label = stringResource(Res.string.screen_stock),
+                    modifier = Modifier.testTag(ScreenshotTestTags.MEDICATION_ACTION_STOCK),
                 )
             }
 

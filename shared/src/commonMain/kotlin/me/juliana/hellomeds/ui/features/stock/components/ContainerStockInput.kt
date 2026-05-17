@@ -37,6 +37,7 @@ import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
 import me.juliana.hellomeds.ui.components.list.SmartListTextItem
 import me.juliana.hellomeds.ui.util.displayNameLowerRes
 import me.juliana.hellomeds.ui.util.formatDecimal
+import me.juliana.hellomeds.ui.util.formatDecimalPlain
 import me.juliana.hellomeds.ui.util.labelPluralRes
 import me.juliana.hellomeds.ui.util.pluralFormRes
 import org.jetbrains.compose.resources.pluralStringResource
@@ -94,7 +95,7 @@ fun ContainerStockInput(
             val currentFull = fullContainers.toIntOrNull() ?: 0
 
             onFullContainersChange((currentFull + extraContainers).toString())
-            onPartialUnitsChange(formatDecimal(remainder))
+            onPartialUnitsChange(formatDecimalPlain(remainder))
 
             // Build error message without @Composable (template already resolved)
             errorText = autoCorrectTemplate
@@ -121,8 +122,14 @@ fun ContainerStockInput(
     val containerLower = medicationContainer?.let {
         stringResource(it.displayNameLowerRes)
     } ?: stringResource(Res.string.stock_container_generic)
-    val partialLabel =
-        stringResource(Res.string.stock_input_units_from_current, stockUnit, containerLower)
+    // The unit (e.g. "tablets") is lowercase in en — title-case it for use as a
+    // field label. No-op for German, where nouns like "Tabletten" are already
+    // capitalized.
+    val partialLabel = stringResource(
+        Res.string.stock_input_units_from_current,
+        stockUnit.replaceFirstChar { it.uppercase() },
+        containerLower,
+    )
 
     Column(
         modifier = modifier,

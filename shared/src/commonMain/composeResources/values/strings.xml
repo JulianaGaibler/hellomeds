@@ -17,9 +17,8 @@
 
     <string name="screen_settings">Settings</string>
     <string name="screen_add_medication">Add medication</string>
-    <string name="screen_edit_base_data">Edit base data</string>
     <string name="screen_medication_details">Medication Details</string>
-    <string name="screen_importance_labels">Importance labels</string>
+    <string name="screen_importance_labels">Reminder types</string>
 
     <!-- Common Actions -->
     <string name="action_edit">Edit</string>
@@ -42,7 +41,7 @@
     <string name="content_description_menu">Menu</string>
     <string name="content_description_edit_schedule">Edit schedule</string>
     <string name="content_description_edit_medication">Edit medication</string>
-    <string name="content_description_edit_label">Edit label</string>
+    <string name="content_description_edit_label">Edit reminder</string>
     <string name="content_description_clear_display_name">Clear display name</string>
 
     <!-- Accessibility -->
@@ -207,7 +206,7 @@
 
     <!-- Medication Actions -->
     <string name="medication_action_schedule">Schedule</string>
-    <string name="medication_action_label">Label</string>
+    <string name="medication_action_label">Reminder</string>
     <string name="medication_action_add_stock">Add Stock</string>
     <string name="medication_action_manage_stock">Manage</string>
 
@@ -216,23 +215,19 @@
 
     <!-- Medication Form Labels -->
     <string name="medication_display_name_label">Display name (optional)</string>
-    <string name="medication_display_name_description">The medication name should be accurate to what you see on your label for your own reference. You can set a display name that will take precedence over the label name throughout the app.</string>
+    <string name="medication_display_name_description">Shown instead of the medication name throughout the app.</string>
     <string name="medication_name_section">Name</string>
     <string name="medication_name_label">Medication name</string>
+    <string name="medication_name_description">The name on the package or prescription label.</string>
     <string name="medication_has_strength">Has strength information</string>
     <string name="medication_strength_value">Strength value</string>
     <string name="medication_strength_unit">Strength unit</string>
     <string name="medication_type_label">Type</string>
+    <string name="medication_type_section">Type</string>
+    <string name="medication_strength_section">Strength</string>
     <string name="medication_icon_label">Icon</string>
     <string name="medication_notes_label">Notes</string>
-    <string name="medication_edit_base_data">Edit base data</string>
     <string name="medication_edit_title_format">Edit %1$s</string>
-
-    <!-- Edit Base Data Dialog -->
-    <string name="edit_base_data_dialog_title">Edit base data?</string>
-    <string name="edit_base_data_dialog_message">Editing your medication name, strength or type also affects your history.\n\nIf you changed medication or dose add a new medication entry and archive this one.</string>
-    <string name="edit_base_data_dialog_understand">I understand</string>
-    <string name="edit_base_data_dialog_confirm">Edit base data</string>
 
     <!-- Color Names -->
     <string name="color_rose">Rose</string>
@@ -259,22 +254,30 @@
     <string name="medication_all_taken">All medications taken</string>
 
     <!-- Importance Label -->
-    <string name="importance_label_title">Importance label</string>
-    <string name="importance_label_description">Labels determine how you will get notified about your schedule.</string>
-    <string name="importance_label_settings_note">You can edit these labels or add new ones later in settings.</string>
-    <string name="importance_label_edit_labels">Edit importance labels</string>
-    <string name="importance_labels_section_title">Importance labels</string>
+    <string name="importance_label_title">Reminder type</string>
+    <string name="importance_label_description">Reminders determine how you will get notified about your schedule.</string>
+    <string name="importance_label_settings_note">You can edit these reminder types or add new ones later in settings.</string>
+    <string name="importance_label_edit_labels">Edit reminder types</string>
+    <string name="importance_labels_section_title">Reminder types</string>
     <string name="importance_labels_section_description">Control how you're notified for each medication</string>
-    <string name="importance_labels_screen_description">Each medication has an importance label associated with it, that determines how you are notified about your schedule.</string>
-    <string name="importance_labels_add_label">Add label</string>
+    <string name="importance_labels_screen_description">Each medication has a reminder type associated with it, that determines how you are notified about your schedule.</string>
+    <string name="importance_labels_add_label">Add reminder type</string>
 
-    <!-- Importance Label Details -->
-    <string name="importance_label_no_reminders">No reminders</string>
-    <string name="importance_label_critical">Critical</string>
-    <string name="importance_label_reminds_once">Reminds once, no follow ups</string>
-    <string name="importance_label_becomes_critical">becomes critical on follow-up %1$d</string>
-    <string name="importance_label_alarm_status">Alarm</string>
-    <string name="importance_label_becomes_alarm">becomes alarm on follow-up %1$d</string>
+    <!-- Reminder type descriptions — used by ImportanceLabelSelector and
+         ImportanceLabelsScreen. Each entry is a complete sentence including
+         its terminal punctuation; the formatter joins them with " ". -->
+    <string name="importance_desc_no_reminders">No reminders.</string>
+    <string name="importance_desc_remind_once">Reminds you once at the scheduled time.</string>
+    <string name="importance_desc_modifier_critical">Bypasses Do Not Disturb.</string>
+    <string name="importance_desc_modifier_alarm">Sounds like an alarm and ignores silent mode.</string>
+    <string name="importance_desc_modifier_critical_after">Becomes critical at follow-up %1$d.</string>
+    <string name="importance_desc_modifier_alarm_after">Becomes an alarm at follow-up %1$d.</string>
+
+    <!-- Reminder timeline preview shown at the bottom of the importance-label
+         edit sheet so users can see how their configuration will play out. -->
+    <string name="importance_preview_title">Reminder timeline</string>
+    <string name="importance_preview_initial">Reminder</string>
+    <string name="importance_preview_follow_up">Follow-up %1$d</string>
 
     <!-- Default Importance Label Names (localized until user renames) -->
     <string name="default_label_silent">Silent</string>
@@ -318,14 +321,14 @@
     <!-- Importance Label Dialogs -->
     <string name="importance_label_dialog_discard_title">Discard changes?</string>
     <string name="importance_label_dialog_discard_message">Some fields have invalid values. Do you want to discard these changes or continue editing?</string>
-    <string name="importance_label_dialog_delete_title">Delete label?</string>
-    <string name="importance_label_dialog_delete_message">Are you sure you want to delete this importance label? This action cannot be undone.</string>
-    <string name="importance_label_dialog_delete_blocked_title">Cannot delete label</string>
+    <string name="importance_label_dialog_delete_title">Delete reminder type?</string>
+    <string name="importance_label_dialog_delete_message">Are you sure you want to delete this reminder type? This action cannot be undone.</string>
+    <string name="importance_label_dialog_delete_blocked_title">Cannot delete reminder type</string>
     <plurals name="importance_label_dialog_delete_blocked_message">
-        <item quantity="one">This label is used by %1$d active medication. Please change its importance label first:</item>
-        <item quantity="other">This label is used by %1$d active medications. Please change their importance label first:</item>
+        <item quantity="one">This reminder type is used by %1$d active medication. Please change its reminder type first:</item>
+        <item quantity="other">This reminder type is used by %1$d active medications. Please change their reminder type first:</item>
     </plurals>
-    <string name="importance_label_dialog_delete_message_safe">Archived medications using this label will be reassigned to the default label. This action cannot be undone.</string>
+    <string name="importance_label_dialog_delete_message_safe">Archived medications using this reminder type will be reassigned to the default. This action cannot be undone.</string>
 
     <!-- Medication Dialogs -->
     <string name="medication_dialog_delete_title">Delete medication?</string>
@@ -350,6 +353,10 @@
     <!-- Schedule Screen -->
     <string name="schedule_screen_title">Schedules</string>
     <string name="schedule_screen_description">Schedules determine when you should take this medication.</string>
+    <string name="schedule_reminder_hint_title">Want a different reminder style?</string>
+    <string name="schedule_reminder_hint_body">You can change how this medication reminds you at any time.</string>
+    <string name="schedule_reminder_hint_action_edit">Change reminder type</string>
+    <string name="schedule_reminder_hint_action_dismiss">Got it</string>
     <string name="schedule_add">Add schedule</string>
     <string name="schedule_new">New schedule</string>
     <string name="schedule_edit">Edit schedule</string>
@@ -419,10 +426,11 @@
     <string name="log_medication_scheduled">Scheduled</string>
     <string name="log_medication_as_needed">As-needed</string>
     <string name="log_medication_status_skipped">Skipped</string>
-    <string name="log_medication_status_not_yet">Not yet</string>
     <string name="log_medication_status_taken">Taken</string>
     <string name="log_medication_action_log">Log</string>
     <string name="log_medication_time">Time</string>
+    <string name="log_medication_empty_scheduled">No scheduled doses for this day</string>
+    <string name="log_medication_empty_as_needed">No medications to log</string>
 
     <!-- Date Formatting -->
     <string name="date_format_weekday_date">%1$s, %2$s</string>
@@ -456,7 +464,7 @@
     <string name="camera_detection_medication_strength">Medication strength</string>
     <string name="camera_detection_edit_note">You can edit this information in the following steps.</string>
     <string name="camera_detection_from_camera">From camera detection</string>
-    <string name="camera_detection_strength_warning">Please make sure these values are correct and as written on your medication. If not correct the data or skip.</string>
+    <string name="camera_detection_strength_warning">Please make sure these values are correct and as written on your medication. If not, correct the data or skip.</string>
     <string name="camera_flash_on">Turn flash off</string>
     <string name="camera_flash_off">Turn flash on</string>
 
@@ -508,27 +516,30 @@
     <!-- Auto-backup Settings -->
     <string name="settings_auto_backup">Automatic backups</string>
     <string name="auto_backup_title">Automatic backups</string>
+    <string name="auto_backup_intro_p1">HelloMeds can automatically back up all your data daily. In case of data loss you can easily restore it.</string>
+    <string name="auto_backup_intro_p2">Backups are encrypted using a passphrase so only you can use them. Choose a strong passphrase and write it down somewhere safe.</string>
+    <string name="auto_backup_disabled_banner">Backups are disabled</string>
+    <string name="auto_backup_enabled_banner">Backups are enabled</string>
     <string name="auto_backup_enable">Enable automatic backups</string>
-    <string name="auto_backup_enable_description">Back up all medications daily with encryption</string>
+    <string name="auto_backup_enable_description">Back up all medications daily protected by a passphrase</string>
     <string name="auto_backup_status_failed">Last backup failed</string>
-    <string name="auto_backup_passphrase_description">Your backups are encrypted with this passphrase. You will need it to restore from a backup.</string>
+    <string name="auto_backup_no_backups_yet">No backups yet</string>
+    <string name="auto_backup_just_now">Last backup just now</string>
+    <string name="auto_backup_long_ago">Last backup over a month ago</string>
+    <string name="auto_backup_passphrase_label">Backup Passphrase</string>
+    <string name="auto_backup_location_label">Backup Location</string>
+    <string name="auto_backup_location_not_set">Not set</string>
     <string name="auto_backup_set_passphrase">Set passphrase</string>
     <string name="auto_backup_change_passphrase">Change passphrase</string>
     <string name="auto_backup_passphrase">Passphrase</string>
     <string name="auto_backup_confirm_passphrase">Confirm passphrase</string>
     <string name="auto_backup_passphrase_hint">Hint (optional)</string>
     <string name="auto_backup_remember_warning">Write this passphrase down! Without it, your backups cannot be restored.</string>
-    <string name="auto_backup_destination_select">Select folder</string>
-    <string name="auto_backup_destination_change">Change folder</string>
     <string name="auto_backup_destination_unavailable">Storage location no longer accessible. Please select a new folder.</string>
     <string name="auto_backup_destination_icloud">Backups are stored in iCloud Drive and sync automatically across your devices.</string>
     <string name="auto_backup_retention_title">Keep recent backups</string>
     <string name="auto_backup_trigger">Back up now</string>
-    <string name="auto_backup_backing_up">Backing up...</string>
-    <string name="auto_backup_needs_passphrase">Set a passphrase to enable automatic backups</string>
-    <string name="auto_backup_needs_destination">Select a backup destination folder</string>
-    <string name="auto_backup_explanation">HelloMeds automatically backs up all your medications daily with encryption. If you ever lose access to your device, you can restore from a backup using your passphrase.\n\nBackups are encrypted so only you can read them. Choose a strong passphrase and write it down somewhere safe.</string>
-    <string name="auto_backup_settings_title">Backup settings</string>
+    <string name="auto_backup_settings_title">Settings</string>
     <string name="auto_backup_passphrase_set">Passphrase is set</string>
     <string name="auto_backup_passphrase_not_set">No passphrase set</string>
     <string name="settings_auto_backup_enabled">Enabled</string>
@@ -541,6 +552,8 @@
     <!-- Export Screen -->
     <string name="backup_export_title">Export data</string>
     <string name="backup_export_options">Options</string>
+    <string name="backup_export_all">Export everything</string>
+    <string name="backup_export_all_description">Includes schedules, stock settings, archived medications, and history. Turn off to customize.</string>
     <string name="backup_include_schedules">Include schedules</string>
     <string name="backup_include_schedules_description">Export medication dosing schedules</string>
     <string name="backup_include_stock">Include stock settings</string>
@@ -563,7 +576,7 @@
     <string name="backup_parsing">Reading backup file…</string>
     <string name="backup_importing">Importing…</string>
     <string name="backup_preview_summary_title">Backup contents</string>
-    <string name="backup_preview_summary">Found %1$d medication(s), %2$d schedule(s), and %3$d importance label(s)</string>
+    <string name="backup_preview_summary">Found %1$d medication(s), %2$d schedule(s), and %3$d reminder type(s)</string>
     <string name="backup_preview_warnings">Warnings</string>
     <string name="backup_duplicate_warning">A medication with this name already exists</string>
     <string name="backup_import_item_stock_tracked">Stock tracked</string>
@@ -650,8 +663,7 @@
     <string name="settings_notification_channel_critical">Critical Alarms</string>
     <string name="settings_notification_channel_critical_description">Configure alarm sound and verify Do Not Disturb bypass for critical medications</string>
     <string name="settings_notification_grouping">Separate notifications</string>
-    <string name="settings_notification_grouping_combined">Single notification</string>
-    <string name="settings_notification_grouping_grouped">Separate notifications</string>
+    <string name="settings_notification_grouping_description">When on, reminders scheduled for the same time appear as individual notifications instead of being grouped into one.</string>
 
     <string name="settings_notification_privacy">Notification privacy</string>
     <string name="settings_notification_privacy_show_names">Show medication names</string>
@@ -680,7 +692,12 @@
 
     <!-- Onboarding -->
     <string name="onboarding_welcome_title">Say\nHelloMeds</string>
+    <string name="onboarding_disclaimer_title">Before we start</string>
+    <string name="onboarding_disclaimer_paragraph1">HelloMeds is a personal medication tracking tool. It does not provide medical advice, diagnosis, or treatment.</string>
+    <string name="onboarding_disclaimer_paragraph2">Always follow your healthcare provider's instructions regarding your medication schedule and dosage.</string>
+    <string name="onboarding_disclaimer_paragraph3">Your data never leaves your device. HelloMeds works entirely offline and all medication data is stored locally. Only manual backups you create can be shared.</string>
     <string name="onboarding_disclaimer_understood">Understood</string>
+    <string name="onboarding_disclaimer_privacy_link">Read the privacy policy</string>
 
     <!-- BETA: Closed-beta onboarding card. Remove per BETA_ROLLBACK.md before public release. -->
     <string name="onboarding_closed_beta_title">You're in the closed beta</string>
@@ -762,6 +779,15 @@
     <string name="settings_closed_beta_cta">Open beta page</string>
     <string name="settings_closed_beta_support_cta">Open Support</string>
     <string name="settings_closed_beta_url" translatable="false">https://juliana.me/projects/hellomeds/closedbeta-feedback</string>
+
+    <!-- BETA: Closed-beta survey nudge (shown 10 days after onboarding). Remove per BETA_ROLLBACK.md before public release. -->
+    <string name="closed_beta_survey_nudge_title">How's HelloMeds working for you?</string>
+    <string name="closed_beta_survey_nudge_body">You've been using HelloMeds for a couple of weeks. If you have some time please provide feedback in a short (~5 min) survey to help get the app ready for launch!</string>
+    <string name="closed_beta_survey_nudge_cta">Take the survey</string>
+    <string name="closed_beta_survey_nudge_dismiss">Maybe later</string>
+    <string name="closed_beta_survey_settings_label">Take the closed-beta survey</string>
+    <string name="closed_beta_survey_settings_description">A short questionnaire about how the app worked for you. ~5 minutes.</string>
+    <string name="closed_beta_survey_url" translatable="false">https://forms.gle/CAYxfRzbzgJZG6Az7</string>
 
     <!-- About -->
     <string name="settings_about_title">About</string>
@@ -876,9 +902,20 @@
     <string name="stock_detail_title_dynamic">%1$s stock</string>
     <string name="stock_detail_settings">Settings</string>
     <string name="stock_detail_no_changes">No changes</string>
-    <string name="stock_summary_sealed_remaining">%1$s remaining</string>
     <string name="stock_summary_total">%1$d left in total</string>
-    <string name="stock_summary_discrete_current">%1$d in current %2$s</string>
+    <string name="stock_summary_discrete_current">%1$d in %2$s</string>
+    <string name="stock_summary_units_remaining">%1$d %2$s remaining</string>
+    <string name="stock_summary_current_package">Current package</string>
+    <string name="stock_summary_current_bottle">Current bottle</string>
+    <string name="stock_summary_current_dispenser">Current dispenser</string>
+    <string name="stock_summary_current_blister_pack">Current blister pack</string>
+    <string name="stock_summary_current_tube">Current tube</string>
+    <string name="stock_summary_current_vial">Current vial</string>
+    <string name="stock_summary_current_inhaler">Current inhaler</string>
+    <string name="stock_summary_current_pen">Current pen</string>
+    <string name="stock_summary_current_ampoule">Current ampoule</string>
+    <string name="stock_summary_current_canister">Current canister</string>
+    <string name="stock_summary_current_jar">Current jar</string>
     <string name="stock_action_top_up">Top up</string>
     <string name="stock_action_update">Update</string>
     <string name="stock_prediction_single_prefix">You'll run out on</string>
@@ -893,8 +930,6 @@
     <string name="stock_update_sealed_title">Update Containers</string>
     <string name="stock_update_sealed_label">Sealed containers</string>
 
-    <!-- Estimated stock display -->
-    <string name="stock_summary_estimated_containers">%1$d %2$s</string>
     <string name="stock_action_container_depleted">Mark container as depleted</string>
     <string name="stock_container_generic">container</string>
 
@@ -906,6 +941,7 @@
     <string name="stock_settings_section_container">Container</string>
     <string name="stock_settings_low_stock_title">Low stock warning</string>
     <string name="stock_settings_container_type">Container type</string>
+    <string name="stock_container_none">None</string>
     <string name="stock_settings_packaging_quantity">Packaging quantity</string>
     <string name="stock_settings_doses_per_container">Doses per %1$s</string>
     <string name="stock_settings_depletion_reminder">Depletion reminder</string>
@@ -1006,7 +1042,7 @@
 
     <!-- Container Stock Input -->
     <string name="stock_input_full_containers">Full %1$s</string>
-    <string name="stock_input_units_from_current">%1$s from current %2$s</string>
+    <string name="stock_input_units_from_current">%1$s in %2$s (current)</string>
 
     <!-- Backup Summary -->
     <string name="backup_preview_summary_format">Found %1$s, %2$s, and %3$s</string>
@@ -1058,10 +1094,12 @@
     <string name="wizard_medication_type_title">What form does your medication come in.</string>
     <string name="wizard_medication_strength_headline">Medication strength</string>
     <string name="wizard_medication_strength_title">Optional strength of your medication. Should be on your packaging or bottle.</string>
-    <string name="wizard_medication_shape_headline">Medication shape</string>
-    <string name="wizard_medication_shape_title">Helps you recognize your medication in the app.</string>
-    <string name="wizard_medication_colors_headline">Medication colors</string>
-    <string name="wizard_medication_colors_title">Choose a color to customize your medication icon.</string>
+    <string name="wizard_medication_icon_headline">Medication icon</string>
+    <string name="wizard_medication_icon_title">Pick a preset, or customize your own.</string>
+    <string name="wizard_medication_icon_customize">Customize</string>
+    <string name="wizard_medication_icon_customize_headline">Customize icon</string>
+    <string name="wizard_medication_icon_customize_title">Pick a shape and color.</string>
+    <string name="wizard_medication_icon_use_preset">Use a preset</string>
 
     <!-- Auto backup -->
     <string name="auto_backup_passphrase_saved">Passphrase saved</string>
@@ -1075,12 +1113,11 @@
     <string name="import_warning_unknown_frequency_type">Schedule %1$d: unknown frequency type '%2$s', will use Interval</string>
     <string name="import_warning_unknown_tracking_precision">Unknown tracking precision '%1$s', will be cleared</string>
     <string name="import_warning_unknown_container">Unknown container type '%1$s', will be cleared</string>
-    <string name="import_warning_label_not_found">Importance label '%1$s' not found, will use default</string>
+    <string name="import_warning_label_not_found">Reminder type '%1$s' not found, will use default</string>
     <string name="import_warning_medication_prefix">%1$s: %2$s</string>
 
     <!-- Dosing Cycle -->
-    <string name="wizard_cycle_headline">Schedule settings</string>
-    <string name="wizard_cycle_title">Configure timing behavior and dosing cycles for this medication.</string>
+    <string name="wizard_cycle_headline">Cyclic dosing</string>
     <string name="cycle_enabled">This medication follows a cycle</string>
     <string name="cycle_enabled_description">Adjusts your schedule and notifications based on active and break days.</string>
     <string name="cycle_placebos_on_description">During break days, you will still receive reminders for inactive days. Notifications will be quieter.</string>

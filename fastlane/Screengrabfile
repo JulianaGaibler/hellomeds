@@ -1,0 +1,23 @@
+# Screengrab configuration for HelloMeds.
+# Drives the `googleScreenshotDebug` instrumentation test against a connected
+# AVD, capturing screenshots in each locale. `./hm screenshots` orchestrates
+# device boot, sysui demo mode, and animation toggles.
+
+android_home(ENV['ANDROID_HOME'] || ENV['ANDROID_SDK_ROOT'])
+
+app_package_name('me.juliana.hellomeds.screenshot')
+tests_package_name('me.juliana.hellomeds.screenshot.test')
+use_tests_in_packages(['me.juliana.hellomeds.screenshots'])
+
+app_apk_path('androidApp/build/outputs/apk/google/screenshotDebug/androidApp-google-screenshotDebug.apk')
+tests_apk_path('androidApp/build/outputs/apk/androidTest/google/screenshotDebug/androidApp-google-screenshotDebug-androidTest.apk')
+
+locales(['en-US', 'de-DE'])
+clear_previous_screenshots(true)
+
+# Output dir is form-factor aware so `./hm screenshots all` keeps phone/tablet
+# captures separate.
+output_directory("fastlane/metadata/android/screenshots/#{ENV['HM_FORM_FACTOR'] || 'phone'}")
+
+test_instrumentation_runner('me.juliana.hellomeds.screenshots.TestScreenshotRunner')
+reinstall_app(true)

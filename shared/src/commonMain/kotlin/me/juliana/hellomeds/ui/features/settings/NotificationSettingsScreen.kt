@@ -50,8 +50,7 @@ import me.juliana.hellomeds.shared.settings_notification_channels_description
 import me.juliana.hellomeds.shared.settings_notification_discreet_toggle
 import me.juliana.hellomeds.shared.settings_notification_discreet_toggle_description
 import me.juliana.hellomeds.shared.settings_notification_grouping
-import me.juliana.hellomeds.shared.settings_notification_grouping_combined
-import me.juliana.hellomeds.shared.settings_notification_grouping_grouped
+import me.juliana.hellomeds.shared.settings_notification_grouping_description
 import me.juliana.hellomeds.shared.settings_notification_open_settings
 import me.juliana.hellomeds.shared.settings_notification_privacy
 import me.juliana.hellomeds.shared.settings_notification_privacy_discreet
@@ -157,11 +156,7 @@ fun NotificationSettingsScreen(onNavigateBack: () -> Unit) {
                             }
                         },
                         shapes = smartListSegmentedShapes(index = 0, count = 1),
-                        supportingText = if (groupingMode == NotificationGroupingMode.COMBINED) {
-                            stringResource(Res.string.settings_notification_grouping_combined)
-                        } else {
-                            stringResource(Res.string.settings_notification_grouping_grouped)
-                        },
+                        supportingText = stringResource(Res.string.settings_notification_grouping_description),
                     )
                 }
             }

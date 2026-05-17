@@ -399,6 +399,15 @@ class FakeNotificationSessionDao : NotificationSessionDao() {
     override suspend fun countStale(cutoff: Long) = 0
 }
 
+/**
+ * Test [TransactionRunner] that just executes the block — no atomicity, no
+ * thread confinement. Works because the [Fake*Dao] implementations are all
+ * pure in-memory operations and tests run on a single coroutine via runTest.
+ */
+class FakeTransactionRunner : me.juliana.hellomeds.data.util.TransactionRunner {
+    override suspend fun <R> run(block: suspend () -> R): R = block()
+}
+
 class FakeAppDatabase(
     private val fakeLabelDao: FakeImportanceLabelDao = FakeImportanceLabelDao(),
     private val fakeMedDao: FakeMedicationDao = FakeMedicationDao(),

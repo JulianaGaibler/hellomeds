@@ -20,6 +20,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import me.juliana.hellomeds.data.preferences.AppearancePreferences
 import me.juliana.hellomeds.data.util.AppLogger
@@ -53,6 +56,17 @@ class AlarmActivity : ComponentActivity() {
 
     private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
+    private var volumeRampJob: Job? = null
+
+    private companion object {
+        // Start very quiet and ramp to full over a few seconds so the alarm doesn't
+        // jolt the user. The MediaPlayer scalar (0.0–1.0) multiplies whatever the
+        // user's system alarm volume is set to.
+        const val RAMP_START_VOLUME = 0.05f
+        const val RAMP_TARGET_VOLUME = 1.0f
+        const val RAMP_DURATION_MS = 10_000L
+        const val RAMP_TICK_MS = 100L
+    }
 
     private val appearancePrefs: AppearancePreferences by inject()
 
@@ -160,9 +174,12 @@ class AlarmActivity : ComponentActivity() {
                         .build(),
                 )
                 isLooping = true
+                setVolume(RAMP_START_VOLUME, RAMP_START_VOLUME)
                 setOnPreparedListener { mp ->
                     try {
+                        mp.setVolume(RAMP_START_VOLUME, RAMP_START_VOLUME)
                         mp.start()
+                        startVolumeRamp(mp)
                     } catch (e: Exception) {
                         AppLogger.e("AlarmActivity", "Failed to start prepared alarm audio", e)
                     }
@@ -188,7 +205,29 @@ class AlarmActivity : ComponentActivity() {
         vibrator?.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 500, 500), 0))
     }
 
+    private fun startVolumeRamp(player: MediaPlayer) {
+        volumeRampJob?.cancel()
+        volumeRampJob = lifecycleScope.launch {
+            val start = RAMP_START_VOLUME
+            val target = RAMP_TARGET_VOLUME
+            val totalSteps = (RAMP_DURATION_MS / RAMP_TICK_MS).toInt()
+            for (step in 1..totalSteps) {
+                delay(RAMP_TICK_MS)
+                if (!isActive) return@launch
+                val volume = start + (target - start) * (step.toFloat() / totalSteps)
+                try {
+                    player.setVolume(volume, volume)
+                } catch (e: IllegalStateException) {
+                    // MediaPlayer was released between the isActive check and setVolume.
+                    return@launch
+                }
+            }
+        }
+    }
+
     private fun stopAlarmFeedback() {
+        volumeRampJob?.cancel()
+        volumeRampJob = null
         try {
             mediaPlayer?.apply {
                 if (isPlaying) stop()

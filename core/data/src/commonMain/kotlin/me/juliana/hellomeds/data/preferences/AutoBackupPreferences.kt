@@ -28,6 +28,11 @@ class AutoBackupPreferences(private val dataStore: DataStore<Preferences>) {
         private val ONBOARDING_COMPLETED_TIMESTAMP =
             longPreferencesKey("onboarding_completed_timestamp")
         private val BACKUP_NUDGE_DISMISSED = booleanPreferencesKey("backup_nudge_dismissed")
+
+        // BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
+        // Key is explicitly namespaced so post-beta removal can't collide with a future feature.
+        private val CLOSED_BETA_SURVEY_NUDGE_DISMISSED =
+            booleanPreferencesKey("closed_beta_survey_nudge_dismissed")
     }
 
     val autoBackupEnabled: Flow<Boolean> = dataStore.data.map { it[AUTO_BACKUP_ENABLED] ?: false }
@@ -43,6 +48,11 @@ class AutoBackupPreferences(private val dataStore: DataStore<Preferences>) {
         dataStore.data.map { it[ONBOARDING_COMPLETED_TIMESTAMP] ?: 0L }
     val backupNudgeDismissed: Flow<Boolean> =
         dataStore.data.map { it[BACKUP_NUDGE_DISMISSED] ?: false }
+
+    // BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
+    val closedBetaSurveyNudgeDismissed: Flow<Boolean> =
+        dataStore.data.map { it[CLOSED_BETA_SURVEY_NUDGE_DISMISSED] ?: false }
+
     val passphraseHint: Flow<String?> = dataStore.data.map { it[PASSPHRASE_HINT] }
 
     suspend fun setAutoBackupEnabled(enabled: Boolean) {
@@ -123,5 +133,10 @@ class AutoBackupPreferences(private val dataStore: DataStore<Preferences>) {
 
     suspend fun setBackupNudgeDismissed(dismissed: Boolean) {
         dataStore.edit { it[BACKUP_NUDGE_DISMISSED] = dismissed }
+    }
+
+    // BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
+    suspend fun setClosedBetaSurveyNudgeDismissed(dismissed: Boolean) {
+        dataStore.edit { it[CLOSED_BETA_SURVEY_NUDGE_DISMISSED] = dismissed }
     }
 }

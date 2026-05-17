@@ -1,0 +1,15 @@
+default_platform(:android)
+
+platform :android do
+  desc "Capture screenshots on a phone-sized AVD"
+  lane :screenshots_phone do
+    ENV['HM_FORM_FACTOR'] = 'phone'
+    capture_android_screenshots
+  end
+
+  desc "Capture screenshots on a tablet-sized AVD"
+  lane :screenshots_tablet do
+    ENV['HM_FORM_FACTOR'] = 'tablet'
+    capture_android_screenshots
+  end
+end

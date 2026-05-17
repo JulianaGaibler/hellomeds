@@ -3,7 +3,6 @@
 
 package me.juliana.hellomeds.data.repository
 
-import androidx.room.RoomDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.datetime.DateTimeUnit
@@ -23,8 +22,8 @@ import me.juliana.hellomeds.data.model.ProjectedEventWithMedication
 import me.juliana.hellomeds.data.model.TrackingDayEvents
 import me.juliana.hellomeds.data.service.ScheduleProjector
 import me.juliana.hellomeds.data.util.AppLogger
-import me.juliana.hellomeds.data.util.currentTimeMillis
-import me.juliana.hellomeds.data.util.performTransaction
+import me.juliana.hellomeds.data.util.TransactionRunner
+import kotlin.time.Clock
 
 /**
  * Repository for medication history (taken/skipped/auto-skipped actions).
@@ -37,25 +36,31 @@ class MedicationHistoryRepository(
     private val historyDao: MedicationHistoryDao,
     private val medicationDao: MedicationDao,
     private val scheduleDao: ScheduleDao,
-    private val database: RoomDatabase,
+    private val transactionRunner: TransactionRunner,
     private val projector: ScheduleProjector,
     private val stockTrackingRepository: StockTrackingRepository,
     private val reconciler: ScheduleReconciler,
     private val lowStockNotifier: LowStockChecker,
     private val depletionReminderNotifier: DepletionChecker,
+    private val clock: Clock = Clock.System,
 ) {
 
     /**
      * Mark a projected event as taken. Creates a MedicationHistory record
      * and records stock consumption atomically.
      */
-    suspend fun markAsTaken(event: ProjectedEvent, actualDose: Double, takenTime: Long = currentTimeMillis()): Int {
+    suspend fun markAsTaken(
+        event: ProjectedEvent,
+        actualDose: Double,
+        takenTime: Long = clock.now().toEpochMilliseconds(),
+    ): Int {
         AppLogger.d(
             TAG,
-            "markAsTaken: scheduleId=${event.scheduleId}, scheduledTime=${event.scheduledTime}",
+            "markAsTaken: scheduleId=${event.scheduleId}, scheduledTime=${event.scheduledTime}, " +
+                "ctx=${kotlin.coroutines.coroutineContext}",
         )
 
-        return database.performTransaction {
+        return transactionRunner.run {
             // Check for existing record to prevent duplicates
             val existingId = historyDao.findByCompositeKey(
                 event.medicationId,
@@ -138,7 +143,7 @@ class MedicationHistoryRepository(
             "markAsSkipped: scheduleId=${event.scheduleId}, scheduledTime=${event.scheduledTime}",
         )
 
-        database.performTransaction {
+        transactionRunner.run {
             val existingId = historyDao.findByCompositeKey(
                 event.medicationId,
                 event.scheduleId,
@@ -179,8 +184,8 @@ class MedicationHistoryRepository(
      * Updates the history record and adjusts stock.
      */
     suspend fun updateTaken(historyId: Int, actualDose: Double, takenTime: Long) {
-        val medicationId = database.performTransaction {
-            val existing = historyDao.getByIdSync(historyId) ?: return@performTransaction null
+        val medicationId = transactionRunner.run {
+            val existing = historyDao.getByIdSync(historyId) ?: return@run null
 
             val updated = existing.copy(
                 status = MedicationHistory.STATUS_TAKEN,
@@ -226,8 +231,8 @@ class MedicationHistoryRepository(
      * Update an existing history record to skipped status.
      */
     suspend fun updateSkipped(historyId: Int) {
-        val medicationId = database.performTransaction {
-            val existing = historyDao.getByIdSync(historyId) ?: return@performTransaction null
+        val medicationId = transactionRunner.run {
+            val existing = historyDao.getByIdSync(historyId) ?: return@run null
 
             val updated = existing.copy(
                 status = MedicationHistory.STATUS_SKIPPED,
@@ -265,8 +270,12 @@ class MedicationHistoryRepository(
      * Reverses any stock adjustments.
      */
     suspend fun deleteHistoryRecord(historyId: Int) {
-        val medicationId = database.performTransaction {
-            val record = historyDao.getByIdSync(historyId) ?: return@performTransaction null
+        val medicationId = transactionRunner.run {
+            val record = historyDao.getByIdSync(historyId)
+            if (record == null) {
+                AppLogger.e(TAG, "deleteHistoryRecord: historyId=$historyId not found — silent no-op")
+                return@run null
+            }
 
             if (record.scheduleId != null && record.scheduledTime != null) {
                 // Scheduled medication: clean up all duplicates and reverse all stock
@@ -320,15 +329,76 @@ class MedicationHistoryRepository(
     }
 
     /**
+     * Delete the history record(s) for a projected event (revert to pending).
+     *
+     * For scheduled events, deletes by composite key `(medicationId, scheduleId,
+     * scheduledTime)` — this is robust against stale `event.historyRecord?.id`
+     * captured by a long-lived dialog. For PRN events (`scheduleId == 0`),
+     * falls back to id-based delete.
+     */
+    suspend fun deleteHistoryRecord(event: ProjectedEvent) {
+        if (event.isScheduled) {
+            val medicationId = event.medicationId
+            val scheduleId = event.scheduleId
+            val scheduledTime = event.scheduledTime
+
+            transactionRunner.run {
+                val allDuplicates = historyDao.getAllByCompositeKey(
+                    medicationId,
+                    scheduleId,
+                    scheduledTime,
+                )
+                if (allDuplicates.isEmpty()) {
+                    AppLogger.w(
+                        TAG,
+                        "deleteHistoryRecord(event): no rows for med=$medicationId schedule=$scheduleId time=$scheduledTime",
+                    )
+                    return@run
+                }
+                for (dup in allDuplicates) {
+                    try {
+                        stockTrackingRepository.reverseStockAdjustment(dup.id)
+                    } catch (e: Exception) {
+                        AppLogger.e(TAG, "Failed to reverse stock for duplicate id=${dup.id}", e)
+                    }
+                }
+                historyDao.deleteByCompositeKey(medicationId, scheduleId, scheduledTime)
+                AppLogger.i(
+                    TAG,
+                    "deleteHistoryRecord(event): deleted ${allDuplicates.size} record(s) by composite key",
+                )
+            }
+            reconciler.reconcile()
+            try {
+                lowStockNotifier.checkAndNotify(medicationId)
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Low stock check failed (non-fatal)", e)
+            }
+            try {
+                depletionReminderNotifier.checkAndNotify(medicationId)
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Depletion check failed (non-fatal)", e)
+            }
+        } else {
+            val id = event.historyRecord?.id
+            if (id == null) {
+                AppLogger.w(TAG, "deleteHistoryRecord(event): PRN event has no historyRecord.id — skipping")
+                return
+            }
+            deleteHistoryRecord(id)
+        }
+    }
+
+    /**
      * Create a manual dose record for "as needed" medications.
      */
     suspend fun createManualDose(
         medicationId: Int,
         dose: Double,
-        takenTime: Long = currentTimeMillis(),
+        takenTime: Long = clock.now().toEpochMilliseconds(),
         notes: String? = null,
     ): Long {
-        return database.performTransaction {
+        return transactionRunner.run {
             val history = MedicationHistory(
                 medicationId = medicationId,
                 scheduleId = null,
@@ -373,7 +443,7 @@ class MedicationHistoryRepository(
      * Auto-skip events whose next occurrence has already passed.
      */
     suspend fun autoSkipMissedEvents() {
-        val now = currentTimeMillis()
+        val now = clock.now().toEpochMilliseconds()
         // Look at events from 48 hours ago to now
         val windowStart = now - (48 * 60 * 60 * 1000L)
 

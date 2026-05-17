@@ -9,7 +9,6 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toLocalDateTime
-import me.juliana.hellomeds.data.database.entities.ImportanceLabel
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.database.entities.Schedule
 import me.juliana.hellomeds.data.model.ProjectedEvent
@@ -46,6 +45,8 @@ import platform.Foundation.NSDateFormatter
 import platform.Foundation.NSDateFormatterMediumStyle
 import platform.Foundation.NSDateFormatterNoStyle
 import platform.Foundation.NSDateFormatterShortStyle
+import platform.Foundation.NSLocale
+import platform.Foundation.currentLocale
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -138,11 +139,27 @@ actual fun formatDateWithTodayPrefix(date: LocalDate): String {
 // ── Number Formatting ───────────────────────────────────────────────────────
 
 actual fun formatDecimal(value: Double): String {
+    // Locale-aware grouping for display. NSNumberFormatterDecimalStyle enables
+    // usesGroupingSeparator by default and picks the locale's group + decimal
+    // separators ("20,000" in en, "20.000" in de).
+    val formatter = platform.Foundation.NSNumberFormatter()
+    formatter.numberStyle = platform.Foundation.NSNumberFormatterDecimalStyle
+    formatter.maximumFractionDigits = 10u
+    formatter.minimumFractionDigits = 0u
+    return formatter.stringFromNumber(platform.Foundation.NSNumber(double = value))
+        ?: value.toString()
+}
+
+actual fun formatDecimalPlain(value: Double): String {
+    // Round-trip safe via toDoubleOrNull(); used to seed editable text fields.
     if (value == value.toLong().toDouble()) return value.toLong().toString()
     val formatter = platform.Foundation.NSNumberFormatter()
     formatter.numberStyle = platform.Foundation.NSNumberFormatterDecimalStyle
     formatter.maximumFractionDigits = 10u
     formatter.minimumFractionDigits = 0u
+    formatter.usesGroupingSeparator = false
+    // Force `.` decimal separator regardless of locale.
+    formatter.locale = platform.Foundation.NSLocale("en_US_POSIX")
     return formatter.stringFromNumber(platform.Foundation.NSNumber(double = value))
         ?: value.toString()
 }
@@ -155,7 +172,9 @@ actual fun formatMedicationTypeAndStrength(medication: Medication): String {
     val strengthValue = medication.strengthValue
     val strengthUnit = medication.strengthUnit
     return if (strengthValue != null && strengthUnit != null) {
-        "$typeString, ${formatDecimal(strengthValue)}${strengthUnit.value}"
+        // Localize the unit ("IU" → "IE" in de) via the existing displayNameRes mapping.
+        val unitString = stringResource(strengthUnit.displayNameRes)
+        "$typeString, ${formatDecimal(strengthValue)}$unitString"
     } else {
         typeString
     }
@@ -201,36 +220,6 @@ actual fun formatLogEventTime(event: ProjectedEvent): String {
     return formatTime(time)
 }
 
-// ── Importance Label Formatting ─────────────────────────────────────────────
-
-@Composable
-actual fun formatImportanceLabelDescription(label: ImportanceLabel): String {
-    if (!label.shouldRemind) return "No reminders"
-
-    val parts = mutableListOf<String>()
-
-    if (label.isAlarm) {
-        parts.add("Alarm")
-    } else if (label.isCritical) {
-        parts.add("Critical")
-    }
-
-    if (!label.hasFollowUps) {
-        parts.add("reminds once")
-    } else {
-        parts.add("${label.followUpCount} follow ups")
-    }
-
-    if (label.criticalAfterFollowUp != null && !label.isCritical && !label.isAlarm) {
-        parts.add("critical on #${label.criticalAfterFollowUp}")
-    }
-    if (label.alarmAfterFollowUp != null && !label.isAlarm) {
-        parts.add("alarm on #${label.alarmAfterFollowUp}")
-    }
-
-    return parts.joinToString(", ")
-}
-
 // ── Dose Unit Plurals ───────────────────────────────────────────────────────
 
 actual fun getDoseUnitPluralRes(medicationType: MedicationType): PluralStringResource {
@@ -258,4 +247,15 @@ actual fun getDoseUnitPluralRes(medicationType: MedicationType): PluralStringRes
 // ── Platform Utilities ──────────────────────────────────────────────────────
 
 @Composable
-actual fun is24HourFormat(): Boolean = true
+actual fun is24HourFormat(): Boolean {
+    // The "j" template asks NSDateFormatter for the locale's preferred hour
+    // pattern. A 12-hour locale (or a user who toggled off "24-Hour Time" in
+    // iOS Settings → General → Date & Time) returns a pattern containing "a"
+    // (the AM/PM marker).
+    val pattern = NSDateFormatter.dateFormatFromTemplate(
+        tmplate = "j",
+        options = 0u,
+        locale = NSLocale.currentLocale,
+    ) ?: return true
+    return !pattern.contains("a")
+}

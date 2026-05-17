@@ -17,9 +17,8 @@
 
 	<string name="screen_settings">Einstellungen</string>
 	<string name="screen_add_medication">Medikament hinzufügen</string>
-	<string name="screen_edit_base_data">Stammdaten bearbeiten</string>
 	<string name="screen_medication_details">Medikamentendetails</string>
-	<string name="screen_importance_labels">Prioritätsstufen</string>
+	<string name="screen_importance_labels">Erinnerungstypen</string>
 
 	<!-- Common Actions -->
 	<string name="action_edit">Bearbeiten</string>
@@ -42,7 +41,7 @@
 	<string name="content_description_menu">Menü</string>
 	<string name="content_description_edit_schedule">Zeitplan bearbeiten</string>
 	<string name="content_description_edit_medication">Medikament bearbeiten</string>
-	<string name="content_description_edit_label">Prioritätsstufe bearbeiten</string>
+	<string name="content_description_edit_label">Erinnerung bearbeiten</string>
 	<string name="content_description_clear_display_name">Anzeigenamen löschen</string>
 
 	<!-- Accessibility -->
@@ -207,7 +206,7 @@
 
 	<!-- Medication Actions -->
 	<string name="medication_action_schedule">Zeitplan</string>
-	<string name="medication_action_label">Priorität</string>
+	<string name="medication_action_label">Erinnerung</string>
 	<string name="medication_action_add_stock">Vorrat hinzufügen</string>
 	<string name="medication_action_manage_stock">Verwalten</string>
 
@@ -216,23 +215,19 @@
 
 	<!-- Medication Form Labels -->
 	<string name="medication_display_name_label">Anzeigename (optional)</string>
-	<string name="medication_display_name_description">Der Medikamentenname sollte zur Beschriftung auf der Verpackung passen. Optional kann ein Anzeigename festgelegt werden, der in der App bevorzugt angezeigt wird.</string>
+	<string name="medication_display_name_description">Wird statt des Medikamentennamens in der App angezeigt.</string>
 	<string name="medication_name_section">Name</string>
 	<string name="medication_name_label">Medikamentenname</string>
+	<string name="medication_name_description">Der Name auf der Verpackung oder dem Rezept.</string>
 	<string name="medication_has_strength">Stärkeangabe vorhanden</string>
 	<string name="medication_strength_value">Stärkewert</string>
 	<string name="medication_strength_unit">Stärkeeinheit</string>
 	<string name="medication_type_label">Typ</string>
+	<string name="medication_type_section">Typ</string>
+	<string name="medication_strength_section">Stärke</string>
 	<string name="medication_icon_label">Symbol</string>
 	<string name="medication_notes_label">Notizen</string>
-	<string name="medication_edit_base_data">Stammdaten bearbeiten</string>
 	<string name="medication_edit_title_format">%1$s bearbeiten</string>
-
-	<!-- Edit Base Data Dialog -->
-	<string name="edit_base_data_dialog_title">Stammdaten bearbeiten?</string>
-	<string name="edit_base_data_dialog_message">Wenn Name, Stärke oder Typ geändert werden, wirkt sich das auch auf den Verlauf aus.\n\nWenn ein anderes Medikament oder eine andere Dosis vorliegt, sollte ein neuer Eintrag angelegt und dieser archiviert werden.</string>
-	<string name="edit_base_data_dialog_understand">Verstanden</string>
-	<string name="edit_base_data_dialog_confirm">Stammdaten bearbeiten</string>
 
 	<!-- Color Names -->
 	<string name="color_rose">Rosé</string>
@@ -259,22 +254,30 @@
 	<string name="medication_all_taken">Alle Medikamente eingenommen</string>
 
 	<!-- Importance Label -->
-	<string name="importance_label_title">Prioritätsstufe</string>
-	<string name="importance_label_description">Prioritätsstufen steuern, wie über Zeitpläne erinnert wird.</string>
-	<string name="importance_label_settings_note">Diese Stufen können später in den Einstellungen bearbeitet oder ergänzt werden.</string>
-	<string name="importance_label_edit_labels">Prioritätsstufen bearbeiten</string>
-	<string name="importance_labels_section_title">Prioritätsstufen</string>
+	<string name="importance_label_title">Erinnerungstyp</string>
+	<string name="importance_label_description">Erinnerungen steuern, wie über Zeitpläne erinnert wird.</string>
+	<string name="importance_label_settings_note">Diese Erinnerungstypen können später in den Einstellungen bearbeitet oder ergänzt werden.</string>
+	<string name="importance_label_edit_labels">Erinnerungstypen bearbeiten</string>
+	<string name="importance_labels_section_title">Erinnerungstypen</string>
 	<string name="importance_labels_section_description">Steuert Erinnerungen je Medikament</string>
-	<string name="importance_labels_screen_description">Jedem Medikament ist eine Prioritätsstufe zugeordnet. Diese bestimmt, wie an den Zeitplan erinnert wird.</string>
-	<string name="importance_labels_add_label">Stufe hinzufügen</string>
+	<string name="importance_labels_screen_description">Jedem Medikament ist ein Erinnerungstyp zugeordnet. Dieser bestimmt, wie an den Zeitplan erinnert wird.</string>
+	<string name="importance_labels_add_label">Erinnerungstyp hinzufügen</string>
 
 	<!-- Importance Label Details -->
-	<string name="importance_label_no_reminders">Keine Erinnerungen</string>
-	<string name="importance_label_critical">Kritisch</string>
-	<string name="importance_label_reminds_once">Einmal erinnern, keine Folgeerinnerungen</string>
-	<string name="importance_label_becomes_critical">wird ab Folgeerinnerung %1$d kritisch</string>
-	<string name="importance_label_alarm_status">Alarm</string>
-	<string name="importance_label_becomes_alarm">wird ab Folgeerinnerung %1$d zum Alarm</string>
+	<!-- Erinnerungstyp-Beschreibungen — verwendet von ImportanceLabelSelector und
+	     ImportanceLabelsScreen. Jeder Eintrag ist ein vollständiger Satz inkl. Satzendezeichen;
+	     der Formatter verbindet sie mit " ". -->
+	<string name="importance_desc_no_reminders">Keine Erinnerungen.</string>
+	<string name="importance_desc_remind_once">Erinnert Sie einmal zur geplanten Zeit.</string>
+	<string name="importance_desc_modifier_critical">Durchbricht „Bitte nicht stören".</string>
+	<string name="importance_desc_modifier_alarm">Klingt wie ein Wecker und ignoriert den Stummmodus.</string>
+	<string name="importance_desc_modifier_critical_after">Wird ab Folgeerinnerung %1$d kritisch.</string>
+	<string name="importance_desc_modifier_alarm_after">Wird ab Folgeerinnerung %1$d zum Wecker.</string>
+
+	<!-- Vorschau am Ende des Erinnerungstyp-Editors, damit die Konfiguration auf einen Blick verständlich ist. -->
+	<string name="importance_preview_title">Erinnerungsverlauf</string>
+	<string name="importance_preview_initial">Erinnerung</string>
+	<string name="importance_preview_follow_up">Folge-Erinnerung %1$d</string>
 
     <!-- Default Importance Label Names (localized until user renames) -->
     <string name="default_label_silent">Stumm</string>
@@ -316,14 +319,14 @@
 	<!-- Importance Label Dialogs -->
 	<string name="importance_label_dialog_discard_title">Änderungen verwerfen?</string>
 	<string name="importance_label_dialog_discard_message">Einige Felder enthalten ungültige Werte. Sollen die Änderungen verworfen oder weiter bearbeitet werden?</string>
-	<string name="importance_label_dialog_delete_title">Stufe löschen?</string>
-	<string name="importance_label_dialog_delete_message">Soll diese Prioritätsstufe wirklich gelöscht werden? Diese Aktion kann nicht rückgängig gemacht werden.</string>
-	<string name="importance_label_dialog_delete_blocked_title">Stufe kann nicht gelöscht werden</string>
+	<string name="importance_label_dialog_delete_title">Erinnerungstyp löschen?</string>
+	<string name="importance_label_dialog_delete_message">Soll dieser Erinnerungstyp wirklich gelöscht werden? Diese Aktion kann nicht rückgängig gemacht werden.</string>
+	<string name="importance_label_dialog_delete_blocked_title">Erinnerungstyp kann nicht gelöscht werden</string>
 	<plurals name="importance_label_dialog_delete_blocked_message">
-		<item quantity="one">Diese Stufe wird von %1$d aktiven Medikament verwendet. Bitte zuerst die Prioritätsstufe ändern:</item>
-		<item quantity="other">Diese Stufe wird von %1$d aktiven Medikamenten verwendet. Bitte zuerst die Prioritätsstufen ändern:</item>
+		<item quantity="one">Dieser Erinnerungstyp wird von %1$d aktiven Medikament verwendet. Bitte zuerst den Erinnerungstyp ändern:</item>
+		<item quantity="other">Dieser Erinnerungstyp wird von %1$d aktiven Medikamenten verwendet. Bitte zuerst die Erinnerungstypen ändern:</item>
 	</plurals>
-	<string name="importance_label_dialog_delete_message_safe">Archivierte Medikamente mit dieser Stufe werden der Standardstufe zugewiesen. Diese Aktion kann nicht rückgängig gemacht werden.</string>
+	<string name="importance_label_dialog_delete_message_safe">Archivierte Medikamente mit diesem Erinnerungstyp werden dem Standard zugewiesen. Diese Aktion kann nicht rückgängig gemacht werden.</string>
 
 	<!-- Medication Dialogs -->
 	<string name="medication_dialog_delete_title">Medikament löschen?</string>
@@ -348,6 +351,10 @@
 	<!-- Schedule Screen -->
 	<string name="schedule_screen_title">Zeitpläne</string>
 	<string name="schedule_screen_description">Zeitpläne legen fest, wann dieses Medikament eingenommen werden soll.</string>
+	<string name="schedule_reminder_hint_title">Andere Erinnerungsart?</string>
+	<string name="schedule_reminder_hint_body">Sie können jederzeit ändern, wie dieses Medikament Sie erinnert.</string>
+	<string name="schedule_reminder_hint_action_edit">Erinnerungsart ändern</string>
+	<string name="schedule_reminder_hint_action_dismiss">Verstanden</string>
 	<string name="schedule_add">Zeitplan hinzufügen</string>
 	<string name="schedule_new">Neuer Zeitplan</string>
 	<string name="schedule_edit">Zeitplan bearbeiten</string>
@@ -417,7 +424,6 @@
 	<string name="log_medication_scheduled">Geplant</string>
 	<string name="log_medication_as_needed">Bei Bedarf</string>
 	<string name="log_medication_status_skipped">Übersprungen</string>
-	<string name="log_medication_status_not_yet">Noch nicht</string>
 	<string name="log_medication_status_taken">Eingenommen</string>
 	<string name="log_medication_action_log">Loggen</string>
 	<string name="log_medication_time">Uhrzeit</string>
@@ -460,25 +466,25 @@
 
 	<!-- Camera Consent Dialogs -->
 	<string name="camera_consent_title">Medikament scannen</string>
-	<string name="camera_consent_intro">Richte die Kamera auf eine Medikamentenpackung oder ein Etikett. Wir erkennen den Text und nutzen ihn, um die nächsten Schritte vorzubefüllen, damit du das Medikament schneller hinzufügen kannst. Vor dem Speichern lässt sich alles prüfen und bearbeiten.</string>
-	<string name="camera_consent_privacy_android">Text- und Objekterkennung laufen auf deinem Gerät mit Googles ML Kit. ML Kit kann sich mit Google-Servern verbinden, um Updates zu beziehen, und sendet Nutzungs- und Leistungsdaten an Google. Dies ist durch die %1$s abgedeckt. Das Bild selbst wird von ML Kit nicht an Google gesendet.</string>
-	<string name="camera_consent_privacy_ios">Text- und Objekterkennung laufen auf deinem Gerät mit Apples Vision-Framework. Die Nutzung dieser Funktionen ist durch Apples %1$s abgedeckt.</string>
+	<string name="camera_consent_intro">Richten Sie die Kamera auf eine Medikamentenpackung oder ein Etikett. Wir erkennen den Text und nutzen ihn, um die nächsten Schritte vorzubefüllen, damit Sie das Medikament schneller hinzufügen können. Vor dem Speichern lässt sich alles prüfen und bearbeiten.</string>
+	<string name="camera_consent_privacy_android">Text- und Objekterkennung laufen auf Ihrem Gerät mit Googles ML Kit. ML Kit kann sich mit Google-Servern verbinden, um Updates zu beziehen, und sendet Nutzungs- und Leistungsdaten an Google. Dies ist durch die %1$s abgedeckt. Das Bild selbst wird von ML Kit nicht an Google gesendet.</string>
+	<string name="camera_consent_privacy_ios">Text- und Objekterkennung laufen auf Ihrem Gerät mit Apples Vision-Framework. Die Nutzung dieser Funktionen ist durch Apples %1$s abgedeckt.</string>
 	<string name="camera_consent_privacy_google_link">Google-Datenschutzerklärung</string>
 	<string name="camera_consent_privacy_google_url">https://policies.google.com/privacy?hl=de</string>
 	<string name="camera_consent_privacy_apple_link">Datenschutzrichtlinie</string>
 	<string name="camera_consent_privacy_apple_url">https://www.apple.com/de/legal/privacy/de-ww/</string>
 	<string name="camera_consent_choose_method">Erkennungsmethode</string>
-	<string name="camera_consent_choose_method_description">Wähle, wie der erkannte Text interpretiert werden soll.</string>
+	<string name="camera_consent_choose_method_description">Wählen Sie, wie der erkannte Text interpretiert werden soll.</string>
 	<string name="camera_consent_method_basic_title">Basis</string>
 	<string name="camera_consent_method_basic_body_android">Eine einfache Texterkennung. Keine KI und nichts herunterzuladen, aber weniger zuverlässig.</string>
-	<string name="camera_consent_method_basic_body_ios">Eine einfache Texterkennung. Läuft komplett ohne KI auf deinem Gerät, ist aber weniger zuverlässig.</string>
+	<string name="camera_consent_method_basic_body_ios">Eine einfache Texterkennung. Läuft komplett ohne KI auf Ihrem Gerät, ist aber weniger zuverlässig.</string>
 	<string name="camera_consent_method_ai_title_android">Gemini Nano</string>
 	<string name="camera_consent_method_ai_body_android">Ein KI-Modell auf dem Gerät ermittelt Name, Form und Dosierung. Funktioniert offline (das Modell muss bei der ersten Nutzung eventuell heruntergeladen werden).</string>
 	<string name="camera_consent_method_ai_title_ios">Apple Intelligence</string>
-	<string name="camera_consent_method_ai_body_ios">Apples KI ermittelt Name, Form und Dosierung. Apple führt dies nach Möglichkeit auf deinem Gerät aus. Für komplexere Anfragen sendet Apple gegebenenfalls die relevanten Daten an Apples Private Cloud Compute, wo die Daten laut Apple weder gespeichert noch für Apple zugänglich sind. %1$s.</string>
+	<string name="camera_consent_method_ai_body_ios">Apples KI ermittelt Name, Form und Dosierung. Apple führt dies nach Möglichkeit auf Ihrem Gerät aus. Für komplexere Anfragen sendet Apple gegebenenfalls die relevanten Daten an Apples Private Cloud Compute, wo die Daten laut Apple weder gespeichert noch für Apple zugänglich sind. %1$s.</string>
 	<string name="camera_consent_method_ai_learn_more">Mehr erfahren</string>
 	<string name="camera_consent_method_ai_learn_more_url">https://www.apple.com/de/legal/privacy/data/de/intelligence-engine/</string>
-	<string name="camera_consent_basic_only">Der erkannte Text wird auf deinem Gerät mit einer einfachen Texterkennung verarbeitet.</string>
+	<string name="camera_consent_basic_only">Der erkannte Text wird auf Ihrem Gerät mit einer einfachen Texterkennung verarbeitet.</string>
 	<string name="camera_consent_will_download">Gemini Nano wird heruntergeladen</string>
 	<string name="camera_consent_continue">Weiter</string>
 
@@ -502,39 +508,44 @@
 	<!-- Auto-backup Settings -->
 	<string name="settings_auto_backup">Automatische Sicherungen</string>
 	<string name="auto_backup_title">Automatische Sicherungen</string>
+	<string name="auto_backup_intro_p1">HelloMeds kann täglich automatisch alle deine Daten sichern. Bei Datenverlust kannst du sie einfach wiederherstellen.</string>
+	<string name="auto_backup_intro_p2">Sicherungen werden mit einem Passwort verschlüsselt, sodass nur du sie verwenden kannst. Wähle ein starkes Passwort und notiere es an einem sicheren Ort.</string>
+	<string name="auto_backup_disabled_banner">Sicherungen sind deaktiviert</string>
+	<string name="auto_backup_enabled_banner">Sicherungen sind aktiviert</string>
 	<string name="auto_backup_enable">Automatische Sicherungen aktivieren</string>
-	<string name="auto_backup_enable_description">Alle Medikamente täglich verschlüsselt sichern</string>
+	<string name="auto_backup_enable_description">Alle Medikamente täglich durch ein Passwort geschützt sichern</string>
 	<string name="auto_backup_status_failed">Letzte Sicherung fehlgeschlagen</string>
-	<string name="auto_backup_passphrase_description">Dieses Passwort verschlüsselt die Sicherungen. Es wird für die Wiederherstellung benötigt.</string>
+	<string name="auto_backup_no_backups_yet">Noch keine Sicherungen</string>
+	<string name="auto_backup_just_now">Letzte Sicherung gerade eben</string>
+	<string name="auto_backup_long_ago">Letzte Sicherung vor über einem Monat</string>
+	<string name="auto_backup_passphrase_label">Passwort für Sicherung</string>
+	<string name="auto_backup_location_label">Speicherort</string>
+	<string name="auto_backup_location_not_set">Nicht festgelegt</string>
 	<string name="auto_backup_set_passphrase">Passwort festlegen</string>
 	<string name="auto_backup_change_passphrase">Passwort ändern</string>
 	<string name="auto_backup_passphrase">Passwort</string>
 	<string name="auto_backup_confirm_passphrase">Passwort bestätigen</string>
 	<string name="auto_backup_passphrase_hint">Hinweis (optional)</string>
 	<string name="auto_backup_remember_warning">Passwort notieren. Ohne Passwort können Sicherungen nicht wiederhergestellt werden.</string>
-	<string name="auto_backup_destination_select">Ordner auswählen</string>
-	<string name="auto_backup_destination_change">Ordner ändern</string>
 	<string name="auto_backup_destination_unavailable">Speicherort ist nicht mehr erreichbar. Bitte neuen Ordner auswählen.</string>
 	<string name="auto_backup_destination_icloud">Sicherungen werden in iCloud Drive gespeichert und automatisch zwischen Geräten synchronisiert.</string>
 	<string name="auto_backup_retention_title">Aktuelle Sicherungen behalten</string>
 	<string name="auto_backup_trigger">Jetzt sichern</string>
-	<string name="auto_backup_backing_up">Wird gesichert...</string>
-	<string name="auto_backup_needs_passphrase">Zum Aktivieren automatischer Sicherungen ein Passwort festlegen</string>
-	<string name="auto_backup_needs_destination">Zielordner für Sicherungen auswählen</string>
-	<string name="auto_backup_explanation">HelloMeds erstellt täglich automatisch verschlüsselte Sicherungen aller Medikamente. Bei Verlust des Gerätezugriffs kann mit dem Passwort wiederhergestellt werden.\n\nDie Sicherungen sind verschlüsselt und nur mit dem Passwort lesbar. Bitte ein starkes Passwort wählen und sicher notieren.</string>
-	<string name="auto_backup_settings_title">Sicherungseinstellungen</string>
+	<string name="auto_backup_settings_title">Einstellungen</string>
 	<string name="auto_backup_passphrase_set">Passwort ist gesetzt</string>
 	<string name="auto_backup_passphrase_not_set">Kein Passwort gesetzt</string>
 	<string name="settings_auto_backup_enabled">Aktiviert</string>
 	<string name="settings_auto_backup_disabled">Nicht eingerichtet</string>
-	<string name="backup_nudge_title">Daten schützen</string>
-	<string name="backup_nudge_body">Automatische Sicherungen einrichten, um Medikamentendaten zu schützen. Bei Verlust des Gerätezugriffs kann alles mit dem Passwort wiederhergestellt werden.</string>
+	<string name="backup_nudge_title">Sichern Sie Ihre Daten</string>
+	<string name="backup_nudge_body">Automatische Sicherungen einrichten, um Medikamentendaten zu schützen. Wenn App-Daten gelöscht werden, kann alles mit dem Passwort wiederhergestellt werden.</string>
 	<string name="backup_nudge_setup">Einrichten</string>
 	<string name="backup_nudge_dismiss">Nicht jetzt</string>
 
 	<!-- Export Screen -->
 	<string name="backup_export_title">Daten exportieren</string>
 	<string name="backup_export_options">Optionen</string>
+	<string name="backup_export_all">Alles exportieren</string>
+	<string name="backup_export_all_description">Enthält Zeitpläne, Vorratseinstellungen, archivierte Medikamente und Verlauf. Zum Anpassen ausschalten.</string>
 	<string name="backup_include_schedules">Zeitpläne einschließen</string>
 	<string name="backup_include_schedules_description">Dosierungszeitpläne exportieren</string>
 	<string name="backup_include_stock">Vorratseinstellungen einschließen</string>
@@ -557,7 +568,7 @@
 	<string name="backup_parsing">Sicherungsdatei wird gelesen…</string>
 	<string name="backup_importing">Wird importiert…</string>
 	<string name="backup_preview_summary_title">Inhalt der Sicherung</string>
-	<string name="backup_preview_summary">%1$d Medikament(e), %2$d Zeitplan/zeitpläne und %3$d Prioritätsstufe(n) gefunden</string>
+	<string name="backup_preview_summary">%1$d Medikament(e), %2$d Zeitplan/zeitpläne und %3$d Erinnerungstyp(en) gefunden</string>
 	<string name="backup_preview_warnings">Warnungen</string>
 	<string name="backup_duplicate_warning">Ein Medikament mit diesem Namen existiert bereits</string>
 	<string name="backup_import_item_stock_tracked">Vorrat verfolgt</string>
@@ -642,8 +653,7 @@
 	<string name="settings_notification_channel_critical">Kritische Alarme</string>
 	<string name="settings_notification_channel_critical_description">Alarmton konfigurieren und Nicht stören-Umgehung für kritische Medikamente prüfen</string>
 	<string name="settings_notification_grouping">Getrennte Benachrichtigungen</string>
-	<string name="settings_notification_grouping_combined">Benachrichtigungen zusammenfassen</string>
-	<string name="settings_notification_grouping_grouped">Benachrichtigungen einzeln anzeigen</string>
+	<string name="settings_notification_grouping_description">Wenn aktiviert, erscheinen Erinnerungen, die zur gleichen Zeit fällig sind, als einzelne Benachrichtigungen statt zusammengefasst.</string>
 
 	<string name="settings_notification_privacy">Benachrichtigungsdatenschutz</string>
 	<string name="settings_notification_privacy_show_names">Medikamentennamen anzeigen</string>
@@ -672,7 +682,12 @@
 
 	<!-- Onboarding -->
 	<string name="onboarding_welcome_title">Sag hallo zu\nHelloMeds</string>
+	<string name="onboarding_disclaimer_title">Vor dem Start</string>
+	<string name="onboarding_disclaimer_paragraph1">HelloMeds ist ein persönliches Tool zur Dokumentation von Medikamenten. Es bietet keine medizinische Beratung, Diagnose oder Behandlung.</string>
+	<string name="onboarding_disclaimer_paragraph2">Bitte den Anweisungen der behandelnden Person zu Einnahmezeiten und Dosierung folgen.</string>
+	<string name="onboarding_disclaimer_paragraph3">Ihre Daten verlassen das Gerät nicht. HelloMeds funktioniert vollständig offline und alle Medikamentendaten werden lokal gespeichert. Nur manuell erstellte Sicherungen können geteilt werden.</string>
 	<string name="onboarding_disclaimer_understood">Verstanden</string>
+	<string name="onboarding_disclaimer_privacy_link">Datenschutzerklärung lesen</string>
 
 	<!-- BETA: Geschlossene-Beta-Onboarding-Karte. Vor öffentlichem Release gemäß BETA_ROLLBACK.md entfernen. -->
 	<string name="onboarding_closed_beta_title">Willkommen in der geschlossenen Beta</string>
@@ -754,6 +769,14 @@
 	<string name="settings_closed_beta_cta">Beta-Seite öffnen</string>
 	<string name="settings_closed_beta_support_cta">Support öffnen</string>
 
+	<!-- BETA: Beta-Umfrage-Hinweis (10 Tage nach Onboarding). Vor öffentlichem Release gemäß BETA_ROLLBACK.md entfernen. -->
+	<string name="closed_beta_survey_nudge_title">Wie läuft's mit HelloMeds?</string>
+	<string name="closed_beta_survey_nudge_body">Du nutzt HelloMeds jetzt seit ein paar Wochen. Wenn du Zeit hast, bitte gib Feedback in einer kurzen Umfrage (ca. 5 Minuten), um die App startklar machen zu können.</string>
+	<string name="closed_beta_survey_nudge_cta">Zur Umfrage</string>
+	<string name="closed_beta_survey_nudge_dismiss">Vielleicht später</string>
+	<string name="closed_beta_survey_settings_label">An der Beta-Umfrage teilnehmen</string>
+	<string name="closed_beta_survey_settings_description">Ein kurzer Fragebogen dazu, wie die App für dich funktioniert hat. Ca. 5 Minuten.</string>
+
 	<!-- About -->
 	<string name="settings_about_title">Info</string>
 	<string name="settings_about_website">Website</string>
@@ -765,11 +788,11 @@
 	<string name="support_title">Support</string>
 	<string name="support_settings_description">Kontakt aufnehmen und Systembericht erstellen</string>
 	<string name="support_contact_section">Kontakt</string>
-	<string name="support_contact_description">Probleme oder Feedback? Du kannst dich per E-Mail an %1$s wenden. Wer technisch versierter ist, kann auch ein Issue auf GitHub eröffnen.</string>
+	<string name="support_contact_description">Probleme oder Feedback? Sie können sich per E-Mail an %1$s wenden. Wer technisch versierter ist, kann auch ein Issue auf GitHub eröffnen.</string>
 	<string name="support_contact_button_email">E-Mail senden</string>
 	<string name="support_contact_button_github">Auf GitHub melden</string>
 	<string name="support_report_section">Systembericht</string>
-	<string name="support_report_description">Der Bericht muss nicht sofort gesendet werden. Er kann später hilfreich sein, wenn ein konkreter Fehler eingegrenzt werden soll. Der Bericht enthält Systeminformationen, Benachrichtigungseinstellungen und den Zeitplanstatus — Medikamentennamen und persönliche Notizen werden nicht aufgenommen. Trotzdem ist er nicht vollständig frei von persönlichen Details. Bitte vor dem Teilen prüfen und alles entfernen, womit du nicht einverstanden bist.</string>
+	<string name="support_report_description">Der Bericht muss nicht sofort gesendet werden. Er kann später hilfreich sein, wenn ein konkreter Fehler eingegrenzt werden soll. Der Bericht enthält Systeminformationen, Benachrichtigungseinstellungen und den Zeitplanstatus — Medikamentennamen und persönliche Notizen werden nicht aufgenommen. Trotzdem ist er nicht vollständig frei von persönlichen Details. Bitte vor dem Teilen prüfen und alles entfernen, womit Sie nicht einverstanden sind.</string>
 	<string name="support_generate">Bericht erstellen</string>
 	<string name="support_copy">In Zwischenablage kopieren</string>
 
@@ -839,9 +862,20 @@
 	<string name="stock_detail_title_dynamic">%1$s-Vorrat</string>
 	<string name="stock_detail_settings">Einstellungen</string>
 	<string name="stock_detail_no_changes">Keine Änderungen</string>
-	<string name="stock_summary_sealed_remaining">%1$s verbleibend</string>
 	<string name="stock_summary_total">Insgesamt %1$d übrig</string>
-	<string name="stock_summary_discrete_current">%1$d im aktuellen %2$s</string>
+	<string name="stock_summary_discrete_current">%1$d in %2$s</string>
+	<string name="stock_summary_units_remaining">%1$d %2$s übrig</string>
+	<string name="stock_summary_current_package">Aktuelle Packung</string>
+	<string name="stock_summary_current_bottle">Aktuelle Flasche</string>
+	<string name="stock_summary_current_dispenser">Aktueller Spender</string>
+	<string name="stock_summary_current_blister_pack">Aktuelle Blisterpackung</string>
+	<string name="stock_summary_current_tube">Aktuelle Tube</string>
+	<string name="stock_summary_current_vial">Aktuelles Fläschchen</string>
+	<string name="stock_summary_current_inhaler">Aktueller Inhalator</string>
+	<string name="stock_summary_current_pen">Aktueller Pen</string>
+	<string name="stock_summary_current_ampoule">Aktuelle Ampulle</string>
+	<string name="stock_summary_current_canister">Aktuelle Dose</string>
+	<string name="stock_summary_current_jar">Aktueller Behälter</string>
 	<string name="stock_action_top_up">Auffüllen</string>
 	<string name="stock_action_update">Aktualisieren</string>
 	<string name="stock_prediction_single_prefix">Voraussichtlich aufgebraucht am</string>
@@ -856,8 +890,6 @@
 	<string name="stock_update_sealed_title">Behälter aktualisieren</string>
 	<string name="stock_update_sealed_label">Versiegelte Behälter</string>
 
-	<!-- Estimated stock display -->
-	<string name="stock_summary_estimated_containers">%1$d %2$s</string>
 	<string name="stock_action_container_depleted">Behälter als aufgebraucht markieren</string>
 	<string name="stock_container_generic">Behälter</string>
 
@@ -867,6 +899,7 @@
 	<string name="stock_settings_section_container">Behälter</string>
 	<string name="stock_settings_low_stock_title">Warnung bei niedrigem Vorrat</string>
 	<string name="stock_settings_container_type">Behältertyp</string>
+	<string name="stock_container_none">Ohne</string>
 	<string name="stock_settings_packaging_quantity">Verpackungsmenge</string>
 	<string name="stock_settings_doses_per_container">Dosen pro %1$s</string>
 	<string name="stock_settings_depletion_reminder">Aufbrauch-Erinnerung</string>
@@ -967,7 +1000,7 @@
 
 	<!-- Container Stock Input -->
 	<string name="stock_input_full_containers">Volle %1$s</string>
-	<string name="stock_input_units_from_current">%1$s aus aktuellem %2$s</string>
+	<string name="stock_input_units_from_current">%1$s in %2$s (aktuell)</string>
 
 	<!-- Backup Summary -->
 	<string name="backup_preview_summary_format">Gefunden: %1$s, %2$s und %3$s</string>
@@ -1019,10 +1052,12 @@
 	<string name="wizard_medication_type_title">In welcher Form liegt das Medikament vor.</string>
 	<string name="wizard_medication_strength_headline">Medikamentenstärke</string>
 	<string name="wizard_medication_strength_title">Optionale Stärke des Medikaments. Sollte auf Verpackung oder Flasche stehen.</string>
-	<string name="wizard_medication_shape_headline">Medikamentenform</string>
-	<string name="wizard_medication_shape_title">Hilft beim Wiedererkennen des Medikaments in der App.</string>
-	<string name="wizard_medication_colors_headline">Medikamentenfarben</string>
-	<string name="wizard_medication_colors_title">Farbe zur Anpassung des Medikamentensymbols auswählen.</string>
+	<string name="wizard_medication_icon_headline">Medikamentensymbol</string>
+	<string name="wizard_medication_icon_title">Wählen Sie eine Vorlage oder gestalten Sie Ihr eigenes Symbol.</string>
+	<string name="wizard_medication_icon_customize">Anpassen</string>
+	<string name="wizard_medication_icon_customize_headline">Symbol anpassen</string>
+	<string name="wizard_medication_icon_customize_title">Form und Farbe auswählen.</string>
+	<string name="wizard_medication_icon_use_preset">Vorlage verwenden</string>
 
 	<!-- Auto backup -->
     <string name="auto_backup_passphrase_saved">Passwort gespeichert</string>
@@ -1036,12 +1071,11 @@
 	<string name="import_warning_unknown_frequency_type">Zeitplan %1$d: unbekannter Häufigkeitstyp '%2$s', es wird Intervall verwendet</string>
 	<string name="import_warning_unknown_tracking_precision">Unbekannte Verfolgungsgenauigkeit '%1$s', wird gelöscht</string>
 	<string name="import_warning_unknown_container">Unbekannter Behältertyp '%1$s', wird gelöscht</string>
-	<string name="import_warning_label_not_found">Prioritätsstufe '%1$s' nicht gefunden, Standard wird verwendet</string>
+	<string name="import_warning_label_not_found">Erinnerungstyp '%1$s' nicht gefunden, Standard wird verwendet</string>
 	<string name="import_warning_medication_prefix">%1$s: %2$s</string>
 
 	<!-- Dosing Cycle -->
-	<string name="wizard_cycle_headline">Zeitplaneinstellungen</string>
-	<string name="wizard_cycle_title">Zeitverhalten und Dosierungszyklen für dieses Medikament konfigurieren.</string>
+	<string name="wizard_cycle_headline">Zyklische Einnahme</string>
 	<string name="cycle_enabled">Dieses Medikament folgt einem Zyklus</string>
 	<string name="cycle_enabled_description">Passt Zeitplan und Benachrichtigungen anhand von Einnahme- und Pausentagen an.</string>
 	<string name="cycle_placebos_on_description">An Pausentagen werden weiterhin Erinnerungen für inaktive Tage gesendet. Benachrichtigungen sind zurückhaltender.</string>

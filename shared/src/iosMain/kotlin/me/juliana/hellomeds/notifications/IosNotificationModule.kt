@@ -3,6 +3,8 @@
 
 package me.juliana.hellomeds.notifications
 
+import me.juliana.hellomeds.data.interfaces.DepletionChecker
+import me.juliana.hellomeds.data.interfaces.LowStockChecker
 import me.juliana.hellomeds.data.interfaces.ScheduleReconciler
 import me.juliana.hellomeds.domain.ml.HeuristicMedicationEngine
 import me.juliana.hellomeds.domain.ml.MedicationIntelligenceEngine
@@ -32,6 +34,14 @@ fun createIosNotificationModule() = module {
     single<ScheduleReconciler> {
         IOSScheduleReconciler(get(), get(), get(), get(), get(), get())
     }
+
+    // Real iOS implementations of LowStockChecker / DepletionChecker. These
+    // override the no-op stubs in iosPlatformModule (loaded with
+    // allowOverride = true after startKoin), matching the ScheduleReconciler
+    // pattern — the stubs guard against early resolution of these interfaces
+    // before this module loads.
+    single<LowStockChecker> { IOSLowStockNotifier(get(), get(), get()) }
+    single<DepletionChecker> { IOSDepletionReminderNotifier(get(), get(), get(), get()) }
 
     // IOSNotificationDelegate now resolves its DB-touching collaborators lazily
     // (see class doc) — Koin construction is dep-free.

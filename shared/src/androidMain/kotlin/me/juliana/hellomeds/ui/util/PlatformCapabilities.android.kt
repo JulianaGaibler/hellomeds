@@ -29,6 +29,7 @@ actual object PlatformCapabilities {
     actual fun canScheduleCriticalAlerts(): Boolean = false // Android uses its own alarm system
     actual fun isNativeAlarmSupported(): Boolean = true // Android always has AlarmManager
     actual fun isAlarmKitAuthorized(): Boolean = true // Android always has AlarmManager — no separate auth
+    actual fun requiresAppStoreDisclaimer(): Boolean = false // Google Play accepts in-app privacy policy link
 
     // Set by the app module at startup
     var versionString: String = "Unknown"

@@ -7,7 +7,6 @@ import me.juliana.hellomeds.data.model.enums.MedicationBackgroundShape
 import me.juliana.hellomeds.data.model.enums.MedicationForegroundShape
 import me.juliana.hellomeds.data.model.enums.MedicationStrengthUnit
 import me.juliana.hellomeds.data.model.enums.MedicationType
-import me.juliana.hellomeds.data.model.enums.TimeZoneMode
 import me.juliana.hellomeds.domain.ml.MedicationDetectionResult
 import me.juliana.hellomeds.ui.theme.MedicationColor
 
@@ -19,19 +18,17 @@ data class AddMedicationState(
     val type: MedicationType = MedicationType.TABLET,
     val strengthValue: String = "",
     val strengthUnit: MedicationStrengthUnit = MedicationStrengthUnit.MG,
-    val foregroundShape: MedicationForegroundShape = MedicationForegroundShape.CAPSULE_PILL,
-    val backgroundShape: MedicationBackgroundShape = MedicationBackgroundShape.CIRCLE,
-    val color1: MedicationColor? = null,
-    val importanceLabelId: Int? = null,
+    // Icon defaults are pulled from the first curated preset so the icon step starts with a
+    // visible selection rather than an unmatched custom triple.
+    val foregroundShape: MedicationForegroundShape = MedicationIconPresets[0].foregroundShape,
+    val backgroundShape: MedicationBackgroundShape = MedicationIconPresets[0].backgroundShape,
+    val color1: MedicationColor? = MedicationIconPresets[0].color,
     // Cycle / blister pack
     val cycleEnabled: Boolean = false,
     val cycleDaysActive: Int = 21,
     val cycleDaysBreak: Int = 7,
     val cycleHasPlacebos: Boolean = false,
     val cycleDayInCycle: Int = 1,
-    // Timezone handling
-    val timeZoneMode: TimeZoneMode = TimeZoneMode.LOCAL,
-    val anchorTimeZone: String? = null,
     // Camera detection data
     val detectedNames: List<String> = emptyList(),
     val detectedTypes: List<MedicationType> = emptyList(),

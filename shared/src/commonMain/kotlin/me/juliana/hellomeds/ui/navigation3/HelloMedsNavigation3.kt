@@ -20,6 +20,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+// BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
@@ -32,6 +34,12 @@ import me.juliana.hellomeds.shared.backup_nudge_body
 import me.juliana.hellomeds.shared.backup_nudge_dismiss
 import me.juliana.hellomeds.shared.backup_nudge_setup
 import me.juliana.hellomeds.shared.backup_nudge_title
+// BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
+import me.juliana.hellomeds.shared.closed_beta_survey_nudge_body
+import me.juliana.hellomeds.shared.closed_beta_survey_nudge_cta
+import me.juliana.hellomeds.shared.closed_beta_survey_nudge_dismiss
+import me.juliana.hellomeds.shared.closed_beta_survey_nudge_title
+import me.juliana.hellomeds.shared.closed_beta_survey_url
 import me.juliana.hellomeds.ui.compat.ConfigureStatusBar
 import me.juliana.hellomeds.ui.compat.DynamicDarkOnboardingTheme
 import me.juliana.hellomeds.ui.components.medication.MedicationAddedDialog
@@ -45,7 +53,6 @@ import me.juliana.hellomeds.ui.features.settings.SettingsScreen
 import me.juliana.hellomeds.ui.features.settings.SupportScreen
 import me.juliana.hellomeds.ui.navigation3.entries.AddMedicationScreenEntry
 import me.juliana.hellomeds.ui.navigation3.entries.AddStockTrackingFlowScreenEntry
-import me.juliana.hellomeds.ui.navigation3.entries.EditBaseDataScreenEntry
 import me.juliana.hellomeds.ui.navigation3.entries.EditLabelScreenEntry
 import me.juliana.hellomeds.ui.navigation3.entries.EditMedicationScreenEntry
 import me.juliana.hellomeds.ui.navigation3.entries.EditScheduleScreenEntry
@@ -57,6 +64,7 @@ import me.juliana.hellomeds.ui.util.IncomingBackupHandler
 import me.juliana.hellomeds.ui.util.PendingImport
 import me.juliana.hellomeds.ui.util.PlatformCapabilities
 import me.juliana.hellomeds.ui.util.rememberFolderPicker
+import me.juliana.hellomeds.ui.util.suggestedAutoBackupInitialUri
 import me.juliana.hellomeds.ui.viewmodel.AutoBackupViewModel
 import me.juliana.hellomeds.ui.viewmodel.BackupViewModel
 import me.juliana.hellomeds.ui.viewmodel.SupportViewModel
@@ -282,12 +290,17 @@ fun HelloMedsNavigation3(
             OverlayScreenWrapper {
                 val viewModel: AutoBackupViewModel = koinViewModel()
                 val pickFolder = rememberFolderPicker { uri ->
-                    viewModel.setDestinationUri(uri)
+                    if (uri != null) {
+                        viewModel.setDestinationUri(uri)
+                    } else {
+                        viewModel.onFolderPickerCancelled()
+                    }
                 }
                 AutoBackupSettingsScreen(
                     viewModel = viewModel,
                     onNavigateBack = { navigator.closeOverlay() },
                     onPickFolder = pickFolder,
+                    suggestedInitialUri = suggestedAutoBackupInitialUri(),
                 )
             }
         }
@@ -385,18 +398,6 @@ fun HelloMedsNavigation3(
                 EditMedicationScreenEntry(
                     medicationId = key.medicationId,
                     onNavigateBack = { navigator.closeOverlay() },
-                    onEditBaseData = { medicationId ->
-                        navigator.openOverlay(EditBaseDataRoute(medicationId))
-                    },
-                )
-            }
-        }
-
-        entry<EditBaseDataRoute> { key ->
-            OverlayScreenWrapper {
-                EditBaseDataScreenEntry(
-                    medicationId = key.medicationId,
-                    onNavigateBack = { navigator.closeOverlay() },
                 )
             }
         }
@@ -406,6 +407,9 @@ fun HelloMedsNavigation3(
                 EditScheduleScreenEntry(
                     medicationId = key.medicationId,
                     onNavigateBack = { navigator.closeOverlay() },
+                    onNavigateToEditLabel = { medicationId ->
+                        navigator.openOverlay(EditLabelRoute(medicationId))
+                    },
                 )
             }
         }
@@ -580,6 +584,49 @@ fun HelloMedsNavigation3(
                 },
             )
         }
+
+        // === BETA: Closed-beta survey nudge — shown 10 days after onboarding.
+        // Remove this entire block per BETA_ROLLBACK.md before public release. ===
+        val surveyNudgeDismissed by autoBackupPrefs.closedBetaSurveyNudgeDismissed
+            .collectAsStateWithLifecycle(false)
+        val tenDaysMs = 10 * 24 * 60 * 60 * 1000L
+        val showSurveyNudge = onboardingTimestamp > 0L &&
+            (kotlin.time.Clock.System.now().toEpochMilliseconds() - onboardingTimestamp) >= tenDaysMs &&
+            !surveyNudgeDismissed
+
+        if (showSurveyNudge) {
+            val surveyUrl = stringResource(Res.string.closed_beta_survey_url)
+            val surveyUriHandler = LocalUriHandler.current
+            AlertDialog(
+                onDismissRequest = {
+                    nudgeScope.launch {
+                        autoBackupPrefs.setClosedBetaSurveyNudgeDismissed(true)
+                    }
+                },
+                title = { Text(stringResource(Res.string.closed_beta_survey_nudge_title)) },
+                text = { Text(stringResource(Res.string.closed_beta_survey_nudge_body)) },
+                confirmButton = {
+                    Button(onClick = {
+                        nudgeScope.launch {
+                            autoBackupPrefs.setClosedBetaSurveyNudgeDismissed(true)
+                        }
+                        surveyUriHandler.openUri(surveyUrl)
+                    }) {
+                        Text(stringResource(Res.string.closed_beta_survey_nudge_cta))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        nudgeScope.launch {
+                            autoBackupPrefs.setClosedBetaSurveyNudgeDismissed(true)
+                        }
+                    }) {
+                        Text(stringResource(Res.string.closed_beta_survey_nudge_dismiss))
+                    }
+                },
+            )
+        }
+        // === END BETA: Closed-beta survey nudge ===
 
         // Navigate to stock detail screen from low stock notification deep-link
         LaunchedEffect(stockDetailMedicationId) {

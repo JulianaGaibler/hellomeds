@@ -25,10 +25,15 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -45,6 +50,10 @@ import me.juliana.hellomeds.shared.schedule_add
 import me.juliana.hellomeds.shared.schedule_cycle_info_body_1
 import me.juliana.hellomeds.shared.schedule_cycle_info_body_2
 import me.juliana.hellomeds.shared.schedule_cycle_info_title
+import me.juliana.hellomeds.shared.schedule_reminder_hint_action_dismiss
+import me.juliana.hellomeds.shared.schedule_reminder_hint_action_edit
+import me.juliana.hellomeds.shared.schedule_reminder_hint_body
+import me.juliana.hellomeds.shared.schedule_reminder_hint_title
 import me.juliana.hellomeds.shared.schedule_screen_description
 import me.juliana.hellomeds.shared.schedule_screen_title
 import me.juliana.hellomeds.shared.schedule_section_archived
@@ -74,6 +83,9 @@ fun ScheduleScreen(
     onAddSchedule: () -> Unit,
     onEditSchedule: (Schedule) -> Unit,
     medication: Medication? = null,
+    showReminderTypeHint: Boolean = false,
+    onEditReminderType: () -> Unit = {},
+    onDismissReminderTypeHint: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val scrollState = rememberLazyListState()
@@ -132,6 +144,53 @@ fun ScheduleScreen(
                     )
                 }
 
+                if (showReminderTypeHint && schedules.isNotEmpty()) {
+                    item {
+                        SmartList(modifier = Modifier.padding(bottom = 16.dp)) {
+                            SmartListInfoCard(
+                                headlineContent = {
+                                    Text(
+                                        stringResource(Res.string.schedule_reminder_hint_title),
+                                        style = MaterialTheme.typography.titleMedium,
+                                    )
+                                },
+                                supportingContent = {
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Text(
+                                            stringResource(Res.string.schedule_reminder_hint_body),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.End,
+                                        ) {
+                                            TextButton(onClick = {
+                                                onDismissReminderTypeHint()
+                                                onEditReminderType()
+                                            }) {
+                                                Text(stringResource(Res.string.schedule_reminder_hint_action_edit))
+                                            }
+                                            Button(
+                                                onClick = onDismissReminderTypeHint,
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                ),
+                                            ) {
+                                                Text(stringResource(Res.string.schedule_reminder_hint_action_dismiss))
+                                            }
+                                        }
+                                    }
+                                },
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            )
+                        }
+                    }
+                }
+
                 if (medication?.cycleType == CycleType.CYCLIC) {
                     item {
                         SmartList(modifier = Modifier.padding(bottom = 24.dp)) {
@@ -179,7 +238,9 @@ fun ScheduleScreen(
                 item {
                     Card(
                         onClick = onAddSchedule,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(ScreenshotTestTags.SCHEDULE_ADD_BUTTON),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                         ),

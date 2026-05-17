@@ -58,7 +58,9 @@ class CmpMedicationDisplayFormatter : MedicationDisplayFormatter {
     override fun typeAndStrength(medication: Medication): String {
         val type = runBlocking { getString(medication.type.displayNameRes) }
         return if (medication.strengthValue != null && medication.strengthUnit != null) {
-            val strength = "${formatDecimal(medication.strengthValue!!)}${medication.strengthUnit?.value ?: ""}"
+            // Localize the unit ("IU" → "IE" in de) via the existing displayNameRes mapping.
+            val unit = runBlocking { getString(medication.strengthUnit!!.displayNameRes) }
+            val strength = "${formatDecimal(medication.strengthValue!!)}$unit"
             runBlocking { getString(Res.string.medication_type_strength_format, type, strength) }
         } else {
             type

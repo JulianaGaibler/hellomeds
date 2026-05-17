@@ -19,12 +19,17 @@ android {
     defaultConfig {
         applicationId = "me.juliana.hellomeds"
         minSdk = libs.versions.minSdk.get().toInt()
-        targetSdk = libs.versions.compileSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = versionProps["APP_VERSION_CODE"].toString().toInt()
         versionName = versionProps["APP_VERSION_NAME"].toString()
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "me.juliana.hellomeds.screenshots.TestScreenshotRunner"
     }
+
+    // Run instrumentation tests against the screenshotDebug variant so the
+    // Fastlane Screengrab APIs are available and the regular debug build
+    // stays free of test-only deps.
+    testBuildType = "screenshotDebug"
 
     flavorDimensions += "distribution"
     productFlavors {
@@ -39,6 +44,13 @@ android {
     buildTypes {
         debug {
             isPseudoLocalesEnabled = true
+        }
+        create("screenshotDebug") {
+            initWith(getByName("debug"))
+            isPseudoLocalesEnabled = false
+            applicationIdSuffix = ".screenshot"
+            matchingFallbacks += "debug"
+            signingConfig = signingConfigs.getByName("debug")
         }
         create("profile") {
             initWith(getByName("release"))
@@ -163,6 +175,10 @@ dependencies {
     androidTestImplementation(libs.androidx.work.testing)
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.rules)
+
+    // Screengrab (used only by the screenshotDebug instrumentation test variant)
+    "androidTestScreenshotDebugImplementation"(libs.fastlane.screengrab)
+    "androidTestScreenshotDebugImplementation"(libs.androidx.test.uiautomator)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

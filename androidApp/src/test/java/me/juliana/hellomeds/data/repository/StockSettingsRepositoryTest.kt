@@ -4,7 +4,6 @@
 package me.juliana.hellomeds.data.repository
 
 import android.util.Log
-import androidx.room.withTransaction
 import io.mockk.MockKAnnotations
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -23,11 +22,11 @@ import me.juliana.hellomeds.data.dao.MedicationDao
 import me.juliana.hellomeds.data.dao.MedicationHistoryDao
 import me.juliana.hellomeds.data.dao.ScheduleDao
 import me.juliana.hellomeds.data.dao.StockAdjustmentDao
-import me.juliana.hellomeds.data.database.AppDatabase
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
 import me.juliana.hellomeds.data.model.enums.TrackingPrecision
 import me.juliana.hellomeds.data.service.StockPredictionEngine
+import me.juliana.hellomeds.data.util.TransactionRunner
 import me.juliana.hellomeds.notifications.DepletionReminderNotifier
 import me.juliana.hellomeds.notifications.LowStockNotifier
 import org.junit.After
@@ -44,8 +43,9 @@ class StockSettingsRepositoryTest {
     @MockK
     private lateinit var stockAdjustmentDao: StockAdjustmentDao
 
-    @MockK
-    private lateinit var database: AppDatabase
+    private val transactionRunner = object : TransactionRunner {
+        override suspend fun <R> run(block: suspend () -> R): R = block()
+    }
 
     @MockK
     private lateinit var scheduleDao: ScheduleDao
@@ -68,7 +68,6 @@ class StockSettingsRepositoryTest {
     fun setup() {
         MockKAnnotations.init(this)
         mockkStatic(Log::class)
-        mockkStatic("androidx.room.RoomDatabaseKt")
 
         every { Log.d(any(), any()) } returns 0
         every { Log.i(any(), any()) } returns 0
@@ -78,16 +77,10 @@ class StockSettingsRepositoryTest {
         coEvery { medicationDao.updateLowStockAlertSent(any(), any()) } just Runs
         coEvery { medicationDao.updateDepletionAlertSent(any(), any()) } just Runs
 
-        @Suppress("UNCHECKED_CAST")
-        coEvery { database.withTransaction(any<suspend () -> Any?>()) } coAnswers {
-            val block = args[1] as suspend () -> Any?
-            block()
-        }
-
         repository = StockTrackingRepository(
             medicationDao = medicationDao,
             stockAdjustmentDao = stockAdjustmentDao,
-            database = database,
+            transactionRunner = transactionRunner,
             scheduleDao = scheduleDao,
             lowStockNotifier = lowStockNotifier,
             predictionEngine = predictionEngine,
@@ -99,7 +92,6 @@ class StockSettingsRepositoryTest {
     @After
     fun tearDown() {
         unmockkStatic(Log::class)
-        unmockkStatic("androidx.room.RoomDatabaseKt")
     }
 
     // ================================================================

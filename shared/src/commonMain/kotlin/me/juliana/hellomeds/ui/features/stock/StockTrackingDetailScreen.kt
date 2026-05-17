@@ -4,14 +4,13 @@
 package me.juliana.hellomeds.ui.features.stock
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -64,6 +63,7 @@ import me.juliana.hellomeds.shared.stock_depletion_confirm_title
 import me.juliana.hellomeds.shared.stock_detail_add_button
 import me.juliana.hellomeds.shared.stock_detail_description
 import me.juliana.hellomeds.shared.stock_detail_no_changes
+import me.juliana.hellomeds.shared.illustration_empty_tracking
 import me.juliana.hellomeds.shared.stock_detail_no_tracking
 import me.juliana.hellomeds.shared.stock_detail_settings
 import me.juliana.hellomeds.shared.stock_detail_title_dynamic
@@ -99,13 +99,13 @@ import me.juliana.hellomeds.shared.stock_rationale_rate_daily
 import me.juliana.hellomeds.shared.stock_rationale_rate_weekly
 import me.juliana.hellomeds.shared.stock_rationale_separator
 import me.juliana.hellomeds.shared.stock_summary_discrete_current
-import me.juliana.hellomeds.shared.stock_summary_estimated_containers
-import me.juliana.hellomeds.shared.stock_summary_sealed_remaining
 import me.juliana.hellomeds.shared.stock_summary_total
+import me.juliana.hellomeds.shared.stock_summary_units_remaining
 import me.juliana.hellomeds.ui.compat.ButtonGroupDefaults
 import me.juliana.hellomeds.ui.compat.LoadingIndicator
 import me.juliana.hellomeds.ui.compat.ToggleButton
 import me.juliana.hellomeds.ui.compat.ToggleButtonDefaults
+import me.juliana.hellomeds.ui.components.common.EmptyState
 import me.juliana.hellomeds.ui.components.graph.StockLevelGraph
 import me.juliana.hellomeds.ui.components.graph.models.GraphConfig
 import me.juliana.hellomeds.ui.components.graph.models.StockLine
@@ -114,13 +114,15 @@ import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.SmartListItem
 import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
 import me.juliana.hellomeds.ui.components.stock.preview.StockPreviewSelector
+import me.juliana.hellomeds.ui.util.currentLabelRes
 import me.juliana.hellomeds.ui.util.displayNameLowerRes
 import me.juliana.hellomeds.ui.util.displayNameRes
 import me.juliana.hellomeds.ui.util.dosagePluralRes
 import me.juliana.hellomeds.ui.util.doseUnitPluralRes
 import me.juliana.hellomeds.ui.util.formatDate
+import me.juliana.hellomeds.ui.util.fullRemainingPluralRes
 import me.juliana.hellomeds.ui.util.labelPluralRes
-import me.juliana.hellomeds.ui.util.pluralRes
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Instant
@@ -185,42 +187,48 @@ fun StockTrackingDetailScreen(
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) { padding ->
-        val scrollState = rememberScrollState()
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(scrollState)
-                .padding(vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            if (!medication.stockTrackingEnabled) {
-                // Not enabled: Show explanation and Add button
-                Spacer(Modifier.height(32.dp))
-                Text(
-                    text = stringResource(Res.string.stock_detail_no_tracking),
-                    style = MaterialTheme.typography.headlineSmall,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 32.dp),
+        // Empty/loading states render outside the scrollable Column so they can occupy
+        // the full viewport and center vertically — Modifier.weight doesn't behave
+        // inside a verticalScroll-modified Column.
+        if (!medication.stockTrackingEnabled) {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 32.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                EmptyState(
+                    title = stringResource(Res.string.stock_detail_no_tracking),
+                    description = stringResource(Res.string.stock_detail_description),
+                    illustration = painterResource(Res.drawable.illustration_empty_tracking),
+                    action = {
+                        Button(onClick = onAddTracking) {
+                            Text(stringResource(Res.string.stock_detail_add_button))
+                        }
+                    },
                 )
-                Text(
-                    text = stringResource(Res.string.stock_detail_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 32.dp),
-                )
-                Spacer(Modifier.weight(1f))
-                Button(onClick = onAddTracking) {
-                    Text(stringResource(Res.string.stock_detail_add_button))
-                }
-            } else if (stockStatus == null) {
-                // Loading state while stock status is being computed
-                Spacer(Modifier.weight(1f))
+            }
+        } else if (stockStatus == null) {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center,
+            ) {
                 LoadingIndicator()
-                Spacer(Modifier.weight(1f))
-            } else {
+            }
+        } else {
+            val scrollState = rememberScrollState()
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(scrollState)
+                    .padding(vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 // === Enabled: Redesigned layout ===
 
                 // Stock preview visualization — show fill level of current container
@@ -383,75 +391,63 @@ fun StockTrackingDetailScreen(
 
 @Composable
 private fun StockSummaryText(medication: Medication, stockStatus: StockStatus?, isEstimated: Boolean) {
+    if (stockStatus == null) return
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(horizontal = 32.dp),
     ) {
-        if (isEstimated) {
-            // ESTIMATED: show "~N containers" display
-            if (stockStatus != null) {
-                val totalContainers = stockStatus.totalQuantity.toInt()
-                val containerLabel = medication.medicationContainer?.let {
-                    pluralStringResource(it.labelPluralRes, totalContainers)
-                } ?: pluralStringResource(
-                    Res.plurals.stock_containers_generic,
-                    totalContainers,
-                    totalContainers,
-                )
-                Text(
-                    text = stringResource(
-                        Res.string.stock_summary_estimated_containers,
-                        totalContainers,
-                        containerLabel,
-                    ),
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center,
-                )
-            }
-        } else {
-            if (stockStatus != null) {
-                val totalInt = stockStatus.totalQuantity.toInt()
-                val containerRemaining = stockStatus.currentContainerRemaining
-                val sealedCount = stockStatus.sealedContainerCount
-                val containerLabel = medication.medicationContainer?.let {
-                    stringResource(it.displayNameLowerRes)
-                }
+        val container = medication.medicationContainer
+        val headerStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+        val subStyle = MaterialTheme.typography.bodyLarge
+        val color = MaterialTheme.colorScheme.onSurface
 
-                if (containerRemaining != null && containerLabel != null) {
-                    // Show derived container breakdown
-                    Text(
-                        text = stringResource(
-                            Res.string.stock_summary_discrete_current,
-                            containerRemaining.toInt(),
-                            containerLabel,
-                        ),
-                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center,
-                    )
-                    if (sealedCount > 0) {
-                        val sealedText = pluralStringResource(
-                            medication.medicationContainer!!.pluralRes,
-                            sealedCount,
-                            sealedCount,
-                        )
-                        Text(
-                            text = stringResource(Res.string.stock_summary_sealed_remaining, sealedText),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                } else {
-                    Text(
-                        text = stringResource(Res.string.stock_summary_total, totalInt),
-                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center,
-                    )
-                }
+        if (container != null) {
+            // Two-line layout (always show both lines, including a "0 full X remaining" sub-line).
+            val sealedCount: Int
+            val headerText: String
+            if (isEstimated) {
+                val totalContainers = stockStatus.totalQuantity.toInt()
+                sealedCount = (totalContainers - 1).coerceAtLeast(0)
+                headerText = stringResource(container.currentLabelRes)
+            } else {
+                val containerRemaining = stockStatus.currentContainerRemaining?.toInt() ?: 0
+                sealedCount = stockStatus.sealedContainerCount
+                headerText = stringResource(
+                    Res.string.stock_summary_discrete_current,
+                    containerRemaining,
+                    stringResource(container.displayNameLowerRes),
+                )
             }
+            Text(
+                text = headerText,
+                style = headerStyle,
+                color = color,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = pluralStringResource(container.fullRemainingPluralRes, sealedCount, sealedCount),
+                style = subStyle,
+                color = color,
+                textAlign = TextAlign.Center,
+            )
+        } else if (!isEstimated) {
+            // Exact, no container: "N units remaining" using the medication's dose unit plural.
+            val totalInt = stockStatus.totalQuantity.toInt()
+            val unitLabel = pluralStringResource(medication.type.doseUnitPluralRes, totalInt)
+            Text(
+                text = stringResource(Res.string.stock_summary_units_remaining, totalInt, unitLabel),
+                style = headerStyle,
+                color = color,
+                textAlign = TextAlign.Center,
+            )
+        } else {
+            // Estimated, no container: fall back to a raw total count.
+            Text(
+                text = stringResource(Res.string.stock_summary_total, stockStatus.totalQuantity.toInt()),
+                style = headerStyle,
+                color = color,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }

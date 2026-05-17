@@ -30,4 +30,7 @@ data class ContainerShapeDefinition(
     val viewportWidth: Float,
     val viewportHeight: Float,
     val aspectRatio: Float,
+    // Drawn underneath the body — sticks out where it extends beyond the fill mask,
+    // hidden by body/fill where they overlap.
+    val behindDecorationDrawable: DrawableResource? = null,
 )

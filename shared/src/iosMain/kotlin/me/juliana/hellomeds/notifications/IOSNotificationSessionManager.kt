@@ -8,7 +8,7 @@ import me.juliana.hellomeds.data.dao.NotificationSessionDao
 import me.juliana.hellomeds.data.database.entities.NotificationSessionEntity
 import me.juliana.hellomeds.data.model.NotificationSession
 import me.juliana.hellomeds.data.util.AppLogger
-import me.juliana.hellomeds.data.util.currentTimeMillis
+import kotlin.time.Clock
 import platform.UserNotifications.UNNotificationRequest
 import platform.UserNotifications.UNUserNotificationCenter
 import kotlin.coroutines.resume
@@ -26,6 +26,7 @@ private const val TAG = "IOSSessionManager"
  */
 class IOSNotificationSessionManager(
     private val dao: NotificationSessionDao,
+    private val clock: Clock = Clock.System,
 ) {
 
     suspend fun createSession(session: NotificationSession) {
@@ -98,7 +99,7 @@ class IOSNotificationSessionManager(
     }
 
     suspend fun clearStaleSessions(maxAgeMs: Long = 48 * 60 * 60 * 1000L) {
-        val cutoff = currentTimeMillis() - maxAgeMs
+        val cutoff = clock.now().toEpochMilliseconds() - maxAgeMs
         val count = dao.countStale(cutoff)
         if (count > 0) {
             dao.deleteStale(cutoff)

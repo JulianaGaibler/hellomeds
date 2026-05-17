@@ -23,7 +23,7 @@ import me.juliana.hellomeds.data.preferences.ReliabilityPreferences
 import me.juliana.hellomeds.data.service.ScheduleProjector
 import me.juliana.hellomeds.data.support.ReconcilerDiagnostic
 import me.juliana.hellomeds.data.util.AppLogger
-import me.juliana.hellomeds.data.util.currentTimeMillis
+import kotlin.time.Clock
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.notification_text_time_log_generic
 import me.juliana.hellomeds.shared.notification_text_time_log_named
@@ -108,6 +108,7 @@ class IOSScheduleReconciler(
     private val notificationPrefs: NotificationPreferences,
     private val sessionManager: IOSNotificationSessionManager,
     private val reliabilityPrefs: ReliabilityPreferences,
+    private val clock: Clock = Clock.System,
 ) : ScheduleReconciler {
 
     private val timeFormatter = NSDateFormatter().apply { dateFormat = "HH:mm" }
@@ -165,7 +166,7 @@ class IOSScheduleReconciler(
         }
 
         val center = UNUserNotificationCenter.currentNotificationCenter()
-        val now = currentTimeMillis()
+        val now = clock.now().toEpochMilliseconds()
 
         // Step 0: Clear expired snoozes so they can be rescheduled normally.
         // This is the iOS equivalent of Android's GlobalAlarmReceiver.getDueSnoozes().
@@ -387,7 +388,7 @@ class IOSScheduleReconciler(
         var restoredSnoozeCount = 0
         for (snoozeSession in activeSnoozedSessions) {
             val snoozeUntil = snoozeSession.snoozeUntilTime ?: continue
-            val remainingMs = snoozeUntil - currentTimeMillis()
+            val remainingMs = snoozeUntil - clock.now().toEpochMilliseconds()
             if (remainingMs <= 0) continue
 
             val slotTime = snoozeSession.timeSlotKey.toLongOrNull() ?: continue
@@ -434,7 +435,7 @@ class IOSScheduleReconciler(
 
     override suspend fun getDiagnosticSummary(): ReconcilerDiagnostic {
         val center = UNUserNotificationCenter.currentNotificationCenter()
-        val now = currentTimeMillis()
+        val now = clock.now().toEpochMilliseconds()
         val windowEnd = now + LOOKAHEAD_MS
 
         // Get pending medication notifications
@@ -625,7 +626,7 @@ class IOSScheduleReconciler(
                 criticalAfterFollowUp = criticalAfterFollowUp,
                 alarmAfterFollowUp = alarmAfterFollowUp,
                 sessionType = SessionType.COMBINED,
-                createdAt = currentTimeMillis(),
+                createdAt = clock.now().toEpochMilliseconds(),
             )
             sessionManager.createSession(session)
             return FollowUpConfig(
@@ -796,7 +797,7 @@ class IOSScheduleReconciler(
                 criticalAfterFollowUp = criticalAfterFollowUp,
                 alarmAfterFollowUp = alarmAfterFollowUp,
                 sessionType = SessionType.COMBINED,
-                createdAt = currentTimeMillis(),
+                createdAt = clock.now().toEpochMilliseconds(),
             )
             sessionManager.createSession(session)
             return FollowUpConfig(
@@ -1019,7 +1020,7 @@ class IOSScheduleReconciler(
         val trigger = platform.UserNotifications.UNTimeIntervalNotificationTrigger
             .triggerWithTimeInterval(intervalSeconds, repeats = false)
 
-        val now = currentTimeMillis()
+        val now = clock.now().toEpochMilliseconds()
         val identifier = "snooze_${slotTime}_$now"
         val request = UNNotificationRequest.requestWithIdentifier(
             identifier = identifier,

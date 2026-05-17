@@ -50,6 +50,14 @@ expect object PlatformCapabilities {
     /** Whether this is a debug build. Used to show developer tools. */
     fun isDebugBuild(): Boolean
 
+    /**
+     * Whether the app needs to surface the medical-disclaimer onboarding step
+     * for store compliance. True on iOS (App Store guidelines 5.1.1 / 5.5
+     * require a disclaimer for health-related apps); false on Android
+     * (Google Play accepts the in-app privacy-policy link).
+     */
+    fun requiresAppStoreDisclaimer(): Boolean
+
     /** Trigger notification alarm reconciliation after settings change. */
     fun triggerNotificationReconciliation(context: Any)
 }

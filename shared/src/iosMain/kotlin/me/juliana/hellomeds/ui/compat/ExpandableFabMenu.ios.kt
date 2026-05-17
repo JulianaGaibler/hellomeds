@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -50,6 +51,7 @@ actual fun ExpandableFabMenu(
     collapsedLabel: String,
     toggleMenuLabel: String,
     closeMenuLabel: String,
+    toggleTestTag: String?,
 ) {
     Column(
         modifier = modifier.padding(end = 16.dp, bottom = 16.dp),
@@ -73,7 +75,11 @@ actual fun ExpandableFabMenu(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         ),
-                        modifier = Modifier.height(56.dp),
+                        modifier = Modifier
+                            .height(56.dp)
+                            .then(
+                                if (item.testTag != null) Modifier.testTag(item.testTag) else Modifier,
+                            ),
                     ) {
                         Icon(item.icon, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
@@ -89,10 +95,14 @@ actual fun ExpandableFabMenu(
         if (visible) {
             FloatingActionButton(
                 onClick = { onExpandedChange(!expanded) },
-                modifier = Modifier.semantics {
-                    stateDescription = if (expanded) expandedLabel else collapsedLabel
-                    contentDescription = toggleMenuLabel
-                },
+                modifier = Modifier
+                    .then(
+                        if (toggleTestTag != null) Modifier.testTag(toggleTestTag) else Modifier,
+                    )
+                    .semantics {
+                        stateDescription = if (expanded) expandedLabel else collapsedLabel
+                        contentDescription = toggleMenuLabel
+                    },
                 containerColor = if (expanded) {
                     MaterialTheme.colorScheme.primary
                 } else {

@@ -8,19 +8,15 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -46,9 +42,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -84,6 +81,7 @@ import me.juliana.hellomeds.ui.compat.PlatformBackHandler
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.PermissionWarningBanners
 import me.juliana.hellomeds.ui.components.common.AppScaffold
+import me.juliana.hellomeds.ui.components.common.EmptyState
 import me.juliana.hellomeds.ui.components.common.TopAppBarWithMenu
 import me.juliana.hellomeds.ui.components.medication.MedicationGridItem
 import me.juliana.hellomeds.ui.util.LocalPermissionWarnings
@@ -202,166 +200,92 @@ fun MedicationListScreen(
                 )
             },
         ) { paddingValues ->
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 160.dp),
-                state = lazyGridState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 16.dp,
-                    bottom = 88.dp, // Extra space for FAB
-                ),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                // Permission warnings (centralized — includes DnD bypass check)
-                if (permissionState.hasWarnings) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
+            // When there's nothing for the grid to render (no active meds and either the user
+            // hasn't asked to see archived or archived is also empty), bypass the LazyVerticalGrid
+            // so the empty/loading state can occupy the full viewport and center vertically —
+            // LazyGridItemScope has no `fillParentMaxHeight` equivalent.
+            val showFullScreenEmpty = medications.isEmpty() &&
+                (!showArchived || archivedMedications.isEmpty())
+
+            if (showFullScreenEmpty) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                ) {
+                    if (permissionState.hasWarnings) {
                         PermissionWarningBanners(
                             state = permissionState,
                             dismissedWarnings = dismissedWarnings,
                             onDismiss = { dismissedWarnings = dismissedWarnings + it },
+                            modifier = Modifier.padding(16.dp),
                         )
                     }
-                }
-
-                // Loading or empty state
-                if (medications.isEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
                         if (!hasLoaded) {
                             val loadingDescription = stringResource(Res.string.accessibility_loading)
                             Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp)
-                                    .semantics {
-                                        contentDescription = loadingDescription
-                                        liveRegion = LiveRegionMode.Polite
-                                    },
-                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.semantics {
+                                    contentDescription = loadingDescription
+                                    liveRegion = LiveRegionMode.Polite
+                                },
                             ) {
                                 LoadingIndicator()
                             }
                         } else {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                            ) {
-                                Image(
-                                    painter = painterResource(Res.drawable.illustration_empty_no_medication),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(200.dp),
-                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.outlineVariant),
-                                )
-                                Spacer(Modifier.height(16.dp))
-                                Text(
-                                    text = stringResource(Res.string.medication_empty_state),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Active medications with drag-and-drop reordering
-                itemsIndexed(medicationsList, key = { _, it -> it.id }) { currentIndex, medication ->
-                    ReorderableItem(reorderableState, key = medication.id) { isDragging ->
-                        // Visual feedback: scale up and reduce opacity when dragging
-                        val scale = if (isDragging) 1.05f else 1f
-                        val alpha = if (isDragging) 0.5f else 1f
-                        val canMoveUp = currentIndex > 0
-                        val canMoveDown = currentIndex < medicationsList.size - 1
-
-                        // Accessibility actions for TalkBack users
-                        val moveUpLabel = stringResource(Res.string.accessibility_move_up)
-                        val moveDownLabel = stringResource(Res.string.accessibility_move_down)
-
-                        MedicationGridItem(
-                            medicationName = medication.name,
-                            typeAndStrength = medication.typeAndStrength,
-                            scheduleSummary = medication.scheduleSummary,
-                            foregroundShape = medication.foregroundShape,
-                            backgroundShape = medication.backgroundShape,
-                            color1 = medication.color1,
-                            onClick = { onMedicationClick(medication.id) },
-                            modifier = Modifier
-                                .longPressDraggableHandle(
-                                    onDragStarted = {
-                                        // Haptic feedback when drag starts
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    },
-                                )
-                                .graphicsLayer {
-                                    scaleX = scale
-                                    scaleY = scale
-                                    this.alpha = alpha
-                                }
-                                .semantics {
-                                    // Add custom accessibility actions for reordering
-                                    val actions = mutableListOf<CustomAccessibilityAction>()
-
-                                    if (canMoveUp) {
-                                        actions.add(
-                                            CustomAccessibilityAction(moveUpLabel) {
-                                                val item = medicationsList.removeAt(currentIndex)
-                                                medicationsList.add(currentIndex - 1, item)
-                                                medicationViewModel.reorderMedications(medicationsList)
-                                                true
-                                            },
-                                        )
-                                    }
-
-                                    if (canMoveDown) {
-                                        actions.add(
-                                            CustomAccessibilityAction(moveDownLabel) {
-                                                val item = medicationsList.removeAt(currentIndex)
-                                                medicationsList.add(currentIndex + 1, item)
-                                                medicationViewModel.reorderMedications(medicationsList)
-                                                true
-                                            },
-                                        )
-                                    }
-
-                                    if (actions.isNotEmpty()) {
-                                        customActions = actions
-                                    }
-                                },
-                        )
-                    }
-                }
-
-                // Archived section header (only show if archived medications exist)
-                if (showArchived && archivedMedications.isNotEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        AnimatedVisibility(
-                            visible = true,
-                            enter = expandVertically() + fadeIn(),
-                            exit = shrinkVertically() + fadeOut(),
-                        ) {
-                            Text(
-                                text = stringResource(Res.string.medication_archived),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+                            EmptyState(
+                                title = stringResource(Res.string.medication_empty_state),
+                                illustration = painterResource(Res.drawable.illustration_empty_no_medication),
                             )
                         }
                     }
                 }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 160.dp),
+                    state = lazyGridState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 16.dp,
+                        bottom = 88.dp, // Extra space for FAB
+                    ),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    // Permission warnings (centralized — includes DnD bypass check)
+                    if (permissionState.hasWarnings) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            PermissionWarningBanners(
+                                state = permissionState,
+                                dismissedWarnings = dismissedWarnings,
+                                onDismiss = { dismissedWarnings = dismissedWarnings + it },
+                            )
+                        }
+                    }
 
-                // Archived medications
-                if (showArchived) {
-                    items(archivedMedications, key = { it.id }) { medication ->
-                        AnimatedVisibility(
-                            visible = true,
-                            enter = expandVertically() + fadeIn(),
-                            exit = shrinkVertically() + fadeOut(),
-                        ) {
+                    // Active medications with drag-and-drop reordering
+                    itemsIndexed(medicationsList, key = { _, it -> it.id }) { currentIndex, medication ->
+                        ReorderableItem(reorderableState, key = medication.id) { isDragging ->
+                            // Visual feedback: scale up and reduce opacity when dragging
+                            val scale = if (isDragging) 1.05f else 1f
+                            val alpha = if (isDragging) 0.5f else 1f
+                            val canMoveUp = currentIndex > 0
+                            val canMoveDown = currentIndex < medicationsList.size - 1
+
+                            // Accessibility actions for TalkBack users
+                            val moveUpLabel = stringResource(Res.string.accessibility_move_up)
+                            val moveDownLabel = stringResource(Res.string.accessibility_move_down)
+
                             MedicationGridItem(
                                 medicationName = medication.name,
                                 typeAndStrength = medication.typeAndStrength,
@@ -370,8 +294,90 @@ fun MedicationListScreen(
                                 backgroundShape = medication.backgroundShape,
                                 color1 = medication.color1,
                                 onClick = { onMedicationClick(medication.id) },
-                                isArchived = true,
+                                modifier = Modifier
+                                    .testTag(ScreenshotTestTags.medicationGridItem(medication.id))
+                                    .longPressDraggableHandle(
+                                        onDragStarted = {
+                                            // Haptic feedback when drag starts
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        },
+                                    )
+                                    .graphicsLayer {
+                                        scaleX = scale
+                                        scaleY = scale
+                                        this.alpha = alpha
+                                    }
+                                    .semantics {
+                                        // Add custom accessibility actions for reordering
+                                        val actions = mutableListOf<CustomAccessibilityAction>()
+
+                                        if (canMoveUp) {
+                                            actions.add(
+                                                CustomAccessibilityAction(moveUpLabel) {
+                                                    val item = medicationsList.removeAt(currentIndex)
+                                                    medicationsList.add(currentIndex - 1, item)
+                                                    medicationViewModel.reorderMedications(medicationsList)
+                                                    true
+                                                },
+                                            )
+                                        }
+
+                                        if (canMoveDown) {
+                                            actions.add(
+                                                CustomAccessibilityAction(moveDownLabel) {
+                                                    val item = medicationsList.removeAt(currentIndex)
+                                                    medicationsList.add(currentIndex + 1, item)
+                                                    medicationViewModel.reorderMedications(medicationsList)
+                                                    true
+                                                },
+                                            )
+                                        }
+
+                                        if (actions.isNotEmpty()) {
+                                            customActions = actions
+                                        }
+                                    },
                             )
+                        }
+                    }
+
+                    // Archived section header (only show if archived medications exist)
+                    if (showArchived && archivedMedications.isNotEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            AnimatedVisibility(
+                                visible = true,
+                                enter = expandVertically() + fadeIn(),
+                                exit = shrinkVertically() + fadeOut(),
+                            ) {
+                                Text(
+                                    text = stringResource(Res.string.medication_archived),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+                                )
+                            }
+                        }
+                    }
+
+                    // Archived medications
+                    if (showArchived) {
+                        items(archivedMedications, key = { it.id }) { medication ->
+                            AnimatedVisibility(
+                                visible = true,
+                                enter = expandVertically() + fadeIn(),
+                                exit = shrinkVertically() + fadeOut(),
+                            ) {
+                                MedicationGridItem(
+                                    medicationName = medication.name,
+                                    typeAndStrength = medication.typeAndStrength,
+                                    scheduleSummary = medication.scheduleSummary,
+                                    foregroundShape = medication.foregroundShape,
+                                    backgroundShape = medication.backgroundShape,
+                                    color1 = medication.color1,
+                                    onClick = { onMedicationClick(medication.id) },
+                                    isArchived = true,
+                                )
+                            }
                         }
                     }
                 }

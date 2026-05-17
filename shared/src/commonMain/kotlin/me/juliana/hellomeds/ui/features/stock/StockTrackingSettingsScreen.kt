@@ -36,6 +36,7 @@ import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_back
 import me.juliana.hellomeds.shared.calculate_24px
 import me.juliana.hellomeds.shared.stock_calculator_toggle
+import me.juliana.hellomeds.shared.stock_container_none
 import me.juliana.hellomeds.shared.stock_discrete_low_threshold
 import me.juliana.hellomeds.shared.stock_settings_container_type
 import me.juliana.hellomeds.shared.stock_settings_depletion_reminder
@@ -179,27 +180,36 @@ fun StockTrackingSettingsScreen(
                         },
                         // Container type dropdown
                         SmartListItemConfig(visible = true) { shapes, visible ->
-                            val selectedName = medication.medicationContainer?.let {
-                                stringResource(it.displayNameRes)
-                            } ?: ""
-                            val optionNames = containerOptions.map { (_, container) ->
+                            val noneLabel = stringResource(Res.string.stock_container_none)
+                            val containerNames = containerOptions.map { (_, container) ->
                                 stringResource(container.displayNameRes)
                             }
+                            // In EXACT mode, prepend "None" so the type can be cleared.
+                            // ESTIMATED requires a container type, so omit it there.
+                            val optionNames = if (isEstimated) {
+                                containerNames
+                            } else {
+                                listOf(noneLabel) + containerNames
+                            }
+                            val selectedName = medication.medicationContainer?.let {
+                                stringResource(it.displayNameRes)
+                            } ?: if (isEstimated) "" else noneLabel
                             SmartListDropdownItem(
                                 label = stringResource(Res.string.stock_settings_container_type),
                                 selectedValue = selectedName,
                                 options = optionNames,
                                 onValueChange = { selectedDisplayName ->
-                                    containerOptions.find { (_, c) ->
-                                        selectedDisplayName == c.displayNameRes.let {
-                                            /* can't call stringResource here */
-                                            selectedDisplayName
-                                        }
-                                    }?.second
-                                    // Find by index since we can't call stringResource in callback
                                     val idx = optionNames.indexOf(selectedDisplayName)
                                     if (idx >= 0) {
-                                        onUpdateContainerType(containerOptions[idx].second)
+                                        if (!isEstimated && idx == 0) {
+                                            onUpdateContainerType(null)
+                                            // Capacity is meaningless without a container — clear it too.
+                                            packagingText = ""
+                                            onUpdatePackagingQuantity(null)
+                                        } else {
+                                            val containerIdx = if (isEstimated) idx else idx - 1
+                                            onUpdateContainerType(containerOptions[containerIdx].second)
+                                        }
                                     }
                                 },
                                 shapes = shapes,
@@ -210,7 +220,7 @@ fun StockTrackingSettingsScreen(
                 )
             }
 
-            // --- Container section (ESTIMATED only) ---
+            // --- Container section ---
             if (isEstimated) {
                 item {
                     SmartListHeader(stringResource(Res.string.stock_settings_section_container))
@@ -298,6 +308,33 @@ fun StockTrackingSettingsScreen(
                                     shapes = shapes,
                                     visible = visible,
                                     supportingText = stringResource(Res.string.stock_settings_depletion_reminder_desc),
+                                )
+                            },
+                        ),
+                    )
+                }
+            } else if (medication.medicationContainer != null) {
+                item {
+                    SmartListHeader(stringResource(Res.string.stock_settings_section_container))
+                }
+                item {
+                    AutoSmartList(
+                        items = listOf(
+                            SmartListItemConfig(visible = true) { shapes, visible ->
+                                SmartListTextItem(
+                                    label = stringResource(Res.string.stock_settings_packaging_quantity),
+                                    value = packagingText,
+                                    onValueChange = { newValue ->
+                                        packagingText = newValue
+                                        // Quantity is required while a container is set —
+                                        // the user clears both by setting container to None.
+                                        StockFormatUtils.parseLocaleDouble(newValue)
+                                            ?.takeIf { it > 0 }
+                                            ?.let(onUpdatePackagingQuantity)
+                                    },
+                                    shapes = shapes,
+                                    visible = visible,
+                                    inputTransformation = DecimalInputTransformation(),
                                 )
                             },
                         ),

@@ -22,8 +22,10 @@ import me.juliana.hellomeds.data.service.ScheduleProjector
 import me.juliana.hellomeds.data.service.StockPredictionEngine
 import me.juliana.hellomeds.data.util.MissedDoseDetector
 import me.juliana.hellomeds.data.util.ReliabilityStateProvider
+import me.juliana.hellomeds.data.util.RoomTransactionRunner
 import me.juliana.hellomeds.data.util.SystemTimeProvider
 import me.juliana.hellomeds.data.util.TimeProvider
+import me.juliana.hellomeds.data.util.TransactionRunner
 import org.koin.core.module.Module
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -53,6 +55,10 @@ val dataModule = module {
                 }
             }
     } bind RoomDatabase::class
+
+    // Transaction abstraction — production wraps Room's writer connection; tests
+    // can substitute a no-op runner without needing the Room builder to run.
+    single<TransactionRunner> { RoomTransactionRunner(get<AppDatabase>()) }
 
     // DAOs
     single { get<AppDatabase>().importanceLabelDao() }

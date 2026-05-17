@@ -5,8 +5,8 @@ package me.juliana.hellomeds.ui.features.tracking
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -39,7 +39,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import me.juliana.hellomeds.data.database.entities.Schedule
 import me.juliana.hellomeds.data.model.ProjectedEvent
 import me.juliana.hellomeds.data.model.ProjectedEventWithMedication
 import me.juliana.hellomeds.shared.Res
@@ -50,7 +49,6 @@ import me.juliana.hellomeds.shared.action_save
 import me.juliana.hellomeds.shared.log_medication_as_needed
 import me.juliana.hellomeds.shared.log_medication_edit_title
 import me.juliana.hellomeds.shared.log_medication_scheduled
-import me.juliana.hellomeds.shared.log_medication_status_skipped
 import me.juliana.hellomeds.shared.log_medication_time
 import me.juliana.hellomeds.shared.log_medication_title
 import me.juliana.hellomeds.ui.compat.platformContext
@@ -64,188 +62,22 @@ import me.juliana.hellomeds.ui.components.medication.medicationInfoItem
 import me.juliana.hellomeds.ui.util.formatDateWithRelativeWeekday
 import me.juliana.hellomeds.ui.util.formatTime
 import org.jetbrains.compose.resources.stringResource
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 
 /**
- * Dialog for logging a scheduled medication when tapped
+ * Bottom sheet for logging or editing a single medication dose.
+ *
+ * Mode is derived from [eventWithMedication.event.historyRecord]:
+ * - null  → new log: pre-selects TAKEN, omits the date subheader and Delete button.
+ * - else  → edit existing log: shows date subheader and Delete button; reverting to
+ *           pending is done via Delete.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LogMedicationDialog(
-    eventWithMedication: ProjectedEventWithMedication,
-    date: LocalDate,
-    onDismiss: () -> Unit,
-    onSkip: (ProjectedEvent, LocalTime, Double) -> Unit,
-    onSave: (ProjectedEvent, LocalTime, Double) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val context = platformContext()
-    val medication = eventWithMedication.medication
-    val event = eventWithMedication.event
-
-    // State for time and dose
-    val initialTime = Instant.fromEpochMilliseconds(event.scheduledTime)
-        .toLocalDateTime(TimeZone.currentSystemDefault()).time
-
-    var selectedTime by remember { mutableStateOf(initialTime) }
-    var dose by remember { mutableStateOf(event.dose) }
-    var showTimePicker by remember { mutableStateOf(false) }
-
-    BasicAlertDialog(
-        onDismissRequest = onDismiss,
-        modifier = modifier,
-    ) {
-        Surface(
-            shape = MaterialTheme.shapes.extraLarge,
-            tonalElevation = 6.dp,
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 24.dp, start = 24.dp, end = 24.dp, bottom = 0.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                // Header
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Text(
-                        text = stringResource(Res.string.log_medication_title),
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        text = formatDateWithRelativeWeekday(date),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = stringResource(Res.string.log_medication_scheduled),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
-                // Medication info and inputs
-                AutoSmartList(
-                    items = listOf(
-                        // Medication info
-                        medicationInfoItem(medication),
-                        // Time
-                        SmartListItemConfig(visible = true) { shapes, visible ->
-                            SmartListItem(
-                                headlineContent = { Text(stringResource(Res.string.log_medication_time)) },
-                                leadingContent = {
-                                    Icon(
-                                        imageVector = Icons.Default.DateRange,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(24.dp),
-                                    )
-                                },
-                                trailingContent = {
-                                    Text(
-                                        text = formatTime(selectedTime),
-                                        style = MaterialTheme.typography.bodyLarge,
-                                    )
-                                },
-                                shapes = shapes,
-                                visible = visible,
-                                onClick = { showTimePicker = true },
-                            )
-                        },
-                        // Dose
-                        SmartListItemConfig(visible = true) { shapes, visible ->
-                            DoseInputListItem(
-                                dose = dose,
-                                medicationType = medication.type,
-                                onDoseChange = { dose = it },
-                                shapes = shapes,
-                                visible = visible,
-                            )
-                        },
-                    ),
-                )
-
-                // Actions
-                FlowRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    TextButton(onClick = { onSkip(event, selectedTime, dose) }) {
-                        Text(stringResource(Res.string.log_medication_status_skipped))
-                    }
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick = onDismiss) {
-                            Text(stringResource(Res.string.action_cancel))
-                        }
-                        Button(onClick = { onSave(event, selectedTime, dose) }) {
-                            Text(stringResource(Res.string.action_save))
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Time Picker Dialog
-    if (showTimePicker) {
-        val timePickerState = rememberTimePickerState(
-            initialHour = selectedTime.hour,
-            initialMinute = selectedTime.minute,
-        )
-
-        BasicAlertDialog(
-            onDismissRequest = { showTimePicker = false },
-        ) {
-            Surface(
-                shape = MaterialTheme.shapes.extraLarge,
-                tonalElevation = 6.dp,
-            ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    TimePicker(state = timePickerState)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                    ) {
-                        TextButton(onClick = { showTimePicker = false }) {
-                            Text(stringResource(Res.string.action_cancel))
-                        }
-                        TextButton(onClick = {
-                            selectedTime = LocalTime(
-                                timePickerState.hour,
-                                timePickerState.minute,
-                            )
-                            showTimePicker = false
-                        }) {
-                            Text(stringResource(Res.string.action_ok))
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * Bottom sheet for editing a logged medication (both scheduled and as-needed)
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun EditLoggedMedicationBottomSheet(
+fun MedicationLogBottomSheet(
     eventWithMedication: ProjectedEventWithMedication,
     date: LocalDate,
     isScheduled: Boolean,
-    schedule: Schedule? = null,
     onDismiss: () -> Unit,
     onDelete: (ProjectedEvent) -> Unit,
     onSave: (ProjectedEvent, LocalTime, Double, LogStatus?) -> Unit,
@@ -254,8 +86,8 @@ fun EditLoggedMedicationBottomSheet(
     val context = platformContext()
     val medication = eventWithMedication.medication
     val event = eventWithMedication.event
+    val isNewLog = event.historyRecord == null
 
-    // State for time, dose, and status
     val initialTime = (event.historyRecord?.takenTime ?: event.scheduledTime).let {
         Instant.fromEpochMilliseconds(it)
             .toLocalDateTime(TimeZone.currentSystemDefault()).time
@@ -266,23 +98,12 @@ fun EditLoggedMedicationBottomSheet(
     var status by remember {
         mutableStateOf(
             when (event.historyRecord?.status) {
-                "TAKEN" -> LogStatus.TAKEN
                 "SKIPPED", "AUTO_SKIPPED" -> LogStatus.SKIPPED
-                else -> LogStatus.NOT_YET
+                else -> LogStatus.TAKEN
             },
         )
     }
     var showTimePicker by remember { mutableStateOf(false) }
-
-    // Calculate whether "Not yet" option should be enabled
-    // Allow within 24 hours after scheduled time (same action as Delete, no technical constraint)
-    val enableNotYet = remember(schedule, event) {
-        if (schedule != null && isScheduled) {
-            event.scheduledTime + 24.hours.inWholeMilliseconds > Clock.System.now().toEpochMilliseconds()
-        } else {
-            false
-        }
-    }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -305,15 +126,19 @@ fun EditLoggedMedicationBottomSheet(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
-                        text = stringResource(Res.string.log_medication_edit_title),
+                        text = stringResource(
+                            if (isNewLog) Res.string.log_medication_title else Res.string.log_medication_edit_title,
+                        ),
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
-                    Text(
-                        text = formatDateWithRelativeWeekday(date),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    if (!isNewLog) {
+                        Text(
+                            text = formatDateWithRelativeWeekday(date),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     Text(
                         text = stringResource(
                             if (isScheduled) {
@@ -332,9 +157,7 @@ fun EditLoggedMedicationBottomSheet(
             item {
                 AutoSmartList(
                     items = listOf(
-                        // Medication info
                         medicationInfoItem(medication),
-                        // Time
                         SmartListItemConfig(visible = true) { shapes, visible ->
                             SmartListItem(
                                 headlineContent = { Text(stringResource(Res.string.log_medication_time)) },
@@ -356,7 +179,6 @@ fun EditLoggedMedicationBottomSheet(
                                 onClick = { showTimePicker = true },
                             )
                         },
-                        // Dose
                         SmartListItemConfig(visible = true) { shapes, visible ->
                             DoseInputListItem(
                                 dose = dose,
@@ -366,14 +188,12 @@ fun EditLoggedMedicationBottomSheet(
                                 visible = visible,
                             )
                         },
-                        // Status selector (only for scheduled medications)
                         SmartListItemConfig(visible = isScheduled) { shapes, visible ->
                             SmartListItem(
                                 headlineContent = {
                                     StatusSegmentedButton(
                                         selectedStatus = status,
                                         onStatusChange = { status = it },
-                                        showNotYet = enableNotYet,
                                     )
                                 },
                                 shapes = shapes,
@@ -385,22 +205,32 @@ fun EditLoggedMedicationBottomSheet(
                 )
             }
 
-            // Actions
+            // Actions — taller buttons so the primary edit decisions feel like
+            // real CTAs; kept at row edges with whitespace between rather than
+            // glued together, so Delete sits clearly apart from Save.
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 32.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = if (isNewLog) Arrangement.End else Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    FilledTonalButton(onClick = { onDelete(event) }) {
-                        Text(stringResource(Res.string.action_delete))
+                    if (!isNewLog) {
+                        FilledTonalButton(
+                            onClick = { onDelete(event) },
+                            modifier = Modifier.defaultMinSize(minHeight = 56.dp),
+                        ) {
+                            Text(stringResource(Res.string.action_delete))
+                        }
                     }
 
-                    Button(onClick = {
-                        onSave(event, selectedTime, dose, if (isScheduled) status else null)
-                    }) {
+                    Button(
+                        onClick = {
+                            onSave(event, selectedTime, dose, if (isScheduled) status else null)
+                        },
+                        modifier = Modifier.defaultMinSize(minHeight = 56.dp),
+                    ) {
                         Text(stringResource(Res.string.action_save))
                     }
                 }

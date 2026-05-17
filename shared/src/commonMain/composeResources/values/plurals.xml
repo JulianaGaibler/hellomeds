@@ -354,8 +354,8 @@
         <item quantity="other">%1$d schedules</item>
     </plurals>
     <plurals name="backup_labels_count">
-        <item quantity="one">%1$d importance label</item>
-        <item quantity="other">%1$d importance labels</item>
+        <item quantity="one">%1$d reminder type</item>
+        <item quantity="other">%1$d reminder types</item>
     </plurals>
     <plurals name="backup_import_summary_medications_imported">
         <item quantity="one">%1$d medication imported</item>
@@ -374,8 +374,8 @@
         <item quantity="other">%1$d schedules imported</item>
     </plurals>
     <plurals name="backup_import_summary_labels_created">
-        <item quantity="one">%1$d importance label created</item>
-        <item quantity="other">%1$d importance labels created</item>
+        <item quantity="one">%1$d reminder type created</item>
+        <item quantity="other">%1$d reminder types created</item>
     </plurals>
     <plurals name="backup_import_summary_history_imported">
         <item quantity="one">%1$d history record imported</item>
@@ -403,9 +403,9 @@
         <item quantity="one">%1$d schedule</item>
         <item quantity="other">%1$d schedules</item>
     </plurals>
-    <plurals name="importance_label_follow_ups_plural">
-        <item quantity="one">Reminds with %1$d follow up</item>
-        <item quantity="other">Reminds with %1$d follow ups</item>
+    <plurals name="importance_desc_follow_ups">
+        <item quantity="one">Reminds you, then follows up %1$d more time at %2$d-minute intervals.</item>
+        <item quantity="other">Reminds you, then follows up %1$d more times at %2$d-minute intervals.</item>
     </plurals>
 
     <!-- Notification Plurals (replace separate one/two/three/many strings) -->
@@ -428,6 +428,18 @@
     <plurals name="auto_backup_retention_count">
         <item quantity="one">%1$d backup</item>
         <item quantity="other">%1$d backups</item>
+    </plurals>
+    <plurals name="auto_backup_minutes_ago">
+        <item quantity="one">Last backup %1$d minute ago</item>
+        <item quantity="other">Last backup %1$d minutes ago</item>
+    </plurals>
+    <plurals name="auto_backup_hours_ago">
+        <item quantity="one">Last backup %1$d hour ago</item>
+        <item quantity="other">Last backup %1$d hours ago</item>
+    </plurals>
+    <plurals name="auto_backup_days_ago">
+        <item quantity="one">Last backup %1$d day ago</item>
+        <item quantity="other">Last backup %1$d days ago</item>
     </plurals>
 
     <!-- Notification Titles -->
@@ -458,5 +470,62 @@
     <plurals name="stock_prediction_per_container_days">
         <item quantity="one">~%1$d day per container</item>
         <item quantity="other">~%1$d days per container</item>
+    </plurals>
+
+    <!-- Stock Summary: "N full <container> remaining" (count-bearing, per container) -->
+
+    <plurals name="stock_summary_full_package">
+        <item quantity="one">%1$d full package remaining</item>
+        <item quantity="other">%1$d full packages remaining</item>
+    </plurals>
+
+    <plurals name="stock_summary_full_bottle">
+        <item quantity="one">%1$d full bottle remaining</item>
+        <item quantity="other">%1$d full bottles remaining</item>
+    </plurals>
+
+    <plurals name="stock_summary_full_dispenser">
+        <item quantity="one">%1$d full dispenser remaining</item>
+        <item quantity="other">%1$d full dispensers remaining</item>
+    </plurals>
+
+    <plurals name="stock_summary_full_blister_pack">
+        <item quantity="one">%1$d full blister pack remaining</item>
+        <item quantity="other">%1$d full blister packs remaining</item>
+    </plurals>
+
+    <plurals name="stock_summary_full_tube">
+        <item quantity="one">%1$d full tube remaining</item>
+        <item quantity="other">%1$d full tubes remaining</item>
+    </plurals>
+
+    <plurals name="stock_summary_full_vial">
+        <item quantity="one">%1$d full vial remaining</item>
+        <item quantity="other">%1$d full vials remaining</item>
+    </plurals>
+
+    <plurals name="stock_summary_full_inhaler">
+        <item quantity="one">%1$d full inhaler remaining</item>
+        <item quantity="other">%1$d full inhalers remaining</item>
+    </plurals>
+
+    <plurals name="stock_summary_full_pen">
+        <item quantity="one">%1$d full pen remaining</item>
+        <item quantity="other">%1$d full pens remaining</item>
+    </plurals>
+
+    <plurals name="stock_summary_full_ampoule">
+        <item quantity="one">%1$d full ampoule remaining</item>
+        <item quantity="other">%1$d full ampoules remaining</item>
+    </plurals>
+
+    <plurals name="stock_summary_full_canister">
+        <item quantity="one">%1$d full canister remaining</item>
+        <item quantity="other">%1$d full canisters remaining</item>
+    </plurals>
+
+    <plurals name="stock_summary_full_jar">
+        <item quantity="one">%1$d full jar remaining</item>
+        <item quantity="other">%1$d full jars remaining</item>
     </plurals>
 </resources>

@@ -58,6 +58,8 @@ import me.juliana.hellomeds.shared.backup_encrypt_description
 import me.juliana.hellomeds.shared.backup_encryption_info_description
 import me.juliana.hellomeds.shared.backup_encryption_info_title
 import me.juliana.hellomeds.shared.backup_encryption_title
+import me.juliana.hellomeds.shared.backup_export_all
+import me.juliana.hellomeds.shared.backup_export_all_description
 import me.juliana.hellomeds.shared.backup_export_options
 import me.juliana.hellomeds.shared.backup_export_title
 import me.juliana.hellomeds.shared.backup_exporting
@@ -189,6 +191,16 @@ fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
                     items = listOf(
                         SmartListItemConfig(visible = true) { shapes, visible ->
                             SmartListSwitchItem(
+                                label = stringResource(Res.string.backup_export_all),
+                                checked = state.exportAll,
+                                onCheckedChange = { viewModel.setExportAll(it) },
+                                shapes = shapes,
+                                visible = visible,
+                                supportingText = stringResource(Res.string.backup_export_all_description),
+                            )
+                        },
+                        SmartListItemConfig(visible = !state.exportAll) { shapes, visible ->
+                            SmartListSwitchItem(
                                 label = stringResource(Res.string.backup_include_schedules),
                                 checked = state.includeSchedules,
                                 onCheckedChange = { viewModel.setIncludeSchedules(it) },
@@ -197,7 +209,7 @@ fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
                                 supportingText = stringResource(Res.string.backup_include_schedules_description),
                             )
                         },
-                        SmartListItemConfig(visible = true) { shapes, visible ->
+                        SmartListItemConfig(visible = !state.exportAll) { shapes, visible ->
                             SmartListSwitchItem(
                                 label = stringResource(Res.string.backup_include_stock),
                                 checked = state.includeStockSettings,
@@ -207,7 +219,7 @@ fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
                                 supportingText = stringResource(Res.string.backup_include_stock_description),
                             )
                         },
-                        SmartListItemConfig(visible = true) { shapes, visible ->
+                        SmartListItemConfig(visible = !state.exportAll) { shapes, visible ->
                             SmartListSwitchItem(
                                 label = stringResource(Res.string.backup_include_archived),
                                 checked = state.includeArchived,
@@ -217,7 +229,7 @@ fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
                                 supportingText = stringResource(Res.string.backup_include_archived_description),
                             )
                         },
-                        SmartListItemConfig(visible = true) { shapes, visible ->
+                        SmartListItemConfig(visible = !state.exportAll) { shapes, visible ->
                             SmartListSwitchItem(
                                 label = stringResource(Res.string.backup_include_history),
                                 checked = state.includeHistory,

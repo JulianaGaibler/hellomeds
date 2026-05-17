@@ -11,7 +11,7 @@ import me.juliana.hellomeds.data.interfaces.ScheduleReconciler
 import me.juliana.hellomeds.data.repository.MedicationHistoryRepository
 import me.juliana.hellomeds.data.service.ScheduleProjector
 import me.juliana.hellomeds.data.util.AppLogger
-import me.juliana.hellomeds.data.util.currentTimeMillis
+import kotlin.time.Clock
 import org.koin.mp.KoinPlatform
 import platform.UIKit.UIApplication
 import platform.UIKit.UIBackgroundTaskInvalid
@@ -89,7 +89,7 @@ fun handleAlarmTaken(slotTimeMs: Long, scheduleIds: String) {
         val reconciler = koin.get<ScheduleReconciler>()
 
         val events = projector.getPendingEventsAtTime(slotTimeMs)
-        val now = currentTimeMillis()
+        val now = Clock.System.now().toEpochMilliseconds()
 
         for (event in events) {
             if (event.scheduleId in ids && event.isPending) {
@@ -165,7 +165,7 @@ fun handleAlarmSnooze(slotTimeMs: Long, scheduleIds: String) {
         val notifPrefs = koin.get<me.juliana.hellomeds.data.preferences.NotificationPreferences>()
 
         val snoozeMinutes = notifPrefs.snoozeIntervalMinutes.first()
-        val snoozeUntil = currentTimeMillis() + (snoozeMinutes * 60_000L)
+        val snoozeUntil = Clock.System.now().toEpochMilliseconds() + (snoozeMinutes * 60_000L)
 
         // Cancel follow-up UNNotifications and clear delivered — snooze takes priority
         sessionManager.cancelFollowUpsForSlot(slotTimeMs)

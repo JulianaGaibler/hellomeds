@@ -2,7 +2,8 @@
 agp = "9.2.1"
 kotlin = "2.2.10"
 ksp = "2.3.2"
-compileSdk = "36"
+compileSdk = "37"
+targetSdk = "36"
 minSdk = "31"
 
 # Core Android
@@ -18,7 +19,7 @@ composeBom = "2024.09.00"
 composeMultiplatform = "1.10.0-beta02"
 
 # Material 3
-material3Expressive = "1.5.0-alpha17"
+material3Expressive = "1.5.0-alpha19"
 material3Adaptive = "1.1.0-alpha08"
 graphicsShapes = "1.0.1"
 
@@ -70,6 +71,8 @@ mockk = "1.13.9"
 turbine = "1.0.0"
 coreTesting = "2.2.0"
 testRules = "1.5.0"
+screengrab = "2.1.1"
+uiautomator = "2.3.0"
 [libraries]
 # Core Android
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -161,6 +164,8 @@ androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 androidx-core-testing = { module = "androidx.arch.core:core-testing", version.ref = "coreTesting" }
 androidx-test-rules = { module = "androidx.test:rules", version.ref = "testRules" }
+fastlane-screengrab = { module = "tools.fastlane:screengrab", version.ref = "screengrab" }
+androidx-test-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }

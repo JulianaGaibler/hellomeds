@@ -76,6 +76,20 @@ class BackupViewModel(
         )
     }
 
+    fun setExportAll(value: Boolean) {
+        _exportState.value = if (value) {
+            _exportState.value.copy(
+                exportAll = true,
+                includeSchedules = true,
+                includeStockSettings = true,
+                includeArchived = true,
+                includeHistory = true,
+            )
+        } else {
+            _exportState.value.copy(exportAll = false)
+        }
+    }
+
     fun setIncludeArchived(include: Boolean) {
         _exportState.value = _exportState.value.copy(includeArchived = include)
         if (!include) {
@@ -271,7 +285,8 @@ class BackupViewModel(
 data class ExportUiState(
     val allMedications: List<MedicationExportItem> = emptyList(),
     val selectedMedicationIds: Set<Int> = emptySet(),
-    val includeArchived: Boolean = false,
+    val exportAll: Boolean = true,
+    val includeArchived: Boolean = true,
     val includeSchedules: Boolean = true,
     val includeStockSettings: Boolean = true,
     val includeHistory: Boolean = true,

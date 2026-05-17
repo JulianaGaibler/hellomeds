@@ -44,14 +44,18 @@ import me.juliana.hellomeds.shared.accessibility_action_expand
 import me.juliana.hellomeds.shared.accessibility_not_selected
 import me.juliana.hellomeds.shared.accessibility_selected
 import me.juliana.hellomeds.shared.action_save
+import me.juliana.hellomeds.shared.illustration_empty_no_schedule
 import me.juliana.hellomeds.shared.log_medication_action_log
 import me.juliana.hellomeds.shared.log_medication_as_needed
+import me.juliana.hellomeds.shared.log_medication_empty_as_needed
+import me.juliana.hellomeds.shared.log_medication_empty_scheduled
 import me.juliana.hellomeds.shared.log_medication_scheduled
 import me.juliana.hellomeds.shared.log_medication_status_taken
 import me.juliana.hellomeds.shared.log_medication_time
 import me.juliana.hellomeds.shared.log_medication_title
 import me.juliana.hellomeds.ui.compat.ToggleButton
 import me.juliana.hellomeds.ui.compat.platformContext
+import me.juliana.hellomeds.ui.components.common.EmptyState
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.SmartListItem
 import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
@@ -66,6 +70,7 @@ import me.juliana.hellomeds.ui.util.formatLogEventDose
 import me.juliana.hellomeds.ui.util.formatMedicationTypeAndStrength
 import me.juliana.hellomeds.ui.util.formatTime
 import me.juliana.hellomeds.ui.util.getDoseUnitPluralRes
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
@@ -103,7 +108,8 @@ fun LogMedicationBottomSheet(
 
                 ScheduledMedicationLog(
                     eventWithMedication = eventWithMed,
-                    status = LogStatus.NOT_YET,
+                    included = false,
+                    status = LogStatus.TAKEN,
                     dose = eventWithMed.event.dose,
                     time = scheduledTime,
                     isExpanded = false,
@@ -176,7 +182,16 @@ fun LogMedicationBottomSheet(
 
             // Medications list
             when (mode) {
-                LogMedicationMode.SCHEDULED -> {
+                LogMedicationMode.SCHEDULED -> if (scheduledMedicationStates.isEmpty()) {
+                    item {
+                        EmptyState(
+                            illustration = painterResource(Res.drawable.illustration_empty_no_schedule),
+                            illustrationSize = 160.dp,
+                            contentDescription = stringResource(Res.string.log_medication_empty_scheduled),
+                            modifier = Modifier.padding(vertical = 32.dp),
+                        )
+                    }
+                } else {
                     items(scheduledMedicationStates.size) { index ->
                         val medicationLog = scheduledMedicationStates[index]
                         val defaultTime = remember(scheduledEvents) {
@@ -211,17 +226,18 @@ fun LogMedicationBottomSheet(
                                 scheduledMedicationStates =
                                     scheduledMedicationStates.toMutableList().apply {
                                         val current = this[index]
-                                        val isLogged = current.status != LogStatus.NOT_YET
-                                        this[index] = if (isLogged) {
+                                        this[index] = if (current.included) {
                                             // Reset to defaults when un-logging
                                             current.copy(
+                                                included = false,
                                                 isExpanded = false,
-                                                status = LogStatus.NOT_YET,
+                                                status = LogStatus.TAKEN,
                                                 dose = defaultDose,
                                                 time = defaultTime,
                                             )
                                         } else {
                                             current.copy(
+                                                included = true,
                                                 isExpanded = false,
                                                 status = LogStatus.TAKEN,
                                             )
@@ -239,7 +255,16 @@ fun LogMedicationBottomSheet(
                     }
                 }
 
-                LogMedicationMode.AS_NEEDED -> {
+                LogMedicationMode.AS_NEEDED -> if (asNeededMedicationStates.isEmpty()) {
+                    item {
+                        EmptyState(
+                            illustration = painterResource(Res.drawable.illustration_empty_no_schedule),
+                            illustrationSize = 160.dp,
+                            contentDescription = stringResource(Res.string.log_medication_empty_as_needed),
+                            modifier = Modifier.padding(vertical = 32.dp),
+                        )
+                    }
+                } else {
                     items(asNeededMedicationStates.size) { index ->
                         val medicationLog = asNeededMedicationStates[index]
                         AsNeededMedicationItem(
@@ -323,7 +348,7 @@ private fun ScheduledMedicationItem(
     val selectedText = stringResource(Res.string.accessibility_selected)
     val notSelectedText = stringResource(Res.string.accessibility_not_selected)
 
-    val isLogged = medicationLog.status != LogStatus.NOT_YET
+    val isLogged = medicationLog.included
 
     // Get display name (use displayName if set, otherwise name)
     val displayName = medication.displayName?.takeIf { it.isNotBlank() } ?: medication.name
@@ -437,7 +462,6 @@ private fun ScheduledMedicationItem(
                         StatusSegmentedButton(
                             selectedStatus = medicationLog.status,
                             onStatusChange = onStatusChange,
-                            showNotYet = false,
                         )
                     },
                     shapes = shapes,

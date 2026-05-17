@@ -9,7 +9,6 @@ package me.juliana.hellomeds.ui.test
  */
 object TestTags {
     // MedicationCycleStep / EditMedicationScreen
-    const val TIMEZONE_TOGGLE = "timezone_toggle"
     const val CYCLE_TOGGLE = "cycle_toggle"
     const val CYCLE_CONFIG = "cycle_config"
     const val CYCLE_PROGRESS = "cycle_progress"

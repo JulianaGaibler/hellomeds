@@ -7,7 +7,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
@@ -27,11 +26,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 actual fun ExpandableFabMenu(
     expanded: Boolean,
@@ -45,6 +45,7 @@ actual fun ExpandableFabMenu(
     collapsedLabel: String,
     toggleMenuLabel: String,
     closeMenuLabel: String,
+    toggleTestTag: String?,
 ) {
     FloatingActionButtonMenu(
         modifier = modifier,
@@ -59,6 +60,9 @@ actual fun ExpandableFabMenu(
             ) {
                 ToggleFloatingActionButton(
                     modifier = Modifier
+                        .then(
+                            if (toggleTestTag != null) Modifier.testTag(toggleTestTag) else Modifier,
+                        )
                         .semantics {
                             stateDescription = if (expanded) expandedLabel else collapsedLabel
                             contentDescription = toggleMenuLabel
@@ -86,6 +90,7 @@ actual fun ExpandableFabMenu(
     ) {
         items.forEachIndexed { i, item ->
             FloatingActionButtonMenuItem(
+                modifier = if (item.testTag != null) Modifier.testTag(item.testTag) else Modifier,
                 onClick = { onItemClick(i) },
                 icon = { Icon(item.icon, contentDescription = null) },
                 text = { Text(text = item.label) },

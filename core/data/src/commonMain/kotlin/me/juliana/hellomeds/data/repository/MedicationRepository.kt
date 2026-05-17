@@ -3,19 +3,18 @@
 
 package me.juliana.hellomeds.data.repository
 
-import androidx.room.RoomDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import me.juliana.hellomeds.data.dao.MedicationDao
 import me.juliana.hellomeds.data.dao.ScheduleDao
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.interfaces.ScheduleReconciler
-import me.juliana.hellomeds.data.util.performTransaction
+import me.juliana.hellomeds.data.util.TransactionRunner
 
 class MedicationRepository(
     private val medicationDao: MedicationDao,
     private val scheduleDao: ScheduleDao,
-    private val database: RoomDatabase,
+    private val transactionRunner: TransactionRunner,
     private val reconciler: ScheduleReconciler,
 ) {
 
@@ -50,7 +49,7 @@ class MedicationRepository(
      * Uses a transaction to ensure atomic operation
      */
     suspend fun archive(medicationId: Int) {
-        database.performTransaction {
+        transactionRunner.run {
             // Archive the medication
             medicationDao.archive(medicationId)
 
@@ -72,7 +71,7 @@ class MedicationRepository(
      * Uses a transaction to ensure atomic operation
      */
     suspend fun unarchive(medicationId: Int) {
-        database.performTransaction {
+        transactionRunner.run {
             // Unarchive the medication
             medicationDao.unarchive(medicationId)
 
@@ -110,7 +109,7 @@ class MedicationRepository(
     }
 
     suspend fun reorderMedications(medications: List<Medication>) {
-        database.performTransaction {
+        transactionRunner.run {
             // Update displayOrder for each medication based on its position in the list
             medications.forEachIndexed { index, medication ->
                 medicationDao.updateDisplayOrder(medication.id, index)

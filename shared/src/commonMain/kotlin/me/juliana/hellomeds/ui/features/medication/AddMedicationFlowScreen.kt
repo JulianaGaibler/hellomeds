@@ -3,7 +3,6 @@
 
 package me.juliana.hellomeds.ui.features.medication
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,13 +43,12 @@ import me.juliana.hellomeds.shared.action_finish
 import me.juliana.hellomeds.shared.action_next
 import me.juliana.hellomeds.shared.content_description_back
 import me.juliana.hellomeds.shared.screen_add_medication
+import me.juliana.hellomeds.data.database.DefaultLabelType
 import me.juliana.hellomeds.ui.compat.PlatformBackHandler
 import me.juliana.hellomeds.ui.components.common.AppScaffold
-import me.juliana.hellomeds.ui.features.medication.steps.ImportanceLabelStep
-import me.juliana.hellomeds.ui.features.medication.steps.MedicationColorsStep
 import me.juliana.hellomeds.ui.features.medication.steps.MedicationCycleStep
+import me.juliana.hellomeds.ui.features.medication.steps.MedicationIconStep
 import me.juliana.hellomeds.ui.features.medication.steps.MedicationNameStep
-import me.juliana.hellomeds.ui.features.medication.steps.MedicationShapeStep
 import me.juliana.hellomeds.ui.features.medication.steps.MedicationStrengthStep
 import me.juliana.hellomeds.ui.features.medication.steps.MedicationTypeStep
 import me.juliana.hellomeds.ui.viewmodel.MedicationViewModel
@@ -65,9 +63,10 @@ import org.koin.compose.viewmodel.koinViewModel
  * 2. Type (tablet, capsule, etc.)
  * 3. Strength (optional)
  * 4. Dosing Cycle (optional)
- * 5. Shape (visual)
- * 6. Colors (visual)
- * 7. Importance label
+ * 5. Icon (preset grid + opt-in customizer)
+ *
+ * Reminder type defaults to the seeded FOLLOW_UPS label and is editable
+ * from the edit screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,21 +80,28 @@ fun AddMedicationFlowScreen(
 ) {
     var currentStep by remember { mutableIntStateOf(0) }
     var state by remember { mutableStateOf(initialState ?: AddMedicationState()) }
+    var iconCustomizing by remember { mutableStateOf(false) }
+    // Guards against a rapid second tap on Finish inserting the medication twice
+    // while the async insert + navigation is still in flight.
+    var isSaving by remember { mutableStateOf(false) }
 
     val canProceed = when (currentStep) {
         0 -> state.name.isNotBlank()
         1 -> true // Type is always selected
         2 -> state.strengthValue.isNotBlank() && state.strengthValue.toDoubleOrNull() != null // Must have valid number (or use skip)
         3 -> !state.cycleEnabled || (state.cycleDaysActive > 0 && state.cycleDayInCycle in 1..(state.cycleDaysActive + state.cycleDaysBreak))
-        4 -> true // Shape is always selected
-        5 -> true // Colors are optional
-        6 -> state.importanceLabelId != null
+        4 -> true // Icon always has a default; presets just shortcut it
         else -> false
     }
 
     // Function to save medication to database
     fun saveMedication(onComplete: (Long) -> Unit) {
-        val importanceLabelId = state.importanceLabelId ?: return
+        // Silent safe default: FOLLOW_UPS is one of the 5 seeded labels and is
+        // undeletable, so this lookup is guaranteed to find it. The user can
+        // change the reminder type from the edit screen later.
+        val importanceLabelId = importanceLabels
+            .firstOrNull { it.defaultType == DefaultLabelType.FOLLOW_UPS.defaultType }
+            ?.id ?: return
         val medication = Medication(
             name = state.name.trim(),
             type = state.type,
@@ -117,20 +123,24 @@ fun AddMedicationFlowScreen(
             } else {
                 null
             },
-            timeZoneMode = state.timeZoneMode,
-            anchorTimeZone = if (state.timeZoneMode == TimeZoneMode.FIXED) state.anchorTimeZone else null,
+            // Capture the user's current TZ at point of creation as the safe default.
+            // They can switch to LOCAL or re-anchor via the edit screen later.
+            timeZoneMode = TimeZoneMode.FIXED,
+            anchorTimeZone = TimeZone.currentSystemDefault().id,
         )
         medicationViewModel.insertMedication(medication) { id ->
             onComplete(id)
         }
     }
 
-    // Handle back button to navigate between steps or close
+    // Handle back button to navigate between steps or close.
+    // When the user is mid-customize on the icon step, back pops the customizer first
+    // rather than stepping out of the wizard — matches the visual nesting.
     PlatformBackHandler {
-        if (currentStep > 0) {
-            currentStep--
-        } else {
-            onClose()
+        when {
+            currentStep == 4 && iconCustomizing -> iconCustomizing = false
+            currentStep > 0 -> currentStep--
+            else -> onClose()
         }
     }
 
@@ -144,10 +154,10 @@ fun AddMedicationFlowScreen(
                     title = { Text(stringResource(Res.string.screen_add_medication)) },
                     navigationIcon = {
                         IconButton(onClick = {
-                            if (currentStep > 0) {
-                                currentStep--
-                            } else {
-                                onClose()
+                            when {
+                                currentStep == 4 && iconCustomizing -> iconCustomizing = false
+                                currentStep > 0 -> currentStep--
+                                else -> onClose()
                             }
                         }) {
                             Icon(
@@ -159,18 +169,19 @@ fun AddMedicationFlowScreen(
                     actions = {
                         Button(
                             onClick = {
-                                if (currentStep < 6) {
+                                if (currentStep < 4) {
                                     currentStep++
-                                } else {
+                                } else if (!isSaving) {
+                                    isSaving = true
                                     saveMedication { medicationId ->
                                         onMedicationAdded(medicationId, state)
                                     }
                                 }
                             },
-                            enabled = canProceed,
+                            enabled = canProceed && !isSaving,
                         ) {
                             Text(
-                                if (currentStep < 6) {
+                                if (currentStep < 4) {
                                     stringResource(Res.string.action_next)
                                 } else {
                                     stringResource(
@@ -186,29 +197,24 @@ fun AddMedicationFlowScreen(
                 )
             },
         ) { paddingValues ->
-            // For shape and color screens, don't use Column scroll - they handle their own layout
-            if (currentStep == 4 || currentStep == 5) {
+            // The icon step manages its own scroll (LazyVerticalGrid / LazyColumn with sticky preview),
+            // so it can't be wrapped in verticalScroll.
+            if (currentStep == 4) {
                 Box(
                     modifier = modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(horizontal = 32.dp),
+                        .padding(paddingValues),
                 ) {
-                    when (currentStep) {
-                        4 -> MedicationShapeStep(
-                            foregroundShape = state.foregroundShape,
-                            backgroundShape = state.backgroundShape,
-                            onForegroundShapeChange = { state = state.copy(foregroundShape = it) },
-                            onBackgroundShapeChange = { state = state.copy(backgroundShape = it) },
-                        )
-
-                        5 -> MedicationColorsStep(
-                            foregroundShape = state.foregroundShape,
-                            backgroundShape = state.backgroundShape,
-                            color1 = state.color1,
-                            onColor1Change = { state = state.copy(color1 = it) },
-                        )
-                    }
+                    MedicationIconStep(
+                        foregroundShape = state.foregroundShape,
+                        backgroundShape = state.backgroundShape,
+                        color1 = state.color1,
+                        customizing = iconCustomizing,
+                        onCustomizingChange = { iconCustomizing = it },
+                        onIconChange = { fg, bg, c ->
+                            state = state.copy(foregroundShape = fg, backgroundShape = bg, color1 = c)
+                        },
+                    )
                 }
             } else {
                 Column(
@@ -217,8 +223,7 @@ fun AddMedicationFlowScreen(
                         .padding(paddingValues)
                         .verticalScroll(rememberScrollState())
                         .imePadding()
-                        .padding(start = 32.dp, end = 32.dp, bottom = 80.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                        .padding(bottom = 80.dp),
                 ) {
                     when (currentStep) {
                         0 -> MedicationNameStep(
@@ -247,10 +252,6 @@ fun AddMedicationFlowScreen(
                         )
 
                         3 -> MedicationCycleStep(
-                            timeZoneMode = state.timeZoneMode,
-                            onTimeZoneModeChange = { state = state.copy(timeZoneMode = it) },
-                            anchorTimeZone = state.anchorTimeZone,
-                            onAnchorTimeZoneChange = { state = state.copy(anchorTimeZone = it) },
                             cycleEnabled = state.cycleEnabled,
                             cycleDaysActive = state.cycleDaysActive,
                             cycleDaysBreak = state.cycleDaysBreak,
@@ -261,12 +262,6 @@ fun AddMedicationFlowScreen(
                             onDaysBreakChange = { state = state.copy(cycleDaysBreak = it) },
                             onHasPlacebosChange = { state = state.copy(cycleHasPlacebos = it) },
                             onDayInCycleChange = { state = state.copy(cycleDayInCycle = it) },
-                        )
-
-                        6 -> ImportanceLabelStep(
-                            labels = importanceLabels,
-                            selectedLabelId = state.importanceLabelId,
-                            onLabelSelected = { state = state.copy(importanceLabelId = it) },
                         )
                     }
                 }

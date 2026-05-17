@@ -23,47 +23,85 @@ import kotlin.coroutines.resume
 private const val TAG = "IOSNotificationSetup"
 
 /**
- * Registers the medication reminder notification category with interactive actions.
- * Actions appear as buttons on the notification when the user long-presses or
- * expands the notification on iOS.
+ * Pre-resolved localized titles for the iOS notification action buttons.
+ * Passed into [registerNotificationCategory] so that registration stays
+ * synchronous at app launch — CMP's [org.jetbrains.compose.resources.getString]
+ * is `suspend`, but the iOS notification system requires categories to be
+ * registered before any notifications are scheduled.
+ *
+ * Resolve via `runBlocking(Dispatchers.Default) { getString(Res.string.X) }`
+ * in the caller (see `MainViewController.setupNotifications`).
+ */
+data class NotificationActionStrings(
+    val take: String,
+    val skip: String,
+    val snooze: String,
+    val markDepleted: String,
+)
+
+/**
+ * Registers the medication reminder and depletion reminder notification
+ * categories with interactive actions. Actions appear as buttons on the
+ * notification when the user long-presses or expands the notification on iOS.
  *
  * Must be called before any notifications are scheduled.
  */
-fun registerNotificationCategory() {
+fun registerNotificationCategory(strings: NotificationActionStrings) {
     val takeAction = UNNotificationAction.actionWithIdentifier(
         identifier = NOTIFICATION_ACTION_TAKE,
-        title = "Take",
+        title = strings.take,
         options = UNNotificationActionOptionNone,
     )
 
     val skipAction = UNNotificationAction.actionWithIdentifier(
         identifier = NOTIFICATION_ACTION_SKIP,
-        title = "Skip",
+        title = strings.skip,
         options = UNNotificationActionOptionDestructive,
     )
 
     val snoozeAction = UNNotificationAction.actionWithIdentifier(
         identifier = NOTIFICATION_ACTION_SNOOZE,
-        title = "Snooze",
+        title = strings.snooze,
         options = UNNotificationActionOptionNone,
     )
 
     // Use explicit ObjC NSSet/NSArray bridging — Kotlin collection literals
     // may not bridge correctly to the ObjC types UNUserNotificationCenter expects.
-    val category = UNNotificationCategory.categoryWithIdentifier(
+    val medicationCategory = UNNotificationCategory.categoryWithIdentifier(
         identifier = NOTIFICATION_CATEGORY_MEDICATION,
         actions = listOf(takeAction, skipAction, snoozeAction),
         intentIdentifiers = listOf<String>(),
         options = UNNotificationCategoryOptionCustomDismissAction,
     )
 
+    // Depletion-reminder category — single "Mark Depleted" action button.
+    val markDepletedAction = UNNotificationAction.actionWithIdentifier(
+        identifier = NOTIFICATION_ACTION_MARK_DEPLETED,
+        title = strings.markDepleted,
+        options = UNNotificationActionOptionNone,
+    )
+    val depletionCategory = UNNotificationCategory.categoryWithIdentifier(
+        identifier = NOTIFICATION_CATEGORY_DEPLETION_REMINDER,
+        actions = listOf(markDepletedAction),
+        intentIdentifiers = listOf<String>(),
+        options = UNNotificationCategoryOptionCustomDismissAction,
+    )
+
     val center = UNUserNotificationCenter.currentNotificationCenter()
 
+    // setNotificationCategories replaces the prior set on every call, so both
+    // categories must be passed together.
     @Suppress("UNCHECKED_CAST")
-    val categorySet = NSMutableSet().apply { addObject(category) } as Set<UNNotificationCategory>
+    val categorySet = NSMutableSet().apply {
+        addObject(medicationCategory)
+        addObject(depletionCategory)
+    } as Set<UNNotificationCategory>
     center.setNotificationCategories(categorySet)
 
-    AppLogger.i(TAG, "Registered notification category with Take/Skip/Snooze actions")
+    AppLogger.i(
+        TAG,
+        "Registered notification categories: medication (Take/Skip/Snooze) + depletion (Mark Depleted)",
+    )
 }
 
 /**

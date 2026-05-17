@@ -13,8 +13,8 @@ import me.juliana.hellomeds.data.dao.MedicationHistoryDao
 import me.juliana.hellomeds.data.interfaces.ScheduleReconciler
 import me.juliana.hellomeds.data.repository.MedicationHistoryRepository
 import me.juliana.hellomeds.data.util.AppLogger
-import me.juliana.hellomeds.data.util.currentTimeMillis
 import org.koin.mp.KoinPlatform
+import kotlin.time.Clock
 import platform.BackgroundTasks.BGAppRefreshTaskRequest
 import platform.BackgroundTasks.BGProcessingTaskRequest
 import platform.BackgroundTasks.BGTask
@@ -44,7 +44,9 @@ import platform.Foundation.dateByAddingTimeInterval
  * - Task identifiers must be listed in Info.plist under
  *   BGTaskSchedulerPermittedIdentifiers.
  */
-class IOSBackgroundTaskManager {
+class IOSBackgroundTaskManager(
+    private val clock: Clock = Clock.System,
+) {
 
     // Lazy resolution: registerTasks() is called from MainViewController during cold launch,
     // but the BGTask handlers only fire later, when the OS schedules them. Resolving these
@@ -195,7 +197,7 @@ class IOSBackgroundTaskManager {
         val job = scope.launch {
             try {
                 // Delete history records older than 90 days
-                val cutoff = currentTimeMillis() - HISTORY_RETENTION_MS
+                val cutoff = clock.now().toEpochMilliseconds() - HISTORY_RETENTION_MS
                 val deletedCount = historyDao.deleteOlderThan(cutoff)
                 if (deletedCount > 0) {
                     AppLogger.i(TAG, "Cleanup: deleted $deletedCount old history records")

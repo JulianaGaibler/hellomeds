@@ -27,6 +27,8 @@ class NotificationPreferences(private val dataStore: DataStore<Preferences>) {
         private val LAST_SCHEDULING_TIMESTAMP = longPreferencesKey("last_scheduling_timestamp")
         private val HAS_SEEN_CRITICAL_CHANNEL_DIALOG =
             booleanPreferencesKey("has_seen_critical_channel_dialog")
+        private val HAS_SEEN_REMINDER_TYPE_HINT =
+            booleanPreferencesKey("has_seen_reminder_type_hint")
     }
 
     // Flows for reading preferences
@@ -117,6 +119,17 @@ class NotificationPreferences(private val dataStore: DataStore<Preferences>) {
     suspend fun setHasSeenCriticalChannelDialog(seen: Boolean) {
         dataStore.edit { preferences ->
             preferences[HAS_SEEN_CRITICAL_CHANNEL_DIALOG] = seen
+        }
+    }
+
+    val hasSeenReminderTypeHint: Flow<Boolean> =
+        dataStore.data.map { preferences ->
+            preferences[HAS_SEEN_REMINDER_TYPE_HINT] ?: false
+        }
+
+    suspend fun setHasSeenReminderTypeHint(seen: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[HAS_SEEN_REMINDER_TYPE_HINT] = seen
         }
     }
 }

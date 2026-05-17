@@ -5,7 +5,6 @@ package me.juliana.hellomeds.ui.features.tracking
 
 // colorResource removed - using hardcoded Color values for CMP compatibility
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -44,8 +42,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -92,6 +90,7 @@ import me.juliana.hellomeds.shared.tracking_section_missed
 import me.juliana.hellomeds.shared.tracking_section_scheduled
 import me.juliana.hellomeds.shared.tracking_section_skipped
 import me.juliana.hellomeds.shared.tracking_section_taken
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.ui.compat.ExpandableFabMenu
 import me.juliana.hellomeds.ui.compat.FabMenuItem
 import me.juliana.hellomeds.ui.compat.ListItemShapes
@@ -101,6 +100,7 @@ import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.AutoBackupWarningBanner
 import me.juliana.hellomeds.ui.components.PermissionWarningBanners
 import me.juliana.hellomeds.ui.components.common.AppScaffold
+import me.juliana.hellomeds.ui.components.common.EmptyState
 import me.juliana.hellomeds.ui.components.common.OverflowMenu
 import me.juliana.hellomeds.ui.components.common.OverflowMenuPrimaryAction
 import me.juliana.hellomeds.ui.components.common.SwipeableListItem
@@ -169,7 +169,6 @@ fun TrackingScreen(
     val takenEvents = state.takenEvents
     val skippedEvents = state.skippedEvents
     val allMedications = state.allMedications
-    val allSchedules = state.allSchedules
     val selectedDate = state.selectedDate
     val hasLoaded = state.hasLoaded
     val notificationEventIds = state.notificationEventIds
@@ -219,8 +218,7 @@ fun TrackingScreen(
     var logMedicationMode by remember { mutableStateOf(LogMedicationMode.SCHEDULED) }
 
     // Dialog state
-    var showLogMedicationDialog by remember { mutableStateOf(false) }
-    var showEditLoggedDialog by remember { mutableStateOf(false) }
+    var showMedicationLogSheet by remember { mutableStateOf(false) }
     var selectedEventForDialog by remember { mutableStateOf<ProjectedEventWithMedication?>(null) }
 
     // State for notification-triggered filtering (Step 3)
@@ -276,7 +274,7 @@ fun TrackingScreen(
 
         if (notificationGroupingMode == "GROUPED") {
             selectedEventForDialog = notificationEvents.first()
-            showLogMedicationDialog = true
+            showMedicationLogSheet = true
         } else {
             filteredNotificationEvents = notificationEvents
             logMedicationMode = LogMedicationMode.SCHEDULED
@@ -403,7 +401,7 @@ fun TrackingScreen(
                             eventWithMedication = eventWithMed,
                             onClick = {
                                 selectedEventForDialog = eventWithMed
-                                showLogMedicationDialog = true
+                                showMedicationLogSheet = true
                             },
                             onMarkAsTaken = { onMarkAsTaken(eventWithMed) },
                             onMarkAsSkipped = { onMarkAsSkipped(eventWithMed) },
@@ -448,7 +446,7 @@ fun TrackingScreen(
                             eventWithMedication = eventWithMed,
                             onClick = {
                                 selectedEventForDialog = eventWithMed
-                                showLogMedicationDialog = true
+                                showMedicationLogSheet = true
                             },
                             onMarkAsTaken = { onMarkAsTaken(eventWithMed) },
                             onMarkAsSkipped = { onMarkAsSkipped(eventWithMed) },
@@ -480,6 +478,7 @@ fun TrackingScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .testTag(ScreenshotTestTags.TRACKING_SECTION_TAKEN)
                                 .semantics { heading() },
                         )
                     }
@@ -492,7 +491,7 @@ fun TrackingScreen(
                             eventWithMedication = eventWithMed,
                             onClick = {
                                 selectedEventForDialog = eventWithMed
-                                showEditLoggedDialog = true
+                                showMedicationLogSheet = true
                             },
                             onMarkAsTaken = null,
                             onMarkAsSkipped = null,
@@ -500,6 +499,7 @@ fun TrackingScreen(
                             modifier = Modifier
                                 .padding(horizontal = 16.dp)
                                 .animateItem(),
+                            isCompleted = true,
                         )
 
                         if (index < takenEvents.lastIndex) {
@@ -533,7 +533,7 @@ fun TrackingScreen(
                             eventWithMedication = eventWithMed,
                             onClick = {
                                 selectedEventForDialog = eventWithMed
-                                showEditLoggedDialog = true
+                                showMedicationLogSheet = true
                             },
                             onMarkAsTaken = null,
                             onMarkAsSkipped = null,
@@ -541,6 +541,7 @@ fun TrackingScreen(
                             modifier = Modifier
                                 .padding(horizontal = 16.dp)
                                 .animateItem(),
+                            isCompleted = true,
                         )
 
                         if (index < skippedEvents.lastIndex) {
@@ -600,7 +601,7 @@ fun TrackingScreen(
                             eventWithMedication = eventWithMed,
                             onClick = {
                                 selectedEventForDialog = eventWithMed
-                                showLogMedicationDialog = true
+                                showMedicationLogSheet = true
                             },
                             onMarkAsTaken = if (!isInFuture) {
                                 { onMarkAsTaken(eventWithMed) }
@@ -652,25 +653,11 @@ fun TrackingScreen(
                                 LoadingIndicator()
                             }
                         } else {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                            ) {
-                                Image(
-                                    painter = painterResource(Res.drawable.illustration_empty_no_schedule),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(200.dp),
-                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.outlineVariant),
-                                )
-                                Spacer(Modifier.height(16.dp))
-                                Text(
-                                    text = stringResource(Res.string.tracking_empty_state),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
+                            EmptyState(
+                                title = stringResource(Res.string.tracking_empty_state),
+                                illustration = painterResource(Res.drawable.illustration_empty_no_schedule),
+                                modifier = Modifier.padding(32.dp),
+                            )
                         }
                     }
                 }
@@ -694,8 +681,16 @@ fun TrackingScreen(
 
         // FAB Menu
         val fabMenuItems = listOf(
-            FabMenuItem(Icons.Default.Add, stringResource(Res.string.tracking_log_scheduled)),
-            FabMenuItem(Icons.Default.Add, stringResource(Res.string.tracking_log_as_needed)),
+            FabMenuItem(
+                icon = Icons.Default.Add,
+                label = stringResource(Res.string.tracking_log_scheduled),
+                testTag = ScreenshotTestTags.TRACKING_FAB_LOG_SCHEDULED,
+            ),
+            FabMenuItem(
+                icon = Icons.Default.Add,
+                label = stringResource(Res.string.tracking_log_as_needed),
+                testTag = ScreenshotTestTags.TRACKING_FAB_LOG_AS_NEEDED,
+            ),
         )
 
         ExpandableFabMenu(
@@ -723,6 +718,7 @@ fun TrackingScreen(
             collapsedLabel = stringResource(Res.string.accessibility_collapsed),
             toggleMenuLabel = stringResource(Res.string.accessibility_toggle_menu),
             closeMenuLabel = stringResource(Res.string.accessibility_close_menu),
+            toggleTestTag = ScreenshotTestTags.TRACKING_FAB_TOGGLE,
         )
     }
 
@@ -756,51 +752,31 @@ fun TrackingScreen(
         )
     }
 
-    // Log Medication Dialog (single scheduled item)
-    if (showLogMedicationDialog && selectedEventForDialog != null) {
-        LogMedicationDialog(
-            eventWithMedication = selectedEventForDialog!!,
-            date = selectedDate,
-            onDismiss = {
-                showLogMedicationDialog = false
-                selectedEventForDialog = null
-            },
-            onSkip = { event, time, dose ->
-                onLogScheduledItem(event, time, dose, true)
-                showLogMedicationDialog = false
-                selectedEventForDialog = null
-            },
-            onSave = { event, time, dose ->
-                onLogScheduledItem(event, time, dose, false)
-                showLogMedicationDialog = false
-                selectedEventForDialog = null
-            },
-        )
-    }
-
-    // Edit Logged Medication Dialog
-    if (showEditLoggedDialog && selectedEventForDialog != null) {
-        val isScheduled = selectedEventForDialog!!.event.scheduleId != 0
-        val schedule = selectedEventForDialog!!.event.scheduleId.let { scheduleId ->
-            allSchedules.firstOrNull { it.id == scheduleId }
-        }
-        EditLoggedMedicationBottomSheet(
-            eventWithMedication = selectedEventForDialog!!,
+    // Unified Log / Edit Medication Bottom Sheet
+    if (showMedicationLogSheet && selectedEventForDialog != null) {
+        val eventWithMed = selectedEventForDialog!!
+        val isScheduled = eventWithMed.event.scheduleId != 0
+        val isNewLog = eventWithMed.event.historyRecord == null
+        MedicationLogBottomSheet(
+            eventWithMedication = eventWithMed,
             date = selectedDate,
             isScheduled = isScheduled,
-            schedule = schedule,
             onDismiss = {
-                showEditLoggedDialog = false
+                showMedicationLogSheet = false
                 selectedEventForDialog = null
             },
             onDelete = { event ->
                 onDeleteLoggedItem(event)
-                showEditLoggedDialog = false
+                showMedicationLogSheet = false
                 selectedEventForDialog = null
             },
             onSave = { event, time, dose, status ->
-                onUpdateLoggedItem(event, time, dose, status)
-                showEditLoggedDialog = false
+                if (isNewLog) {
+                    onLogScheduledItem(event, time, dose, status == LogStatus.SKIPPED)
+                } else {
+                    onUpdateLoggedItem(event, time, dose, status)
+                }
+                showMedicationLogSheet = false
                 selectedEventForDialog = null
             },
         )
@@ -816,6 +792,7 @@ private fun SwipeableMedicationLogListItem(
     shapes: ListItemShapes,
     modifier: Modifier = Modifier,
     timeOverride: String? = null,
+    isCompleted: Boolean = false,
 ) {
     SwipeableListItem(
         key = "${eventWithMedication.event.historyRecord?.id ?: eventWithMedication.event.compositeKey}",
@@ -834,6 +811,7 @@ private fun SwipeableMedicationLogListItem(
             onClick = onClick,
             shapes = shapes,
             timeOverride = timeOverride,
+            isCompleted = isCompleted,
         )
     }
 }
@@ -844,7 +822,7 @@ private fun MedicationLogListItem(
     onClick: () -> Unit,
     shapes: ListItemShapes,
     modifier: Modifier = Modifier,
-    isLogged: Boolean = false,
+    isCompleted: Boolean = false,
     timeOverride: String? = null,
 ) {
     val context = platformContext()
@@ -951,6 +929,11 @@ private fun MedicationLogListItem(
         shapes = shapes,
         onClick = onClick,
         modifier = modifier,
+        containerColor = if (isCompleted) {
+            MaterialTheme.colorScheme.surfaceContainerHighest
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLowest
+        },
     )
 }
 

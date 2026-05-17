@@ -25,6 +25,7 @@ import me.juliana.hellomeds.ui.compat.PlatformBackHandler
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.features.onboarding.steps.BetaThankYouScreen
 import me.juliana.hellomeds.ui.features.onboarding.steps.CompletionScreen
+import me.juliana.hellomeds.ui.features.onboarding.steps.DisclaimerScreen
 import me.juliana.hellomeds.ui.features.onboarding.steps.ExactAlarmPermissionScreen
 import me.juliana.hellomeds.ui.features.onboarding.steps.FullScreenIntentPermissionScreen
 import me.juliana.hellomeds.ui.features.onboarding.steps.QuickStartScreen
@@ -81,6 +82,12 @@ fun OnboardingScreen(
 
             // BETA: closed-beta thank-you. Remove per BETA_ROLLBACK.md before release.
             add(OnboardingPage.BetaThankYou)
+
+            // Medical disclaimer — required for App Store compliance (iOS only).
+            // Google Play accepts the in-app privacy-policy link.
+            if (PlatformCapabilities.requiresAppStoreDisclaimer()) {
+                add(OnboardingPage.Disclaimer)
+            }
 
             // Notifications (skip if already granted, unless showAllSteps)
             if (showAllSteps || !PermissionUtils.areNotificationsEnabled(context)) {
@@ -167,6 +174,19 @@ fun OnboardingScreen(
 
             // BETA: closed-beta thank-you. Remove per BETA_ROLLBACK.md before release.
             OnboardingPage.BetaThankYou -> BetaThankYouScreen(
+                onContinue = {
+                    scope.launch {
+                        pagerState.animateScrollToPage(pageIndex + 1)
+                    }
+                },
+                onBack = {
+                    scope.launch {
+                        pagerState.animateScrollToPage(pageIndex - 1)
+                    }
+                },
+            )
+
+            OnboardingPage.Disclaimer -> DisclaimerScreen(
                 onContinue = {
                     scope.launch {
                         pagerState.animateScrollToPage(pageIndex + 1)
@@ -303,8 +323,10 @@ fun OnboardingScreen(
 
 private enum class OnboardingPage {
     Welcome,
+
     // BETA: Remove per BETA_ROLLBACK.md before release.
     BetaThankYou,
+    Disclaimer,
     QuickStart,
     Notifications,
     ExactAlarms,

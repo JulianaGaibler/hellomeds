@@ -10,10 +10,25 @@ package me.juliana.hellomeds.notifications
 // IOSScheduleReconciler (and its iOS framework API imports) at file load time.
 
 const val NOTIFICATION_CATEGORY_MEDICATION = "MEDICATION_REMINDER"
+const val NOTIFICATION_CATEGORY_DEPLETION_REMINDER = "DEPLETION_REMINDER"
 const val NOTIFICATION_ACTION_TAKE = "ACTION_TAKE"
 const val NOTIFICATION_ACTION_SKIP = "ACTION_SKIP"
 const val NOTIFICATION_ACTION_SNOOZE = "ACTION_SNOOZE"
+const val NOTIFICATION_ACTION_MARK_DEPLETED = "ACTION_MARK_DEPLETED"
 const val NOTIFICATION_ID_PREFIX = "med_"
+
+/** userInfo "type" values written by iOS notifiers and dispatched by IOSNotificationDelegate. */
+const val NOTIFICATION_TYPE_MEDICATION_REMINDER = "medication_reminder"
+const val NOTIFICATION_TYPE_LOW_STOCK = "low_stock"
+const val NOTIFICATION_TYPE_DEPLETION_REMINDER = "depletion_reminder"
+
+/** Stable identifier prefixes for stock-related notifications — `<prefix><medicationId>`. */
+const val LOW_STOCK_NOTIFICATION_ID_PREFIX = "hellomeds_low_stock_"
+const val DEPLETION_NOTIFICATION_ID_PREFIX = "hellomeds_depletion_"
+
+/** Thread identifiers so iOS Notification Center groups by alert type. */
+const val LOW_STOCK_THREAD_IDENTIFIER = "hellomeds_low_stock"
+const val DEPLETION_THREAD_IDENTIFIER = "hellomeds_depletion"
 
 /**
  * iOS hard-caps an app at 64 pending local notifications (system enforces, no warning).
