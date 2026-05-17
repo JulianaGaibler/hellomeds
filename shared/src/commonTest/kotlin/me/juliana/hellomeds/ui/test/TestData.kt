@@ -83,7 +83,7 @@ fun testEventWithMedication(
     )
 }
 
-/** Creates a TrackingScreenState with sensible defaults. Override what you need. */
+/** Creates a TrackingScreenState with sensible defaults. */
 fun testTrackingScreenState(
     scheduledEvents: List<ProjectedEventWithMedication> = emptyList(),
     takenEvents: List<ProjectedEventWithMedication> = emptyList(),

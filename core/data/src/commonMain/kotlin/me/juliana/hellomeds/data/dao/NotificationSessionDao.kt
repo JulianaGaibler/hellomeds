@@ -21,8 +21,6 @@ import me.juliana.hellomeds.data.database.entities.NotificationSessionEntity
 @Dao
 abstract class NotificationSessionDao {
 
-    // --- Basic CRUD ---
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insert(session: NotificationSessionEntity)
 
@@ -38,12 +36,8 @@ abstract class NotificationSessionDao {
     @Query("DELETE FROM notification_sessions WHERE timeSlotKey = :key")
     abstract suspend fun deleteByKey(key: String)
 
-    // --- Targeted queries ---
-
     @Query("SELECT * FROM notification_sessions WHERE parentTimeSlotKey = :parentKey")
     abstract suspend fun getByParent(parentKey: String): List<NotificationSessionEntity>
-
-    // --- Atomic single-statement updates ---
 
     // channelId escalation: criticalAfterFollowUp IS NOT NULL is the sole gate.
     // Meds that are critical from the start already have their platform channel ID set at
@@ -142,8 +136,6 @@ abstract class NotificationSessionDao {
 
     @Query("SELECT COUNT(*) FROM notification_sessions WHERE createdAt < :cutoff")
     abstract suspend fun countStale(cutoff: Long): Int
-
-    // --- Compound transactional operations ---
 
     /**
      * Split a COMBINED session into INDIVIDUAL per-medication sessions.

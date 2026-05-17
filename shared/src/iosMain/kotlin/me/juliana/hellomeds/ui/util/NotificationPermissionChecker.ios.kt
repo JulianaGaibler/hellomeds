@@ -22,11 +22,7 @@ import platform.UserNotifications.UNUserNotificationCenter
 
 private const val TAG = "NotificationPermChecker"
 
-/**
- * Fires the async UNUserNotificationCenter query and updates
- * [PermissionUtils.cachedNotificationsEnabled]. Does NOT update Compose state
- * directly — the caller polls the cache after a short delay.
- */
+/** Updates only the cache; the caller polls after a short delay. */
 private fun refreshCachedStatus() {
     UNUserNotificationCenter.currentNotificationCenter()
         .getNotificationSettingsWithCompletionHandler { settings ->
@@ -40,22 +36,16 @@ private fun refreshCachedStatus() {
 
 @Composable
 actual fun isNotificationPermissionGranted(): Boolean {
-    // Read the @Volatile cached value. The LaunchedEffect below triggers
-    // re-reads by bumping checkCounter after the async query completes.
     var checkCounter by remember { mutableIntStateOf(0) }
     var granted by remember { mutableStateOf(PermissionUtils.cachedNotificationsEnabled) }
 
-    // Fire async query, wait for it to update the cache, then read it.
-    // This avoids K/N ObjC block → Compose MutableState mutation issues.
+    // Reading the cache after a delay avoids mutating Compose state from a K/N ObjC block.
     LaunchedEffect(checkCounter) {
         refreshCachedStatus()
-        // The callback updates cachedNotificationsEnabled asynchronously.
-        // A short delay ensures we read after the callback has run.
         delay(200)
         granted = PermissionUtils.cachedNotificationsEnabled
     }
 
-    // Bump counter on app resume to re-query
     DisposableEffect(Unit) {
         val observer = NSNotificationCenter.defaultCenter.addObserverForName(
             name = UIApplicationDidBecomeActiveNotification,

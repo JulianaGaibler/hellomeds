@@ -44,23 +44,14 @@ class StockTrackingRepository(
         private const val TAG = "StockTrackingRepository"
     }
 
-    /**
-     * Get a medication by ID (reactive Flow).
-     */
     fun getMedicationById(medicationId: Int): Flow<Medication?> {
         return medicationDao.getById(medicationId)
     }
 
-    /**
-     * Get all medications with stock tracking enabled.
-     */
     fun getTrackedMedications(): Flow<List<Medication>> {
         return medicationDao.getStockTracked()
     }
 
-    /**
-     * Get current stock for a medication (reactive Flow).
-     */
     fun getCurrentStock(medicationId: Int): Flow<Double?> {
         return medicationDao.getById(medicationId).map { medication ->
             medication?.let { calculateCurrentStock(it) }
@@ -442,17 +433,10 @@ class StockTrackingRepository(
         }
     }
 
-    // --- Private helpers ---
-
-    /**
-     * Update cached stock on Medication entity from ledger sum.
-     */
     private suspend fun updateCachedStock(medicationId: Int) {
         val newStock = stockAdjustmentDao.getCurrentStock(medicationId) ?: 0.0
         medicationDao.updateCachedStockQuantity(medicationId, newStock)
     }
-
-    // --- Stock Settings Update Methods ---
 
     suspend fun updateLowStockThreshold(medicationId: Int, threshold: Double?) {
         val medication = medicationDao.getById(medicationId).first()

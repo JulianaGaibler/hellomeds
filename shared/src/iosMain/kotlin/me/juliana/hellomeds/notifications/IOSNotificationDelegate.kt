@@ -16,7 +16,6 @@ import me.juliana.hellomeds.data.repository.MedicationHistoryRepository
 import me.juliana.hellomeds.data.repository.StockTrackingRepository
 import me.juliana.hellomeds.data.service.ScheduleProjector
 import me.juliana.hellomeds.data.util.AppLogger
-import kotlin.time.Clock
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.notification_text_time_log_generic
 import me.juliana.hellomeds.shared.notification_text_time_log_named
@@ -41,31 +40,18 @@ import platform.UserNotifications.UNTimeIntervalNotificationTrigger
 import platform.UserNotifications.UNUserNotificationCenter
 import platform.UserNotifications.UNUserNotificationCenterDelegateProtocol
 import platform.darwin.NSObject
+import kotlin.time.Clock
 
 private const val DELEGATE_TAG = "IOSNotificationDelegate"
 
 /**
- * Handles notification interactions on iOS:
- * - User tapping a notification (default action)
- * - User choosing Take/Skip/Snooze from notification actions
- * - Foreground presentation policy
- *
- * Registered as UNUserNotificationCenter.delegate during app initialization.
- * Uses Koin to resolve dependencies lazily when actions are received.
- *
- * Note: Kotlin/Native does not support companion objects with fields in NSObject subclasses,
- * so constants are declared at file level.
+ * UNUserNotificationCenterDelegate handling notification taps, action buttons
+ * (Take/Skip/Snooze, Mark Depleted), and foreground presentation policy.
  */
 class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProtocol {
 
-    // Lazy resolution: this delegate is registered as UNUserNotificationCenter.delegate
-    // during cold launch (pre-UI), but its callback methods only fire later when the
-    // user interacts with a notification — which always happens after first unlock.
-    // Eager constructor injection would pull AppDatabase through these deps, and a
-    // foreground launch attempt while the Keychain is locked would crash. Lazy
-    // delegates push DB resolution to action-handling time.
-    // Note: reconciler was injected via the old constructor but never referenced — repository
-    // methods (markAsTaken / markAsSkipped) trigger reconcile internally, so we drop it here.
+    // Lazy: callbacks fire post-first-unlock, so deferred DI avoids a Keychain crash
+    // if eager resolution ran during a pre-unlock launch.
     private val projector: ScheduleProjector by lazy { KoinPlatform.getKoin().get() }
     private val historyRepo: MedicationHistoryRepository by lazy { KoinPlatform.getKoin().get() }
     private val notificationPrefs: NotificationPreferences by lazy { KoinPlatform.getKoin().get() }
@@ -73,24 +59,14 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
     private val medicationDao: MedicationDao by lazy { KoinPlatform.getKoin().get() }
     private val stockTrackingRepo: StockTrackingRepository by lazy { KoinPlatform.getKoin().get() }
 
-    // Property rather than constructor parameter because this class is an NSObject
-    // subclass with a parameterless constructor (delegate is created at cold launch
-    // before Koin builds the AppDatabase — see comment above on lazy deps).
     private val clock: Clock = Clock.System
 
     private val scope = CoroutineScope(Dispatchers.Main)
 
-    // Background-launched notification actions (e.g. Mark Depleted from a dead-state
-    // app) need a scope that won't be torn down by transient UI lifecycle changes.
-    // Default dispatcher because Kotlin/Native's `Dispatchers.IO` is internal —
-    // Default is the closest publicly-available pool. Supervised so a failure
-    // here can't poison the medication-reminder scope above.
+    // Supervised + Default dispatcher so background-launched actions outlive UI scope
+    // and a failure can't poison the medication-reminder scope. K/N has no public IO dispatcher.
     private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    /**
-     * Called when the user interacts with a notification (tap, or action button).
-     * Parses the event info from userInfo and delegates to action handlers.
-     */
     override fun userNotificationCenter(
         center: UNUserNotificationCenter,
         didReceiveNotificationResponse: UNNotificationResponse,
@@ -101,9 +77,7 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
         val userInfo = response.notification.request.content.userInfo
 
         // Extract event metadata from notification userInfo
-        val type = userInfo["type"] as? String
-
-        when (type) {
+        when (val type = userInfo["type"] as? String) {
             NOTIFICATION_TYPE_DEPLETION_REMINDER -> {
                 handleDepletionResponse(actionId, userInfo, withCompletionHandler)
                 return
@@ -145,9 +119,8 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
         val isCritical = (userInfo["isCritical"] as? Boolean) ?: false
         val isAlarm = (userInfo["isAlarm"] as? Boolean) ?: false
 
-        // Protect DB writes with a UIBackgroundTask. If the app is backgrounded/terminated,
-        // iOS gives very limited execution time. Without this, iOS may kill the process before
-        // withCompletionHandler() is called, penalizing the app and losing the action.
+        // UIBackgroundTask keeps the process alive long enough to flush DB writes and
+        // call withCompletionHandler — iOS gives very limited time post-action otherwise.
         var taskId = UIBackgroundTaskInvalid
         taskId = UIApplication.sharedApplication.beginBackgroundTaskWithExpirationHandler {
             // OS is killing us — call completion handler to avoid system penalty
@@ -275,9 +248,7 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
      * changes that would cancel [scope].
      */
     private fun handleDepletionResponse(actionId: String, userInfo: Map<Any?, *>, withCompletionHandler: () -> Unit) {
-        // Defensive double-cast: NSDictionary bridging may surface the value
-        // as NSString rather than a Kotlin String depending on how the entry
-        // was inserted on the originating side.
+        // NSDictionary bridging may surface the value as NSString instead of a Kotlin String.
         val medIdString = (userInfo["medicationId"] as? String)
             ?: (userInfo["medicationId"] as? NSString)?.toString()
         val medicationId = medIdString?.toIntOrNull()

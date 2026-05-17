@@ -33,7 +33,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,13 +41,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
-import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
@@ -57,9 +55,8 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.shared.Res
-import me.juliana.hellomeds.shared.action_hide_archived
-import me.juliana.hellomeds.shared.action_show_archived
 import me.juliana.hellomeds.shared.accessibility_close_menu
 import me.juliana.hellomeds.shared.accessibility_collapsed
 import me.juliana.hellomeds.shared.accessibility_expanded
@@ -67,6 +64,8 @@ import me.juliana.hellomeds.shared.accessibility_loading
 import me.juliana.hellomeds.shared.accessibility_move_down
 import me.juliana.hellomeds.shared.accessibility_move_up
 import me.juliana.hellomeds.shared.accessibility_toggle_menu
+import me.juliana.hellomeds.shared.action_hide_archived
+import me.juliana.hellomeds.shared.action_show_archived
 import me.juliana.hellomeds.shared.add_medication_content_description
 import me.juliana.hellomeds.shared.illustration_empty_no_medication
 import me.juliana.hellomeds.shared.medication_add_manually
@@ -78,6 +77,7 @@ import me.juliana.hellomeds.ui.compat.ExpandableFabMenu
 import me.juliana.hellomeds.ui.compat.FabMenuItem
 import me.juliana.hellomeds.ui.compat.LoadingIndicator
 import me.juliana.hellomeds.ui.compat.PlatformBackHandler
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.PermissionWarningBanners
 import me.juliana.hellomeds.ui.components.common.AppScaffold
@@ -102,25 +102,21 @@ fun MedicationListScreen(
     onAddMedication: () -> Unit,
     onAddWithCamera: () -> Unit,
     onMedicationClick: (Int) -> Unit,
-    onEditLabel: (Int) -> Unit,
     modifier: Modifier = Modifier,
     medicationViewModel: MedicationViewModel = koinViewModel(),
 ) {
-    val context = platformContext()
-    val lifecycleOwner = LocalLifecycleOwner.current
+    platformContext()
+    LocalLifecycleOwner.current
     val haptic = LocalHapticFeedback.current
     val medications by medicationViewModel.activeMedications.collectAsStateWithLifecycle()
     val archivedMedications by medicationViewModel.archivedMedications.collectAsStateWithLifecycle()
-    val hasCriticalMedications by medicationViewModel.hasCriticalMedications.collectAsStateWithLifecycle()
     val hasLoaded by medicationViewModel.hasLoaded.collectAsStateWithLifecycle()
 
     val permissionState = LocalPermissionWarnings.current
     var dismissedWarnings by remember { mutableStateOf(emptySet<PermissionWarning>()) }
 
-    // Create mutable list for reordering
     val medicationsList = remember(medications) { medications.toMutableStateList() }
 
-    // Sync the mutable list when medications change
     LaunchedEffect(medications) {
         if (medicationsList != medications) {
             medicationsList.clear()
@@ -131,17 +127,14 @@ fun MedicationListScreen(
     var showArchived by rememberSaveable { mutableStateOf(false) }
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
-    val focusRequester = FocusRequester()
+    FocusRequester()
 
     PlatformBackHandler(fabMenuExpanded) { fabMenuExpanded = false }
 
-    // Setup lazy grid state
     val lazyGridState = rememberLazyGridState()
 
-    // Setup reorderable state for the grid
     val warningBannerCount = if (permissionState.hasWarnings) 1 else 0
     val reorderableState = rememberReorderableLazyGridState(lazyGridState) { from, to ->
-        // Perform haptic feedback when an item is moved
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
 
         // Offset to account for the conditional permission warning banner item

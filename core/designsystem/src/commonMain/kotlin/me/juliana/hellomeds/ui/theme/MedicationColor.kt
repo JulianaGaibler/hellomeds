@@ -23,18 +23,12 @@ sealed class MedicationColor(
     val foregroundDark: Color,
     val backgroundDark: Color,
 ) {
-    /**
-     * Get the appropriate foreground color based on current theme
-     */
     @Composable
     @ReadOnlyComposable
     fun foreground(isDark: Boolean = androidx.compose.foundation.isSystemInDarkTheme()): Color {
         return if (isDark) foregroundDark else foregroundLight
     }
 
-    /**
-     * Get the appropriate background color based on current theme
-     */
     @Composable
     @ReadOnlyComposable
     fun background(isDark: Boolean = androidx.compose.foundation.isSystemInDarkTheme()): Color {

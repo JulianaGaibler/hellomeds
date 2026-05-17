@@ -54,9 +54,8 @@ class StockGraphBuilder(
                 if (value > maxValue) maxValue = value
                 if (value < minValue) minValue = value
 
-                val adjType = StockAdjustmentType.fromValue(adj.adjustmentType)
-                val event: StockEvent? = when (adjType) {
-                    StockAdjustmentType.INTAKE -> StockEvent.DoseTaken(adj.historyId ?: 0, adj.quantityChange)
+                val event: StockEvent? = when (val adjType = StockAdjustmentType.fromValue(adj.adjustmentType)) {
+                    StockAdjustmentType.INTAKE -> StockEvent.DoseTaken(adj.quantityChange)
                     StockAdjustmentType.REFILL -> StockEvent.Refill(adj.quantityChange)
                     StockAdjustmentType.MANUAL_CORRECTION -> StockEvent.Adjustment(
                         adjType.value,
@@ -176,7 +175,6 @@ class StockGraphBuilder(
                 medicationName = medication.displayName ?: medication.name,
                 dataPoints = allPoints,
                 medicationType = medication.type,
-                medicationContainer = medication.medicationContainer,
                 isEstimatedTracking = isEstimated,
                 color = Color.Unspecified,
                 yAxisRange = yMin to if (yMax > yMin) yMax else yMin + 1.0,

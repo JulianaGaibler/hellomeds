@@ -10,8 +10,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,9 +18,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.model.StockStatus
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
@@ -40,11 +40,9 @@ class StockTrackingViewModel(
     private val stockGraphBuilder: StockGraphBuilder,
 ) : ViewModel() {
 
-    // Loading state - true once the first stock status computation completes
     private val _hasLoaded = MutableStateFlow(false)
     val hasLoaded: StateFlow<Boolean> = _hasLoaded.asStateFlow()
 
-    // Stock statuses computed in parallel on background threads
     private val _stockStatuses = MutableStateFlow<Map<Int, StockStatus>>(emptyMap())
     val stockStatuses: StateFlow<Map<Int, StockStatus>> = _stockStatuses.asStateFlow()
 
@@ -183,8 +181,6 @@ class StockTrackingViewModel(
     suspend fun deleteAllTrackingData(medicationId: Int) {
         repository.deleteAllTrackingData(medicationId)
     }
-
-    // --- Stock Settings ---
 
     fun updateLowStockThreshold(medicationId: Int, threshold: Double?) {
         viewModelScope.launch { repository.updateLowStockThreshold(medicationId, threshold) }

@@ -33,12 +33,11 @@ fun ContainerSelector(
     modifier: Modifier = Modifier,
     containersToShow: List<MedicationContainer> = MedicationContainer.entries,
 ) {
-    // Map container types to their display names
     val allContainers = containersToShow.map { container ->
         container to stringResource(container.displayNameRes)
     }
 
-    // Most common container types (shown first for better UX)
+    // Common containers surfaced first.
     val commonContainers = listOf(
         MedicationContainer.BOTTLE,
         MedicationContainer.PACKAGE,

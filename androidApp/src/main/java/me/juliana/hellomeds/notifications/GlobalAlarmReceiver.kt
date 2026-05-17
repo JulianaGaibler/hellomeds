@@ -11,7 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import me.juliana.hellomeds.data.dao.ImportanceLabelDao
 import me.juliana.hellomeds.data.dao.MedicationDao
 import me.juliana.hellomeds.data.model.NotificationSession
 import me.juliana.hellomeds.data.model.SessionType
@@ -82,7 +81,6 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
         val sessionManager: NotificationSessionManager = get()
         val notifPrefs: NotificationPreferences = get()
         val medicationDao: MedicationDao = get()
-        val importanceLabelDao: ImportanceLabelDao = get()
         val missedDoseProcessor: MissedDoseProcessor = get()
 
         val lockScreenVisibility = notifPrefs.lockScreenVisibility.first()
@@ -99,7 +97,6 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
                 projector,
                 sessionManager,
                 medicationDao,
-                importanceLabelDao,
                 missedDoseProcessor,
                 lockScreenVisibility,
             )
@@ -160,7 +157,6 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
         projector: ScheduleProjector,
         sessionManager: NotificationSessionManager,
         medicationDao: MedicationDao,
-        importanceLabelDao: ImportanceLabelDao,
         missedDoseProcessor: MissedDoseProcessor,
         lockScreenVisibility: LockScreenVisibility,
     ) {
@@ -182,7 +178,6 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
                     projector,
                     sessionManager,
                     medicationDao,
-                    importanceLabelDao,
                     missedDoseProcessor,
                     lockScreenVisibility,
                 )
@@ -275,7 +270,6 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
         projector: ScheduleProjector,
         sessionManager: NotificationSessionManager,
         medicationDao: MedicationDao,
-        importanceLabelDao: ImportanceLabelDao,
         missedDoseProcessor: MissedDoseProcessor,
         lockScreenVisibility: LockScreenVisibility,
     ) {

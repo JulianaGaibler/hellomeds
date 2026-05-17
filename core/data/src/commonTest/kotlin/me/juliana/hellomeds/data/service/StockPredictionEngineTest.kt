@@ -590,7 +590,6 @@ class StockPredictionEngineTest {
         val pkgQty = 40.0
         val containerStartedAt = dayMs // non-zero reference
         val now = containerStartedAt + 10 * dayMs // 10 days later
-        val oldRate = 3.0 // old: 3 doses/day → consumed 30, remaining = 10
 
         // Step 1: estimate remaining with old rate
         val oldSchedules = listOf(

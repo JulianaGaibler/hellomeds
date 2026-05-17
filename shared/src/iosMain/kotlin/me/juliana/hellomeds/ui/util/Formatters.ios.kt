@@ -53,11 +53,6 @@ import kotlin.time.Instant
 // ── Time Formatting ─────────────────────────────────────────────────────────
 
 @Composable
-actual fun formatTime(hour: Int, minute: Int): String {
-    return "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
-}
-
-@Composable
 actual fun formatTime(time: LocalTime): String {
     return "${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}"
 }
@@ -92,12 +87,6 @@ actual fun formatShortDate(date: LocalDate): String {
     formatter.dateStyle = NSDateFormatterShortStyle
     formatter.timeStyle = NSDateFormatterNoStyle
     return formatter.stringFromDate(nsDate)
-}
-
-actual fun formatShortDate(millis: Long): String {
-    val localDate = Instant.fromEpochMilliseconds(millis)
-        .toLocalDateTime(TimeZone.currentSystemDefault()).date
-    return formatShortDate(localDate)
 }
 
 @Composable
@@ -159,7 +148,7 @@ actual fun formatDecimalPlain(value: Double): String {
     formatter.minimumFractionDigits = 0u
     formatter.usesGroupingSeparator = false
     // Force `.` decimal separator regardless of locale.
-    formatter.locale = platform.Foundation.NSLocale("en_US_POSIX")
+    formatter.locale = NSLocale("en_US_POSIX")
     return formatter.stringFromNumber(platform.Foundation.NSNumber(double = value))
         ?: value.toString()
 }

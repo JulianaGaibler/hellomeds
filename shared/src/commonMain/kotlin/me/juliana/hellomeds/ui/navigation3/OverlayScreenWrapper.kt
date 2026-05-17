@@ -13,38 +13,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 
 /**
- * Wrapper for overlay screens that adds subtle rounded corners.
- *
- * **Purpose:**
- * On full-screen phones, 16dp corners are barely noticeable (hidden by status bars
- * or device hardware corners). However, during the predictive back shrink animation,
- * these rounded corners become visible and create a polished "card" appearance.
- *
- * **Visual Effect:**
- * - At rest: Corners blend with device hardware or status bar
- * - During back gesture: Screen shrinks revealing elegant rounded corners
- * - Gives overlays a "floating card" appearance during transitions
- *
- * **Usage:**
- * ```kotlin
- * entry<SettingsRoute> {
- *   OverlayScreenWrapper {
- *     SettingsScreen(...)
- *   }
- * }
- * ```
- *
- * @param cornerRadius Corner radius in dp (default 16dp for subtle effect)
- * @param content The overlay screen composable
+ * Subtle rounded corners on overlay screens. At rest the corners hide behind status bars or device
+ * hardware curvature; during the predictive-back shrink they're revealed, giving the overlay a
+ * floating-card look.
  */
 @Composable
 fun OverlayScreenWrapper(cornerRadius: Float = 16f, content: @Composable () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            // Clip to rounded corners
-            // At full size: barely noticeable
-            // During scale animation: creates polished card appearance
             .clip(RoundedCornerShape(cornerRadius.dp)),
         color = MaterialTheme.colorScheme.background,
     ) {
@@ -52,21 +29,13 @@ fun OverlayScreenWrapper(cornerRadius: Float = 16f, content: @Composable () -> U
     }
 }
 
-/**
- * Alternative wrapper with more pronounced corners for tablet/desktop.
- *
- * Uses 28dp corners which are more appropriate for larger screens where
- * the screen doesn't fill the entire display edge-to-edge.
- */
+/** Larger 28dp corners for tablet/desktop where the screen isn't flush to the device edge. */
 @Composable
 fun OverlayScreenWrapperLarge(content: @Composable () -> Unit) {
     OverlayScreenWrapper(cornerRadius = 28f, content = content)
 }
 
-/**
- * No-corner version for screens that should remain square.
- * Useful for camera or immersive experiences.
- */
+/** Square-cornered variant for camera or other immersive screens. */
 @Composable
 fun OverlayScreenWrapperSquare(content: @Composable () -> Unit) {
     Surface(

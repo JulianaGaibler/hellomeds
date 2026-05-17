@@ -3,6 +3,8 @@
 
 package me.juliana.hellomeds.ui.navigation3
 
+// TODO(BETA_ROLLBACK): closed-beta survey nudge
+// TODO(BETA_ROLLBACK): closed-beta survey nudge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,14 +15,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-// BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -34,7 +34,6 @@ import me.juliana.hellomeds.shared.backup_nudge_body
 import me.juliana.hellomeds.shared.backup_nudge_dismiss
 import me.juliana.hellomeds.shared.backup_nudge_setup
 import me.juliana.hellomeds.shared.backup_nudge_title
-// BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
 import me.juliana.hellomeds.shared.closed_beta_survey_nudge_body
 import me.juliana.hellomeds.shared.closed_beta_survey_nudge_cta
 import me.juliana.hellomeds.shared.closed_beta_survey_nudge_dismiss
@@ -42,6 +41,7 @@ import me.juliana.hellomeds.shared.closed_beta_survey_nudge_title
 import me.juliana.hellomeds.shared.closed_beta_survey_url
 import me.juliana.hellomeds.ui.compat.ConfigureStatusBar
 import me.juliana.hellomeds.ui.compat.DynamicDarkOnboardingTheme
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.components.medication.MedicationAddedDialog
 import me.juliana.hellomeds.ui.features.backup.AutoBackupSettingsScreen
 import me.juliana.hellomeds.ui.features.backup.ExportDataScreen
@@ -110,13 +110,9 @@ fun HelloMedsNavigation3(
     onStockDetailHandled: () -> Unit = {},
     screenProviders: NavigationScreenProviders = NavigationScreenProviders(),
 ) {
-    // Create navigation state with single root stack
     val appNavState = rememberAppNavigationState(initialRoute = initialRoute)
-
-    // Create navigator to handle navigation events
     val navigator = remember { Navigator(appNavState) }
 
-    // Check onboarding status and navigate if needed (non-blocking)
     val onboardingPrefs = koinInject<OnboardingPreferences>()
     var hasCheckedOnboarding by remember { mutableStateOf(false) }
 
@@ -125,7 +121,6 @@ fun HelloMedsNavigation3(
             val isCompleted = onboardingPrefs.onboardingCompleted.first()
 
             if (!isCompleted && appNavState.rootBackStack.lastOrNull() !is OnboardingRoute) {
-                // User hasn't completed onboarding, navigate there
                 appNavState.rootBackStack.clear()
                 appNavState.rootBackStack.add(OnboardingRoute())
             }
@@ -134,14 +129,8 @@ fun HelloMedsNavigation3(
         }
     }
 
-    // Define all app destinations (main route + overlays)
     val entryProvider = entryProvider {
-        // ====================================================================
-        // MAIN APP ROUTE - Contains Nav Bar/Rail and 3 Tabs
-        // ====================================================================
-
         entry<MainAppRoute> {
-            // This entry contains ALL the adaptive layout logic and navigation UI
             AdaptiveMainScreen(
                 selectedTabIndex = appNavState.selectedTabIndex,
                 onTabSelected = { navigator.selectTab(it) },
@@ -160,12 +149,6 @@ fun HelloMedsNavigation3(
                 onNavigateToMedicationDetail = { medicationId ->
                     navigator.openOverlay(MedicationDetailRoute(medicationId))
                 },
-                onNavigateToEditSchedule = { medicationId ->
-                    navigator.openOverlay(EditScheduleRoute(medicationId))
-                },
-                onNavigateToEditLabel = { medicationId ->
-                    navigator.openOverlay(EditLabelRoute(medicationId))
-                },
                 onNavigateToStockDetail = { medicationId ->
                     navigator.openOverlay(StockTrackingDetailRoute(medicationId))
                 },
@@ -175,47 +158,36 @@ fun HelloMedsNavigation3(
             )
         }
 
-        // ====================================================================
-        // ONBOARDING ROUTE - First-Launch Permission Setup
-        // ====================================================================
-
         entry<OnboardingRoute> { key ->
             OnboardingScreen(
                 showAllSteps = key.showAllSteps,
                 onComplete = {
-                    // If this is the initial onboarding (backstack only has OnboardingRoute),
-                    // clear backstack and navigate to main app
-                    // If this is a debug/review launch (backstack has more entries),
-                    // just close the overlay
+                    // Initial onboarding (only OnboardingRoute on the stack) replaces with
+                    // main app; debug/review launches just close the overlay.
                     if (appNavState.rootBackStack.size == 1) {
-                        // Initial onboarding - replace with main app
                         appNavState.rootBackStack.clear()
                         appNavState.rootBackStack.add(MainAppRoute)
                     } else {
-                        // Debug/review launch - just close the overlay
                         navigator.closeOverlay()
                     }
                 },
                 onNavigateToCamera = {
-                    // Complete onboarding, navigate to main app (Medications tab), and open camera
                     if (appNavState.rootBackStack.size == 1) {
                         appNavState.rootBackStack.clear()
                         appNavState.rootBackStack.add(MainAppRoute)
-                        appNavState.selectedTabIndex = 1 // Select Medications tab
+                        appNavState.selectedTabIndex = 1
                     }
                     navigator.openOverlay(CameraDetectionRoute)
                 },
                 onNavigateToManualAdd = {
-                    // Complete onboarding, navigate to main app (Medications tab), and open manual add
                     if (appNavState.rootBackStack.size == 1) {
                         appNavState.rootBackStack.clear()
                         appNavState.rootBackStack.add(MainAppRoute)
-                        appNavState.selectedTabIndex = 1 // Select Medications tab
+                        appNavState.selectedTabIndex = 1
                     }
                     navigator.openOverlay(AddMedicationRoute)
                 },
                 onNavigateToImport = {
-                    // Complete onboarding, navigate to main app, and open import
                     if (appNavState.rootBackStack.size == 1) {
                         appNavState.rootBackStack.clear()
                         appNavState.rootBackStack.add(MainAppRoute)
@@ -227,11 +199,6 @@ fun HelloMedsNavigation3(
                 criticalAlertsPermissionScreen = screenProviders.criticalAlertsPermissionScreen,
             )
         }
-
-        // ====================================================================
-        // OVERLAY ROUTES - Simple Full-Screen Composables (NO Scaffold)
-        // ====================================================================
-        // Settings Hierarchy
 
         entry<SettingsRoute> {
             OverlayScreenWrapper {
@@ -489,7 +456,6 @@ fun HelloMedsNavigation3(
             // status bar configuration.
         }
 
-        // Configure status bar when NOT on dark theme route
         if (!isDarkThemeRoute) {
             ConfigureStatusBar(isDarkTheme = darkTheme)
         }
@@ -585,8 +551,7 @@ fun HelloMedsNavigation3(
             )
         }
 
-        // === BETA: Closed-beta survey nudge — shown 10 days after onboarding.
-        // Remove this entire block per BETA_ROLLBACK.md before public release. ===
+        // TODO(BETA_ROLLBACK): closed-beta survey nudge (shown 10 days after onboarding) — remove this entire block before public release.
         val surveyNudgeDismissed by autoBackupPrefs.closedBetaSurveyNudgeDismissed
             .collectAsStateWithLifecycle(false)
         val tenDaysMs = 10 * 24 * 60 * 60 * 1000L

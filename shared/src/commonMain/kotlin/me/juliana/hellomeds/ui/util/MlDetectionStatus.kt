@@ -12,16 +12,9 @@ enum class MlDetectionStatusValue {
     UNAVAILABLE,
 }
 
-/**
- * Returns the current ML detection model status.
- * Android: checks Gemini Nano via ML Kit.
- * iOS: checks Apple Intelligence availability.
- */
+/** Android: Gemini Nano via ML Kit. iOS: Apple Intelligence availability. */
 @Composable
 expect fun rememberMlDetectionStatus(): MlDetectionStatusValue
 
-/**
- * Platform-specific label for the advanced ML detection method.
- * Android: "Gemini", iOS: "Apple Intelligence"
- */
+/** Android: "Gemini". iOS: "Apple Intelligence". */
 expect fun mlDetectionMethodLabel(): String

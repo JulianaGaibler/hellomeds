@@ -3,8 +3,6 @@
 
 package me.juliana.hellomeds.ui.navigation3
 
-import androidx.compose.ui.platform.testTag
-import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -41,7 +39,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.filled_box_24px
 import me.juliana.hellomeds.shared.filled_calendar_today_24
@@ -81,8 +81,6 @@ import org.jetbrains.compose.resources.stringResource
  * @param onNavigateToAddMedication Callback to navigate to Add Medication flow
  * @param onNavigateToCamera Callback to navigate to Camera detection screen
  * @param onNavigateToMedicationDetail Callback to navigate to medication detail
- * @param onNavigateToEditSchedule Callback to navigate to edit schedule
- * @param onNavigateToEditLabel Callback to navigate to edit label
  */
 @Composable
 fun AdaptiveMainScreen(
@@ -93,8 +91,6 @@ fun AdaptiveMainScreen(
     onNavigateToAddMedication: () -> Unit,
     onNavigateToCamera: () -> Unit,
     onNavigateToMedicationDetail: (medicationId: Int) -> Unit,
-    onNavigateToEditSchedule: (medicationId: Int) -> Unit,
-    onNavigateToEditLabel: (medicationId: Int) -> Unit,
     onNavigateToStockDetail: (medicationId: Int) -> Unit,
     modifier: Modifier = Modifier,
     notificationEventIds: IntArray? = null,
@@ -137,8 +133,6 @@ fun AdaptiveMainScreen(
                 onAddMedication = onNavigateToAddMedication,
                 onAddWithCamera = onNavigateToCamera,
                 onMedicationClick = onNavigateToMedicationDetail,
-                onEditSchedule = onNavigateToEditSchedule,
-                onEditLabel = onNavigateToEditLabel,
             )
         }
     }
@@ -153,17 +147,14 @@ fun AdaptiveMainScreen(
         }
     }
 
-    // Use BoxWithConstraints for actual dp width measurement.
-    // Note: WindowSizeClass.isWidthAtLeastBreakpoint() only reports bucketed breakpoint
-    // values (0, 600, 840) — not the actual width — so custom thresholds like 1024
-    // never trigger. BoxWithConstraints gives the real dp value.
+    // WindowSizeClass reports bucketed breakpoints (0/600/840), so custom thresholds like 1024
+    // never trigger. BoxWithConstraints gives the real dp width.
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val isWide = maxWidth >= 1024.dp
         val isMedium = maxWidth >= 600.dp && !isWide
 
         if (isWide) {
-            // --- WIDE LAYOUT (Desktop/Large Tablet) ---
-            // Show all three screens side-by-side as rounded cards with gaps
+            // Wide layout: three screens side-by-side as rounded cards.
             Box(
                 modifier = Modifier
                     .fillMaxSize()

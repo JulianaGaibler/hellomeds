@@ -26,9 +26,6 @@ import org.jetbrains.compose.resources.stringResource
 // ── Time Formatting ─────────────────────────────────────────────────────────
 
 @Composable
-expect fun formatTime(hour: Int, minute: Int): String
-
-@Composable
 expect fun formatTime(time: LocalTime): String
 
 // ── Date Formatting ─────────────────────────────────────────────────────────
@@ -38,8 +35,6 @@ expect fun formatDate(date: LocalDate): String
 expect fun formatDate(millis: Long): String
 
 expect fun formatShortDate(date: LocalDate): String
-
-expect fun formatShortDate(millis: Long): String
 
 @Composable
 expect fun formatDateWithRelativeWeekday(date: LocalDate): String

@@ -7,36 +7,21 @@ import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.database.entities.Schedule
 
 /**
- * Abstracts platform-specific string formatting for medication display items.
+ * Platform-specific string formatting for medication display items.
  *
- * On Android, this wraps Context + string resources (R.string, R.plurals).
- * On iOS, this would use NSLocalizedString or similar.
- *
- * This interface allows MedicationViewModel to live in commonMain while
- * keeping full-fidelity localized formatting on each platform.
+ * Lets MedicationViewModel live in commonMain while each platform plugs in its own localized
+ * resources (Android `R.string` / `R.plurals`, iOS `NSLocalizedString`).
  */
 interface MedicationDisplayFormatter {
 
-    /**
-     * Returns a localized "as needed" label (e.g., "As needed").
-     */
     fun asNeededLabel(): String
 
-    /**
-     * Returns a localized frequency text for a single schedule.
-     * e.g., "Every day", "Every 2 days", "Mon, Wed, Fri"
-     */
+    /** e.g., "Every day", "Every 2 days", "Mon, Wed, Fri" */
     fun frequencyText(schedule: Schedule): String
 
-    /**
-     * Returns a localized plural schedule count.
-     * e.g., "2 schedules", "3 schedules"
-     */
+    /** e.g., "2 schedules", "3 schedules" */
     fun scheduleCountText(count: Int): String
 
-    /**
-     * Formats medication type with optional strength for display.
-     * e.g., "Capsule, 100mg", "Liquid, 5ml"
-     */
+    /** e.g., "Capsule, 100mg", "Liquid, 5ml" */
     fun typeAndStrength(medication: Medication): String
 }

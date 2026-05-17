@@ -53,6 +53,7 @@ import me.juliana.hellomeds.data.model.enums.TrackingPrecision
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_cancel
 import me.juliana.hellomeds.shared.content_description_back
+import me.juliana.hellomeds.shared.illustration_empty_tracking
 import me.juliana.hellomeds.shared.stock_action_container_depleted
 import me.juliana.hellomeds.shared.stock_action_top_up
 import me.juliana.hellomeds.shared.stock_action_update
@@ -63,7 +64,6 @@ import me.juliana.hellomeds.shared.stock_depletion_confirm_title
 import me.juliana.hellomeds.shared.stock_detail_add_button
 import me.juliana.hellomeds.shared.stock_detail_description
 import me.juliana.hellomeds.shared.stock_detail_no_changes
-import me.juliana.hellomeds.shared.illustration_empty_tracking
 import me.juliana.hellomeds.shared.stock_detail_no_tracking
 import me.juliana.hellomeds.shared.stock_detail_settings
 import me.juliana.hellomeds.shared.stock_detail_title_dynamic
@@ -229,9 +229,7 @@ fun StockTrackingDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // === Enabled: Redesigned layout ===
-
-                // Stock preview visualization — show fill level of current container
+                // Fill-level of the current container.
                 val previewStock = stockStatus.currentContainerRemaining
                     ?: currentStock ?: medication.currentStockQuantity ?: 0.0
                 StockPreviewSelector(

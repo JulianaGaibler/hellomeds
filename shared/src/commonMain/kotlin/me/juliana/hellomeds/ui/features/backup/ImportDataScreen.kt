@@ -32,7 +32,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +47,7 @@ import me.juliana.hellomeds.data.backup.model.ImportDecision
 import me.juliana.hellomeds.data.backup.model.ImportResult
 import me.juliana.hellomeds.data.backup.model.ImportWarning
 import me.juliana.hellomeds.data.backup.model.MedicationImportInfo
+import me.juliana.hellomeds.data.model.enums.MedicationType
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.accessibility_not_selected
 import me.juliana.hellomeds.shared.accessibility_selected
@@ -95,16 +95,16 @@ import me.juliana.hellomeds.shared.import_warning_unknown_frequency_type
 import me.juliana.hellomeds.shared.import_warning_unknown_med_type
 import me.juliana.hellomeds.shared.import_warning_unknown_strength_unit
 import me.juliana.hellomeds.shared.import_warning_unknown_tracking_precision
-import me.juliana.hellomeds.data.model.enums.MedicationType
 import me.juliana.hellomeds.ui.compat.ButtonGroupDefaults
 import me.juliana.hellomeds.ui.compat.ListItemShapes
 import me.juliana.hellomeds.ui.compat.ToggleButton
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.components.common.AppScaffold
-import me.juliana.hellomeds.ui.features.settings.SettingsHeader
-import me.juliana.hellomeds.ui.features.settings.settingsContentPadding
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.SmartListItem
 import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
+import me.juliana.hellomeds.ui.features.settings.SettingsHeader
+import me.juliana.hellomeds.ui.features.settings.settingsContentPadding
 import me.juliana.hellomeds.ui.util.displayNameRes
 import me.juliana.hellomeds.ui.util.rememberFileLoader
 import me.juliana.hellomeds.ui.viewmodel.BackupViewModel

@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
-import me.juliana.hellomeds.data.model.enums.MedicationType
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_skip
 import me.juliana.hellomeds.shared.stock_container_generic
@@ -42,11 +41,10 @@ fun DiscretePackagingStep(
     onPackagingQuantityChange: (String) -> Unit,
     container: MedicationContainer?,
     onContainerChange: (MedicationContainer?) -> Unit,
-    medicationType: MedicationType,
     onSkip: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = platformContext()
+    platformContext()
     Column(modifier = modifier.fillMaxWidth()) {
         ScreenHeader(
             headline = stringResource(Res.string.stock_discrete_packaging_title),

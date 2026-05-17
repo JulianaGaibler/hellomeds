@@ -50,10 +50,7 @@ class MedicationRepository(
      */
     suspend fun archive(medicationId: Int) {
         transactionRunner.run {
-            // Archive the medication
             medicationDao.archive(medicationId)
-
-            // Get all schedules for this medication and archive them
             val schedules = scheduleDao.getByMedicationId(medicationId).first()
             schedules.forEach { schedule ->
                 if (!schedule.isArchived) {
@@ -62,7 +59,6 @@ class MedicationRepository(
             }
         }
         compactDisplayOrder()
-        // Refresh alarms to cancel alarms for archived schedules
         reconciler.reconcile()
     }
 
@@ -72,10 +68,7 @@ class MedicationRepository(
      */
     suspend fun unarchive(medicationId: Int) {
         transactionRunner.run {
-            // Unarchive the medication
             medicationDao.unarchive(medicationId)
-
-            // Get all schedules for this medication and unarchive them
             val schedules = scheduleDao.getByMedicationId(medicationId).first()
             schedules.forEach { schedule ->
                 if (schedule.isArchived) {

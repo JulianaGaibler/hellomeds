@@ -35,6 +35,8 @@ import me.juliana.hellomeds.data.model.enums.TrackingPrecision
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_back
 import me.juliana.hellomeds.shared.calculate_24px
+import me.juliana.hellomeds.shared.stock_adjust_level_action
+import me.juliana.hellomeds.shared.stock_adjust_level_action_desc
 import me.juliana.hellomeds.shared.stock_calculator_toggle
 import me.juliana.hellomeds.shared.stock_container_none
 import me.juliana.hellomeds.shared.stock_discrete_low_threshold
@@ -45,8 +47,6 @@ import me.juliana.hellomeds.shared.stock_settings_doses_per_container
 import me.juliana.hellomeds.shared.stock_settings_doses_per_container_desc
 import me.juliana.hellomeds.shared.stock_settings_low_stock_title
 import me.juliana.hellomeds.shared.stock_settings_packaging_quantity
-import me.juliana.hellomeds.shared.stock_adjust_level_action
-import me.juliana.hellomeds.shared.stock_adjust_level_action_desc
 import me.juliana.hellomeds.shared.stock_settings_remove_tracking
 import me.juliana.hellomeds.shared.stock_settings_section_container
 import me.juliana.hellomeds.shared.stock_settings_section_general

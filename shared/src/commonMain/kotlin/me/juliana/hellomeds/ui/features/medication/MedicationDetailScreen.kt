@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import me.juliana.hellomeds.ui.components.medication.MedicationActionIconButton
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -45,9 +44,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
-import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -61,6 +59,7 @@ import me.juliana.hellomeds.data.model.enums.MedicationForegroundShape
 import me.juliana.hellomeds.data.model.enums.MedicationStrengthUnit
 import me.juliana.hellomeds.data.model.enums.MedicationType
 import me.juliana.hellomeds.data.model.getCycleDay
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.domain.validation.MedicationValidation
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_cancel
@@ -96,6 +95,7 @@ import me.juliana.hellomeds.ui.components.list.SmartList
 import me.juliana.hellomeds.ui.components.list.SmartListItem
 import me.juliana.hellomeds.ui.components.list.smartListSegmentedShapes
 import me.juliana.hellomeds.ui.components.medication.CycleDayPicker
+import me.juliana.hellomeds.ui.components.medication.MedicationActionIconButton
 import me.juliana.hellomeds.ui.components.medication.MedicationShapeIcon
 import me.juliana.hellomeds.ui.theme.HelloMedsTheme
 import me.juliana.hellomeds.ui.theme.MedicationColor
@@ -143,7 +143,7 @@ fun MedicationDetailScreen(
 
     // Delete confirmation dialog
     if (showDeleteDialog) {
-        val context = platformContext()
+        platformContext()
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text(stringResource(Res.string.medication_dialog_delete_title)) },
@@ -181,7 +181,7 @@ fun MedicationDetailScreen(
 
     // Archive/Unarchive confirmation dialog
     if (showArchiveDialog) {
-        val context = platformContext()
+        platformContext()
         AlertDialog(
             onDismissRequest = { showArchiveDialog = false },
             title = {

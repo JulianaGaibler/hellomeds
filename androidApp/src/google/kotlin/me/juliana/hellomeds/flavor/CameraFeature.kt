@@ -18,12 +18,10 @@ import me.juliana.hellomeds.ui.util.mlDetectionStatusChecker
 object CameraFeature {
     val isAvailable: Boolean = true
 
-    fun getCameraScreen(): (
-        @Composable (
-            onNavigateBack: () -> Unit,
-            onDetectionComplete: (MedicationDetectionResult) -> Unit,
-        ) -> Unit
-    )? =
+    fun getCameraScreen(): @Composable (
+        onNavigateBack: () -> Unit,
+        onDetectionComplete: (MedicationDetectionResult) -> Unit,
+    ) -> Unit =
         { onBack, onDetectionComplete ->
             CameraDetectionEntryScreen(
                 onNavigateBack = onBack,

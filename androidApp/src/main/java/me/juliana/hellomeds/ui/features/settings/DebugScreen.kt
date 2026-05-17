@@ -123,7 +123,6 @@ fun DebugScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // ── Section 1: Today's Doses ──
             item {
                 SmartListLabel(text = "Today's Doses")
             }
@@ -132,7 +131,6 @@ fun DebugScreen(
                 TodayDosesSection(todayOverview = todayOverview)
             }
 
-            // ── Section 2: Alarm & Notifications ──
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SmartListLabel(text = "Alarm & Notifications")
@@ -170,7 +168,6 @@ fun DebugScreen(
                 }
             }
 
-            // ── Section 3: Upcoming Schedules ──
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SmartListLabel(text = "Upcoming Schedules")
@@ -180,7 +177,6 @@ fun DebugScreen(
                 UpcomingSchedulesSection(scheduledAlarms = scheduledAlarms)
             }
 
-            // ── Section 4: System & Permissions ──
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SmartListLabel(text = "System & Permissions")
@@ -215,7 +211,6 @@ fun DebugScreen(
                 )
             }
 
-            // ── Section 5: Database ──
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SmartListLabel(text = "Database")
@@ -225,7 +220,6 @@ fun DebugScreen(
                 DatabaseHealthSection(databaseHealth = databaseHealth)
             }
 
-            // ── Section 5b: Encryption ──
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SmartListLabel(text = "Encryption")
@@ -236,7 +230,6 @@ fun DebugScreen(
                 EncryptionSection(keyManager = keyManager)
             }
 
-            // ── Section 6: Actions ──
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SmartListLabel(text = "Actions")
@@ -276,7 +269,7 @@ fun DebugScreen(
                             snackbarHostState.showSnackbar(nudgeSuccessMsg)
                         }
                     },
-                    // BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
+                    // TODO(BETA_ROLLBACK): closed-beta survey nudge
                     onSimulateSurveyNudge = {
                         scope.launch {
                             val elevenDaysAgo =
@@ -291,8 +284,6 @@ fun DebugScreen(
         }
     }
 }
-
-// ── Section Composables ──
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -964,7 +955,7 @@ private fun ActionsSection(
     onPreviewLowStockNotification: () -> Unit = {},
     onPreviewDepletionNotification: () -> Unit = {},
     onTriggerBackupNudge: () -> Unit = {},
-    // BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
+    // TODO(BETA_ROLLBACK): closed-beta survey nudge
     onSimulateSurveyNudge: () -> Unit = {},
 ) {
     AutoSmartList(
@@ -1042,7 +1033,7 @@ private fun ActionsSection(
                     onClick = onTriggerBackupNudge,
                 )
             },
-            // BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
+            // TODO(BETA_ROLLBACK): closed-beta survey nudge
             SmartListItemConfig(visible = true) { shapes, visible ->
                 SmartListItem(
                     headlineContent = { Text("Simulate 10 days since onboarding (survey nudge)") },
@@ -1057,8 +1048,6 @@ private fun ActionsSection(
         ),
     )
 }
-
-// ── Helper Functions ──
 
 @Composable
 private fun doseStatusText(dose: TodayDoseInfo): String {

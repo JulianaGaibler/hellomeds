@@ -530,7 +530,7 @@ class ScheduleProjectorTest {
         val nyTz = TimeZone.of("America/New_York")
         val date = LocalDate(2025, 6, 15)
         val startMillis = date.atStartOfDayIn(nyTz).toEpochMilliseconds()
-        val endMillis = date.plus(1, kotlinx.datetime.DateTimeUnit.DAY)
+        val endMillis = date.plus(1, DateTimeUnit.DAY)
             .atStartOfDayIn(nyTz).toEpochMilliseconds()
 
         val medication = createMedication(id = 1, timeZoneMode = TimeZoneMode.FIXED)
@@ -564,7 +564,7 @@ class ScheduleProjectorTest {
         val systemTz = TimeZone.currentSystemDefault()
         val date = LocalDate(2025, 6, 15)
         val startMillis = date.atStartOfDayIn(systemTz).toEpochMilliseconds()
-        val endMillis = date.plus(1, kotlinx.datetime.DateTimeUnit.DAY)
+        val endMillis = date.plus(1, DateTimeUnit.DAY)
             .atStartOfDayIn(systemTz).toEpochMilliseconds()
 
         val medication = createMedication(id = 1, timeZoneMode = TimeZoneMode.LOCAL)
@@ -600,7 +600,7 @@ class ScheduleProjectorTest {
         val anchorDate = LocalDate(2025, 6, 1)
         val testDate = LocalDate(2025, 6, 15) // Day 14 in cycle (0-based)
         val startMillis = testDate.atStartOfDayIn(nyTz).toEpochMilliseconds()
-        val endMillis = testDate.plus(1, kotlinx.datetime.DateTimeUnit.DAY)
+        val endMillis = testDate.plus(1, DateTimeUnit.DAY)
             .atStartOfDayIn(nyTz).toEpochMilliseconds()
 
         // 21-day active + 7-day break cycle. Day 14 (0-based) is in active period.
@@ -644,7 +644,7 @@ class ScheduleProjectorTest {
         val date = LocalDate(2025, 6, 15)
         val startMillis = date.atStartOfDayIn(systemTz).toEpochMilliseconds()
         // Use a wide window to capture events from both timezones
-        val endMillis = date.plus(2, kotlinx.datetime.DateTimeUnit.DAY)
+        val endMillis = date.plus(2, DateTimeUnit.DAY)
             .atStartOfDayIn(systemTz).toEpochMilliseconds()
 
         val fixedMed = createMedication(id = 1, name = "Fixed Med", timeZoneMode = TimeZoneMode.FIXED)
@@ -700,7 +700,7 @@ class ScheduleProjectorTest {
         val systemTz = TimeZone.currentSystemDefault()
         val date = LocalDate(2025, 6, 15)
         val startMillis = date.atStartOfDayIn(systemTz).toEpochMilliseconds()
-        val endMillis = date.plus(1, kotlinx.datetime.DateTimeUnit.DAY)
+        val endMillis = date.plus(1, DateTimeUnit.DAY)
             .atStartOfDayIn(systemTz).toEpochMilliseconds()
 
         val medication = createMedication(id = 1, timeZoneMode = TimeZoneMode.FIXED)
@@ -830,7 +830,7 @@ class ScheduleProjectorTest {
         val nyTz = TimeZone.of("America/New_York")
         val dstDay = LocalDate(2025, 3, 9)
 
-        val medication = createMedication(id = 1, timeZoneMode = TimeZoneMode.FIXED)
+        createMedication(id = 1, timeZoneMode = TimeZoneMode.FIXED)
         val schedule = createSchedule(
             id = 1,
             medicationId = 1,
@@ -859,7 +859,7 @@ class ScheduleProjectorTest {
         val nyTz = TimeZone.of("America/New_York")
         val dstDay = LocalDate(2025, 11, 2)
 
-        val medication = createMedication(id = 1, timeZoneMode = TimeZoneMode.FIXED)
+        createMedication(id = 1, timeZoneMode = TimeZoneMode.FIXED)
         val schedule = createSchedule(
             id = 1,
             medicationId = 1,

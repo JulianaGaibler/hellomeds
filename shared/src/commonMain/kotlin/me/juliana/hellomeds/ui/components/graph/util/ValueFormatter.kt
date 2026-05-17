@@ -112,10 +112,7 @@ object ValueFormatter {
         return result
     }
 
-    /**
-     * Calculate a "nice" interval for axis labels.
-     * Returns values like 1, 2, 5, 10, 20, 50, 100, etc.
-     */
+    /** Snaps to round values like 1, 2, 5, 10, 20, 50, 100, … */
     private fun calculateNiceInterval(roughInterval: Double): Double {
         if (roughInterval <= 0) return 1.0
 

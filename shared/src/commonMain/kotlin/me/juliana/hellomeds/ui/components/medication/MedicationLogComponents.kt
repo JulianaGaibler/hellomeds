@@ -48,19 +48,14 @@ import me.juliana.hellomeds.ui.util.getDoseUnitPluralRes
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
-/**
- * Creates a SettingsItemConfig for displaying medication info in dialogs
- * Returns a list item with medication name, type, and icon
- * If onToggle is provided, shows expand/collapse arrow and is clickable
- */
-
+/** When [onToggle] is non-null the item becomes clickable and shows an expand/collapse arrow. */
 @Composable
 fun medicationInfoItem(
     medication: Medication,
     isExpanded: Boolean? = null,
     onToggle: (() -> Unit)? = null,
 ): SmartListItemConfig {
-    val context = platformContext()
+    platformContext()
     val displayName = medication.displayName?.takeIf { it.isNotBlank() } ?: medication.name
     val typeAndStrength = formatMedicationTypeAndStrength(medication)
 

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -22,6 +21,7 @@ import me.juliana.hellomeds.data.preferences.OnboardingPreferences
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.accessibility_pager_state
 import me.juliana.hellomeds.ui.compat.PlatformBackHandler
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.features.onboarding.steps.BetaThankYouScreen
 import me.juliana.hellomeds.ui.features.onboarding.steps.CompletionScreen
@@ -66,7 +66,6 @@ fun OnboardingScreen(
     val prefs = koinInject<OnboardingPreferences>()
     val autoBackupPrefs = koinInject<AutoBackupPreferences>()
 
-    // Check if this is initial onboarding or a review/debug launch
     val wasAlreadyCompleted by prefs.onboardingCompleted.collectAsStateWithLifecycle(initial = false)
 
     suspend fun completeOnboarding() {
@@ -74,13 +73,12 @@ fun OnboardingScreen(
         autoBackupPrefs.setOnboardingCompletedTimestamp(Clock.System.now().toEpochMilliseconds())
     }
 
-    // Build dynamic page list - skip already granted permissions unless showAllSteps
+    // Skip already-granted permission pages unless showAllSteps is set (debug/review launch).
     val pages = remember(showAllSteps) {
         buildList {
-            // Screen 1: Always show welcome
             add(OnboardingPage.Welcome)
 
-            // BETA: closed-beta thank-you. Remove per BETA_ROLLBACK.md before release.
+            // TODO(BETA_ROLLBACK): closed-beta thank-you page
             add(OnboardingPage.BetaThankYou)
 
             // Medical disclaimer — required for App Store compliance (iOS only).
@@ -89,17 +87,15 @@ fun OnboardingScreen(
                 add(OnboardingPage.Disclaimer)
             }
 
-            // Notifications (skip if already granted, unless showAllSteps)
             if (showAllSteps || !PermissionUtils.areNotificationsEnabled(context)) {
                 add(OnboardingPage.Notifications)
             }
 
-            // Screen 4: Exact Alarms (skip if already granted, unless showAllSteps)
             if (showAllSteps || !PermissionUtils.canScheduleExactAlarms(context)) {
                 add(OnboardingPage.ExactAlarms)
             }
 
-            // Screen 5: Full Screen Intent (Android 14+ only, skip if already granted)
+            // Full Screen Intent: Android 14+ only.
             if (showAllSteps || (
                     PlatformCapabilities.supportsFullScreenIntentPermission() &&
                         !PermissionUtils.canUseFullScreenIntent(context)
@@ -108,39 +104,32 @@ fun OnboardingScreen(
                 add(OnboardingPage.FullScreenIntent)
             }
 
-            // Screen: Critical Alerts (iOS only, skip if already authorized)
+            // Critical Alerts: iOS only.
             if (criticalAlertsPermissionScreen != null &&
                 (showAllSteps || !PlatformCapabilities.canScheduleCriticalAlerts())
             ) {
                 add(OnboardingPage.CriticalAlerts)
             }
 
-            // Screen: AlarmKit (iOS 26+ only, skip if already authorized)
+            // AlarmKit: iOS 26+ only.
             if (alarmKitPermissionScreen != null &&
                 (showAllSteps || !PlatformCapabilities.isAlarmKitAuthorized())
             ) {
                 add(OnboardingPage.AlarmKit)
             }
 
-            // Screen 6: Always show quick start guide
             add(OnboardingPage.QuickStart)
-
-            // Screen 6: Always show completion
             add(OnboardingPage.Complete)
         }
     }
 
     val pagerState = rememberPagerState(pageCount = { pages.size })
 
-    // Handle back button
-    // Page 0 (Welcome): Exit app
-    // Page > 0: Go to previous page
     PlatformBackHandler {
         if (pagerState.currentPage == 0) {
-            // Exit the app (initial onboarding, can't go back)
+            // Page 0 has nowhere to go back to — exit the app.
             onExitApp()
         } else {
-            // Go to previous page
             scope.launch {
                 pagerState.animateScrollToPage(pagerState.currentPage - 1)
             }
@@ -172,7 +161,7 @@ fun OnboardingScreen(
                 },
             )
 
-            // BETA: closed-beta thank-you. Remove per BETA_ROLLBACK.md before release.
+            // TODO(BETA_ROLLBACK): closed-beta thank-you page
             OnboardingPage.BetaThankYou -> BetaThankYouScreen(
                 onContinue = {
                     scope.launch {
@@ -324,7 +313,7 @@ fun OnboardingScreen(
 private enum class OnboardingPage {
     Welcome,
 
-    // BETA: Remove per BETA_ROLLBACK.md before release.
+    // TODO(BETA_ROLLBACK)
     BetaThankYou,
     Disclaimer,
     QuickStart,

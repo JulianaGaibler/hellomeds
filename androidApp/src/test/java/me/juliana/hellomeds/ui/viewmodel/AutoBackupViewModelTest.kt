@@ -111,10 +111,6 @@ class AutoBackupViewModelTest {
         return vm
     }
 
-    // -----------------------------------------------------------------------
-    // 2a. Bug fix: passphrase reactivity
-    // -----------------------------------------------------------------------
-
     @Test
     fun hasPassphrase_flips_true_after_setPassphrase_without_other_prefs_changing() = runTest(dispatcher) {
         val viewModel = newViewModel()
@@ -132,10 +128,6 @@ class AutoBackupViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
-
-    // -----------------------------------------------------------------------
-    // 2b. onEnableToggled walk-through
-    // -----------------------------------------------------------------------
 
     @Test
     fun onEnableToggled_false_disablesAndDoesNotEmit() = runTest(dispatcher) {
@@ -212,10 +204,6 @@ class AutoBackupViewModelTest {
         coVerify(exactly = 1) { preferences.setAutoBackupEnabled(true) }
     }
 
-    // -----------------------------------------------------------------------
-    // 2c. pendingEnable chaining — full happy path
-    // -----------------------------------------------------------------------
-
     @Test
     fun enableFlow_chains_passphraseThenFolderThenEnabled() = runTest(dispatcher) {
         hasPassphrase = false
@@ -242,10 +230,6 @@ class AutoBackupViewModelTest {
         }
         coVerify(exactly = 1) { preferences.setAutoBackupEnabled(true) }
     }
-
-    // -----------------------------------------------------------------------
-    // 2d. Cancellation paths
-    // -----------------------------------------------------------------------
 
     @Test
     fun dismissingPassphraseDialog_clearsPendingEnable_soLaterSetPassphrase_doesNotHijack() = runTest(dispatcher) {

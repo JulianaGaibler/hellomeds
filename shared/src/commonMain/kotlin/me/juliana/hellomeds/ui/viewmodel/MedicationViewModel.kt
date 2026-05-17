@@ -8,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -19,10 +18,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import me.juliana.hellomeds.data.dao.MedicationDao
@@ -114,10 +113,7 @@ class MedicationViewModel(
             medicationsFlow,
             scheduleRepository.getActive(),
         ) { medications, schedules ->
-            // Group schedules by medication ID
             val schedulesByMedId = schedules.groupBy { it.medicationId }
-
-            // Map each medication to a display item
             medications.map { medication ->
                 val medicationSchedules = schedulesByMedId[medication.id] ?: emptyList()
                 medication.toDisplayItem(medicationSchedules)

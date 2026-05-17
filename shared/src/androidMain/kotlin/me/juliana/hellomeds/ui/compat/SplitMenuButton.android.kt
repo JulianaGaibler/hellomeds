@@ -19,10 +19,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
-import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.accessibility_collapsed
 import me.juliana.hellomeds.shared.accessibility_expanded

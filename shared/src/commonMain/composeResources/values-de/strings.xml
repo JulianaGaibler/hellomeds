@@ -689,7 +689,7 @@
 	<string name="onboarding_disclaimer_understood">Verstanden</string>
 	<string name="onboarding_disclaimer_privacy_link">Datenschutzerklärung lesen</string>
 
-	<!-- BETA: Geschlossene-Beta-Onboarding-Karte. Vor öffentlichem Release gemäß BETA_ROLLBACK.md entfernen. -->
+	<!-- TODO(BETA_ROLLBACK): closed-beta onboarding card -->
 	<string name="onboarding_closed_beta_title">Willkommen in der geschlossenen Beta</string>
 	<string name="onboarding_closed_beta_body">Vielen Dank fürs Testen von HelloMeds! Die App bitte mindestens 14 Tage lang installiert lassen. Das verlangt Google Play, bevor sie öffentlich veröffentlicht werden darf. In den Einstellungen gibt es eine "Geschlossene Beta"-Karte mit Möglichkeiten für Feedback und Fehlermeldungen.</string>
 	<string name="onboarding_get_started">Loslegen</string>
@@ -763,13 +763,13 @@
 	<string name="settings_screen_privacy">Bildschirm-Datenschutz</string>
 	<string name="settings_screen_privacy_description">Screenshots verhindern und Inhalt in der App-Übersicht ausblenden</string>
 
-	<!-- BETA: Geschlossene-Beta-Einstellungskarte. Vor öffentlichem Release gemäß BETA_ROLLBACK.md entfernen. -->
+	<!-- TODO(BETA_ROLLBACK): closed-beta settings card -->
 	<string name="settings_closed_beta_title">Geschlossene Beta</string>
 	<string name="settings_closed_beta_body">Vielen Dank fürs Testen von HelloMeds vor dem Release. Die Schaltfläche unten führt zu den Kanälen für Feedback und Fehlermeldungen.</string>
 	<string name="settings_closed_beta_cta">Beta-Seite öffnen</string>
 	<string name="settings_closed_beta_support_cta">Support öffnen</string>
 
-	<!-- BETA: Beta-Umfrage-Hinweis (10 Tage nach Onboarding). Vor öffentlichem Release gemäß BETA_ROLLBACK.md entfernen. -->
+	<!-- TODO(BETA_ROLLBACK): closed-beta survey nudge (10 days after onboarding) -->
 	<string name="closed_beta_survey_nudge_title">Wie läuft's mit HelloMeds?</string>
 	<string name="closed_beta_survey_nudge_body">Du nutzt HelloMeds jetzt seit ein paar Wochen. Wenn du Zeit hast, bitte gib Feedback in einer kurzen Umfrage (ca. 5 Minuten), um die App startklar machen zu können.</string>
 	<string name="closed_beta_survey_nudge_cta">Zur Umfrage</string>

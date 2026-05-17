@@ -699,7 +699,7 @@
     <string name="onboarding_disclaimer_understood">Understood</string>
     <string name="onboarding_disclaimer_privacy_link">Read the privacy policy</string>
 
-    <!-- BETA: Closed-beta onboarding card. Remove per BETA_ROLLBACK.md before public release. -->
+    <!-- TODO(BETA_ROLLBACK): closed-beta onboarding card -->
     <string name="onboarding_closed_beta_title">You're in the closed beta</string>
     <string name="onboarding_closed_beta_body">Thanks for helping test HelloMeds! Please keep the app installed for at least 14 days. That's what Google Play requires before it can be launched publicly. You'll find a "Closed beta" card in Settings with everything you need to share feedback or report problems.</string>
     <string name="onboarding_get_started">Get Started</string>
@@ -773,14 +773,14 @@
     <string name="settings_screen_privacy">Screen privacy</string>
     <string name="settings_screen_privacy_description">Prevent screenshots and hide content in the app switcher</string>
 
-    <!-- BETA: Closed-beta settings card. Remove per BETA_ROLLBACK.md before public release. -->
+    <!-- TODO(BETA_ROLLBACK): closed-beta settings card -->
     <string name="settings_closed_beta_title">Closed beta</string>
     <string name="settings_closed_beta_body">Thanks for helping test HelloMeds before launch. Tap below for feedback and bug-report channels.</string>
     <string name="settings_closed_beta_cta">Open beta page</string>
     <string name="settings_closed_beta_support_cta">Open Support</string>
     <string name="settings_closed_beta_url" translatable="false">https://juliana.me/projects/hellomeds/closedbeta-feedback</string>
 
-    <!-- BETA: Closed-beta survey nudge (shown 10 days after onboarding). Remove per BETA_ROLLBACK.md before public release. -->
+    <!-- TODO(BETA_ROLLBACK): closed-beta survey nudge (shown 10 days after onboarding) -->
     <string name="closed_beta_survey_nudge_title">How's HelloMeds working for you?</string>
     <string name="closed_beta_survey_nudge_body">You've been using HelloMeds for a couple of weeks. If you have some time please provide feedback in a short (~5 min) survey to help get the app ready for launch!</string>
     <string name="closed_beta_survey_nudge_cta">Take the survey</string>

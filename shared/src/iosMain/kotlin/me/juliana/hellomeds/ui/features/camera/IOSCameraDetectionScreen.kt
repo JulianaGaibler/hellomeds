@@ -42,10 +42,10 @@ import me.juliana.hellomeds.data.preferences.CameraPreferences
 import me.juliana.hellomeds.data.util.AppLogger
 import me.juliana.hellomeds.domain.ml.MedicationDetectionResult
 import me.juliana.hellomeds.domain.ml.MedicationIntelligenceEngine
+import me.juliana.hellomeds.ml.isFoundationModelAvailable
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_back
 import me.juliana.hellomeds.shared.camera_detection_permission_required
-import me.juliana.hellomeds.ml.isFoundationModelAvailable
 import me.juliana.hellomeds.ui.components.CameraConsentDialog
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject

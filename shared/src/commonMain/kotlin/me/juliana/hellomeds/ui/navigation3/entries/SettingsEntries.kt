@@ -4,12 +4,12 @@
 package me.juliana.hellomeds.ui.navigation3.entries
 
 import androidx.compose.runtime.Composable
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import me.juliana.hellomeds.data.database.entities.ImportanceLabel
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.features.settings.ImportanceLabelBottomSheet
 import me.juliana.hellomeds.ui.features.settings.ImportanceLabelsScreen
 import me.juliana.hellomeds.ui.viewmodel.ImportanceLabelViewModel

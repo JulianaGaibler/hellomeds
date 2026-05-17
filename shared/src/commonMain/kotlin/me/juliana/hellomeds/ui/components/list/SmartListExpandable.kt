@@ -41,33 +41,13 @@ import me.juliana.hellomeds.shared.accessibility_action_expand
 import me.juliana.hellomeds.ui.compat.ListItemShapes
 import org.jetbrains.compose.resources.stringResource
 
-/**
- * Helper function to remember a map for tracking expanded state of multiple items by ID.
- * Useful for lists where each item can be independently expanded/collapsed.
- * Uses SnapshotStateMap so that mutations trigger recomposition.
- *
- * @return A state-aware mutable map where keys are item IDs and values are expanded states
- */
+/** Expanded-state per item ID; SnapshotStateMap so mutations trigger recomposition. */
 @Composable
 fun rememberExpandedStateMap(): SnapshotStateMap<Int, Boolean> {
     return remember { mutableStateMapOf() }
 }
 
-/**
- * An expandable SmartList item that shows/hides child content when clicked.
- * Displays a chevron icon that rotates when expanded.
- *
- * @param headlineContent The main text content of the item
- * @param expanded Whether the item is currently expanded
- * @param onExpandToggle Callback invoked when the expand button is clicked
- * @param modifier Modifier for styling
- * @param supportingContent Optional supporting text shown below headline
- * @param leadingContent Optional content shown at the start (e.g., icon)
- * @param position Position in the list for proper corner radius
- * @param visible Whether this item is visible (with animation)
- * @param childContent The content to show when expanded (nested items, details, etc.)
- */
-
+/** Expandable SmartList item with a rotating chevron and child content revealed on click. */
 @Composable
 fun SmartListExpandableItem(
     headlineContent: @Composable () -> Unit,
@@ -80,10 +60,9 @@ fun SmartListExpandableItem(
     visible: Boolean = true,
     childContent: @Composable ColumnScope.() -> Unit,
 ) {
-    // Track if this item has ever transitioned from invisible to visible
+    // Suppress the enter animation on the very first frame this item appears.
     val hasAnimated = remember { mutableStateOf(!visible) }
 
-    // Update animation state when visibility changes
     LaunchedEffect(visible) {
         if (visible && !hasAnimated.value) {
             hasAnimated.value = true
@@ -100,7 +79,6 @@ fun SmartListExpandableItem(
         exit = fadeOut() + shrinkVertically(),
     ) {
         Column {
-            // Main item with expand button
             val itemModifier = modifier
                 .clip(shapes.shape)
                 .clickable(onClick = onExpandToggle)
@@ -128,7 +106,6 @@ fun SmartListExpandableItem(
                 ),
             )
 
-            // Child content (expanded details)
             AnimatedVisibility(
                 visible = expanded,
                 enter = fadeIn(tween(300)) + expandVertically(tween(300)),
@@ -144,17 +121,7 @@ fun SmartListExpandableItem(
     }
 }
 
-/**
- * An expandable section header for grouping multiple SmartList items.
- * Useful for creating collapsible sections like "Today's Alarms", "Tomorrow's Alarms", etc.
- *
- * @param title The section title text
- * @param expanded Whether the section is currently expanded
- * @param onExpandToggle Callback invoked when the section header is clicked
- * @param modifier Modifier for styling
- * @param badge Optional text to show in a badge (e.g., count: "3")
- * @param content The child items to show when expanded
- */
+/** Collapsible section header for grouping SmartList items (e.g., "Today's Alarms"). */
 @Composable
 fun SmartListExpandableSection(
     title: String,
@@ -165,7 +132,6 @@ fun SmartListExpandableSection(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(modifier = modifier) {
-        // Section header
         Row(
             modifier = Modifier
                 .clickable(onClick = onExpandToggle)

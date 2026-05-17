@@ -245,26 +245,15 @@ fun AutoSmartList(modifier: Modifier = Modifier, items: List<SmartListItemConfig
 }
 
 /**
- * Configuration for a single settings item.
- *
- * @param visible Whether this item should be shown. When false, the item animates out.
- * @param content The composable content for this item, receiving the calculated shapes and visibility state.
+ * [content] receives the calculated shapes and visibility state. When [visible] flips to false the
+ * item animates out via the parent SmartList.
  */
-
 data class SmartListItemConfig(
     val visible: Boolean = true,
     val content: @Composable (shapes: ListItemShapes, visible: Boolean) -> Unit,
 )
 
-/**
- * Individual setting list item with Material 3 styling.
- * Use within SmartList or AutoSmartList for proper grouping and corner radius.
- *
- * @param shapes The Material3 ListItemShapes for this item's position in the list
- * @param visible Whether this item should be visible (for animations)
- * @param onClick Optional click handler to make the item clickable
- */
-
+/** Settings list item with Material 3 styling. Use inside SmartList/AutoSmartList for grouping. */
 @Composable
 fun SmartListItem(
     headlineContent: @Composable () -> Unit,
@@ -276,13 +265,12 @@ fun SmartListItem(
     visible: Boolean = true,
     onClick: (() -> Unit)? = null,
 ) {
-    // Track if this item has ever transitioned from invisible to visible
+    // Suppress the enter animation on the very first frame an item becomes visible — only animate
+    // visibility changes after the initial state has been recorded.
     val hasAnimated = remember { mutableStateOf(!visible) }
 
-    // Update animation state when visibility changes
     LaunchedEffect(visible) {
         if (visible && !hasAnimated.value) {
-            // First time becoming visible - mark as animated
             hasAnimated.value = true
         }
     }
@@ -290,10 +278,8 @@ fun SmartListItem(
     AnimatedVisibility(
         visible = visible,
         enter = if (!hasAnimated.value) {
-            // First time visible - no animation
             fadeIn(tween(0)) + expandVertically(tween(0))
         } else {
-            // Subsequent visibility changes - animate normally
             fadeIn() + expandVertically()
         },
         exit = fadeOut() + shrinkVertically(),
@@ -322,18 +308,9 @@ fun SmartListItem(
 }
 
 /**
- * LazyColumn-compatible version of SmartListItem for use with Modifier.animateItem().
- * This version does NOT wrap content in AnimatedVisibility, making it suitable for
- * direct use as a child of LazyColumn items() where the item animation is handled
- * by Modifier.animateItem() instead.
- *
- * Use this in LazyColumn contexts where you need smooth enter/exit/reorder animations.
- * For non-lazy contexts (like settings screens), continue using the regular SmartListItem.
- *
- * @param shapes The Material3 ListItemShapes for this item's position in the list
- * @param onClick Optional click handler to make the item clickable
+ * LazyColumn variant of [SmartListItem]: leaves animation to `Modifier.animateItem()` rather than
+ * wrapping in `AnimatedVisibility`. Wrapping inside a LazyColumn breaks enter/exit/reorder anims.
  */
-
 @Composable
 fun LazySmartListItem(
     headlineContent: @Composable () -> Unit,
@@ -368,17 +345,9 @@ fun LazySmartListItem(
 }
 
 /**
- * A specialized list item for text input fields on the right side.
- * The text field has no visible border and matches the text style of list items.
- *
- * @param shapes The Material3 ListItemShapes for this item's position in the list
- * @param suffix Optional text to display after the input field (e.g., "minutes")
- * @param supportingText Optional supporting text to display below the label
- * @param visible Whether this item should be visible (for animations)
- * @param validator Optional validation function that returns true if the value is valid (for form validation, not visual feedback)
- * @param inputTransformation Optional input transformation to filter/transform user input (e.g., IntegerInputTransformation(), DecimalInputTransformation())
+ * SmartList item with a borderless trailing text field matching the list-item text style.
+ * [validator] gates form submission only — it does not change visual feedback.
  */
-
 @Composable
 fun SmartListTextItem(
     label: String,
@@ -412,20 +381,17 @@ fun SmartListTextItem(
         }
     }
 
-    // Sync TextFieldState changes to external state and validate
     LaunchedEffect(textFieldState.text) {
         val currentText = textFieldState.text.toString()
         if (currentText != value) {
             onValueChange(currentText)
         }
-        // Update error state if validator is provided
         hasError = validator != null && currentText.isNotEmpty() && !validator(currentText)
     }
 
-    // Track if this item has ever transitioned from invisible to visible
+    // Suppress the enter animation on the very first frame this item appears.
     val hasAnimated = remember { mutableStateOf(!visible) }
 
-    // Update animation state when visibility changes
     LaunchedEffect(visible) {
         if (visible && !hasAnimated.value) {
             hasAnimated.value = true
@@ -542,10 +508,9 @@ fun SmartListDropdownItem(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    // Track if this item has ever transitioned from invisible to visible
+    // Suppress the enter animation on the very first frame this item appears.
     val hasAnimated = remember { mutableStateOf(!visible) }
 
-    // Update animation state when visibility changes
     LaunchedEffect(visible) {
         if (visible && !hasAnimated.value) {
             hasAnimated.value = true
@@ -612,10 +577,7 @@ fun SmartListDropdownItem(
     }
 }
 
-/**
- * A divider to be used between list items within SmartList.
- * This is invisible and only provides spacing between items.
- */
+/** Invisible spacer between SmartList items. */
 @Composable
 fun SmartListDivider() {
     Spacer(modifier = Modifier)
@@ -773,18 +735,7 @@ fun SmartListNavigationItem(
     )
 }
 
-/**
- * An info card within a SmartList that displays important messages with custom colors.
- * Properly integrates with SmartList's border radius and animations.
- *
- * @param headlineContent The main title/headline text
- * @param supportingContent Optional body text and additional content (buttons, etc.)
- * @param containerColor The background color of the card
- * @param contentColor The text color for content inside the card
- * @param shapes The Material3 ListItemShapes for this item's position in the list
- * @param visible Whether this item should be visible (for animations)
- */
-
+/** SmartList item rendered as an info card with custom container/content colors. */
 @Composable
 fun SmartListInfoCard(
     headlineContent: @Composable () -> Unit,
@@ -795,10 +746,9 @@ fun SmartListInfoCard(
     shapes: ListItemShapes = smartListSegmentedShapes(index = 0, count = 1),
     visible: Boolean = true,
 ) {
-    // Track if this item has ever transitioned from invisible to visible
+    // Suppress the enter animation on the very first frame this item appears.
     val hasAnimated = remember { mutableStateOf(!visible) }
 
-    // Update animation state when visibility changes
     LaunchedEffect(visible) {
         if (visible && !hasAnimated.value) {
             hasAnimated.value = true

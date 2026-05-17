@@ -25,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import me.juliana.hellomeds.ui.components.common.ScreenHeader
 import me.juliana.hellomeds.data.model.enums.MedicationBackgroundShape
 import me.juliana.hellomeds.data.model.enums.MedicationForegroundShape
 import me.juliana.hellomeds.shared.Res
@@ -35,6 +34,7 @@ import me.juliana.hellomeds.shared.wizard_medication_icon_customize_title
 import me.juliana.hellomeds.shared.wizard_medication_icon_headline
 import me.juliana.hellomeds.shared.wizard_medication_icon_title
 import me.juliana.hellomeds.shared.wizard_medication_icon_use_preset
+import me.juliana.hellomeds.ui.components.common.ScreenHeader
 import me.juliana.hellomeds.ui.components.medication.MedicationIconCustomizer
 import me.juliana.hellomeds.ui.components.medication.MedicationIconStickyPreview
 import me.juliana.hellomeds.ui.components.medication.MedicationShapeIcon

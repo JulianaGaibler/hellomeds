@@ -6,7 +6,6 @@ package me.juliana.hellomeds.ui.components.graph.models
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 import me.juliana.hellomeds.data.model.StockDataPoint
-import me.juliana.hellomeds.data.model.enums.MedicationContainer
 import me.juliana.hellomeds.data.model.enums.MedicationType
 
 /**
@@ -16,7 +15,6 @@ import me.juliana.hellomeds.data.model.enums.MedicationType
  * @param medicationName Display name for the legend
  * @param dataPoints List of stock level data points over time (sorted by timestamp)
  * @param medicationType The medication type enum (for resolving unit labels)
- * @param medicationContainer The container type enum, if any
  * @param isEstimatedTracking Whether this line uses estimated (container-based) tracking
  * @param color Color for this line and its Y-axis
  * @param yAxisRange Min and max values for Y-axis scaling (min, max)
@@ -27,7 +25,6 @@ data class StockLine(
     val medicationName: String,
     val dataPoints: List<StockDataPoint>,
     val medicationType: MedicationType,
-    val medicationContainer: MedicationContainer?,
     val isEstimatedTracking: Boolean,
     val color: Color,
     val yAxisRange: Pair<Double, Double>,
@@ -43,29 +40,18 @@ data class StockLine(
         }
     }
 
-    /**
-     * Check if two lines use the same unit type (for dual Y-axis decisions).
-     */
+    /** Used to decide whether two lines can share a Y-axis. */
     fun hasSameUnit(other: StockLine): Boolean {
         return medicationType == other.medicationType &&
             isEstimatedTracking == other.isEstimatedTracking
     }
 
-    /**
-     * Get historical (non-future) data points.
-     */
     val historicalPoints: List<StockDataPoint>
         get() = dataPoints.filter { !it.isFuture }
 
-    /**
-     * Get future (predicted) data points.
-     */
     val futurePoints: List<StockDataPoint>
         get() = dataPoints.filter { it.isFuture }
 
-    /**
-     * Get the timestamp range covered by this line's data.
-     */
     val timeRange: LongRange
         get() = if (dataPoints.isEmpty()) {
             0L..0L

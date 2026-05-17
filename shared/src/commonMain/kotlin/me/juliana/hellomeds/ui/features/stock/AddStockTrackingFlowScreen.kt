@@ -31,7 +31,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
 import me.juliana.hellomeds.data.model.enums.TrackingPrecision
+import me.juliana.hellomeds.data.service.StockPredictionEngine
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_confirm
 import me.juliana.hellomeds.shared.action_finish
@@ -76,8 +76,10 @@ import me.juliana.hellomeds.shared.stock_method_title
 import me.juliana.hellomeds.shared.stock_settings_depletion_reminder_desc
 import me.juliana.hellomeds.shared.stock_settings_doses_per_container
 import me.juliana.hellomeds.ui.compat.PlatformBackHandler
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.common.AppScaffold
+import me.juliana.hellomeds.ui.components.common.ScreenHeader
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.DecimalInputTransformation
 import me.juliana.hellomeds.ui.components.list.IntegerInputTransformation
@@ -88,14 +90,12 @@ import me.juliana.hellomeds.ui.components.list.SmartListSwitchItem
 import me.juliana.hellomeds.ui.components.list.SmartListTextItem
 import me.juliana.hellomeds.ui.components.medication.ContainerSelector
 import me.juliana.hellomeds.ui.components.stock.CalculatorBottomSheet
-import me.juliana.hellomeds.ui.components.common.ScreenHeader
+import me.juliana.hellomeds.ui.components.stock.PredictionContext
+import me.juliana.hellomeds.ui.components.stock.StockPredictionPreview
 import me.juliana.hellomeds.ui.features.stock.steps.DiscreteCurrentStockStep
 import me.juliana.hellomeds.ui.features.stock.steps.DiscreteLowStockStep
 import me.juliana.hellomeds.ui.features.stock.steps.DiscretePackagingStep
 import me.juliana.hellomeds.ui.util.displayNameLowerRes
-import me.juliana.hellomeds.data.service.StockPredictionEngine
-import me.juliana.hellomeds.ui.components.stock.PredictionContext
-import me.juliana.hellomeds.ui.components.stock.StockPredictionPreview
 import me.juliana.hellomeds.ui.util.labelPluralRes
 import me.juliana.hellomeds.ui.util.pluralFormRes
 import me.juliana.hellomeds.ui.viewmodel.MedicationViewModel
@@ -368,7 +368,6 @@ fun AddStockTrackingFlowScreen(
                                 onPackagingQuantityChange = { state = state.copy(packagingQuantity = it) },
                                 container = state.container,
                                 onContainerChange = { state = state.copy(container = it) },
-                                medicationType = medication.type,
                                 onSkip = {
                                     // Clear packaging data when skipping
                                     state = state.copy(
@@ -437,7 +436,6 @@ fun AddStockTrackingFlowScreen(
                                 onDosesPerContainerChange = { state = state.copy(estimatedDosesPerContainer = it) },
                                 medication = medication,
                                 container = state.estimatedContainer,
-                                containerCount = state.estimatedContainerCount,
                                 dailyConsumption = dailyConsumption,
                                 onSkip = {
                                     state =
@@ -572,12 +570,11 @@ private fun EstimatedDosesStep(
     onDosesPerContainerChange: (Double?) -> Unit,
     medication: Medication,
     container: MedicationContainer?,
-    containerCount: Int = 1,
     dailyConsumption: Double = 0.0,
     onSkip: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = platformContext()
+    platformContext()
     var dosesText by remember {
         mutableStateOf(
             dosesPerContainer?.let {
@@ -709,7 +706,7 @@ private fun EstimatedCurrentStockStep(
     onContainerStartedAtChange: (Long?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = platformContext()
+    platformContext()
     var countText by remember {
         mutableStateOf(containerCount.toString())
     }
@@ -811,7 +808,7 @@ private fun EstimatedLowStockStep(
     onSkip: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = platformContext()
+    platformContext()
     var thresholdText by remember {
         mutableStateOf(lowStockThreshold?.toString() ?: "2")
     }

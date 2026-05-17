@@ -9,7 +9,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -18,6 +17,7 @@ import kotlinx.coroutines.launch
 import me.juliana.hellomeds.data.dao.MedicationDao
 import me.juliana.hellomeds.data.util.ReliabilityState
 import me.juliana.hellomeds.data.util.ReliabilityStateProvider
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.components.reliability.ReliabilityBanner
 import me.juliana.hellomeds.ui.navigation3.HelloMedsNavigation
 import me.juliana.hellomeds.ui.navigation3.MainAppRoute

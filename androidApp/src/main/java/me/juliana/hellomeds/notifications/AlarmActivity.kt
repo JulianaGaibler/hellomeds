@@ -3,7 +3,6 @@
 
 package me.juliana.hellomeds.notifications
 
-import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
@@ -196,10 +195,10 @@ class AlarmActivity : ComponentActivity() {
 
         // Looping vibration
         vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            (getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
+            (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
         } else {
             @Suppress("DEPRECATION")
-            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            getSystemService(VIBRATOR_SERVICE) as Vibrator
         }
         // Pattern: wait 0ms, vibrate 500ms, pause 500ms — repeat from index 0
         vibrator?.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 500, 500), 0))

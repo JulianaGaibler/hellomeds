@@ -4,7 +4,6 @@
 package me.juliana.hellomeds.ui.compat
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.Button
@@ -64,11 +63,6 @@ actual fun ToggleButton(
     )
 
     // Animate shape via scale — brief squeeze on toggle
-    val scaleX by animateFloatAsState(
-        targetValue = if (checked) 1f else 1f,
-        animationSpec = tween(200),
-        label = "toggleScaleX",
-    )
 
     val shape: Shape = if (checked) checkedShape else uncheckedShape
 

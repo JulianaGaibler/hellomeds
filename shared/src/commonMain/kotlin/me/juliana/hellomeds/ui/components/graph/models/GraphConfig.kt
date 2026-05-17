@@ -32,15 +32,9 @@ enum class ZoomLevel(val daysVisible: Int, val label: String) {
     YEAR(365, "Year"),
     ;
 
-    /**
-     * Get the time range in milliseconds for this zoom level.
-     */
     val millisVisible: Long
         get() = daysVisible * 24L * 60L * 60L * 1000L
 
-    /**
-     * Get the next zoom level (zoom in).
-     */
     fun zoomIn(): ZoomLevel = when (this) {
         YEAR -> QUARTER
         QUARTER -> MONTH
@@ -49,9 +43,6 @@ enum class ZoomLevel(val daysVisible: Int, val label: String) {
         DAY -> DAY
     }
 
-    /**
-     * Get the previous zoom level (zoom out).
-     */
     fun zoomOut(): ZoomLevel = when (this) {
         DAY -> WEEK
         WEEK -> MONTH

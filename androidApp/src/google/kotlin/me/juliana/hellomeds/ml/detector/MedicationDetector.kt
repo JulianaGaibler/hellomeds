@@ -18,7 +18,6 @@ import com.google.mlkit.genai.prompt.ImagePart
 import com.google.mlkit.genai.prompt.TextPart
 import com.google.mlkit.genai.prompt.generateContentRequest
 import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.objects.DetectedObject
 import com.google.mlkit.vision.objects.ObjectDetection
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions
 import com.google.mlkit.vision.text.TextRecognition
@@ -240,14 +239,13 @@ class MedicationDetector(private val context: Context) {
                         val box = obj.boundingBox
                         val area = box.width() * box.height()
 
-                        // Calculate distance from image center to box center
                         val boxCenterX = (box.left + box.right) / 2f
                         val boxCenterY = (box.top + box.bottom) / 2f
                         val distanceX = boxCenterX - centerX
                         val distanceY = boxCenterY - centerY
                         val centerDistance = sqrt(distanceX * distanceX + distanceY * distanceY)
 
-                        // Score: larger area and closer to center = higher score
+                        // Larger area + closer to center scores higher.
                         val score = area / (centerDistance + 100f)
 
                         Log.d(
@@ -349,7 +347,6 @@ class MedicationDetector(private val context: Context) {
             )
 
             return analyzeWithGemini(
-                detectedObject = null,
                 extractedText = extractedText,
                 bitmap = croppedBitmap,
                 useGemini = useGemini,
@@ -368,12 +365,10 @@ class MedicationDetector(private val context: Context) {
      * @param useGemini If true, try to use Gemini Nano; if false, use heuristic directly
      */
     private suspend fun analyzeWithGemini(
-        detectedObject: DetectedObject?,
         extractedText: String,
         bitmap: Bitmap,
         useGemini: Boolean = true,
     ): MedicationDetectionResult {
-        // Check if user prefers heuristic or if Gemini is not available
         if (!useGemini || !isGeminiNanoAvailable()) {
             AppLogger.w(
                 TAG,
@@ -383,8 +378,7 @@ class MedicationDetector(private val context: Context) {
         }
 
         try {
-            // Build structured prompt - concise to stay under 4000 tokens (~3000 words)
-            // Use centralized enum values from MedicationDictionaries
+            // Prompt is kept concise to stay under Gemini Nano's ~4000 token limit.
             val allowedTypes = MedicationDictionaries.ALLOWED_TYPES.joinToString(", ")
             val allowedUnits = MedicationDictionaries.ALLOWED_UNITS.joinToString(", ")
 
@@ -418,7 +412,7 @@ class MedicationDetector(private val context: Context) {
             Log.d(TAG, "Gemini response: $jsonResponse")
 
             // Parse JSON response - returns null if no valid data
-            val result = parseGeminiResponse(jsonResponse, extractedText)
+            val result = parseGeminiResponse(jsonResponse)
             if (result == null) {
                 // No valid data extracted, use heuristic fallback
                 AppLogger.w(TAG, "Gemini returned no valid medication data, using heuristic fallback")
@@ -437,7 +431,7 @@ class MedicationDetector(private val context: Context) {
      * Parse Gemini JSON response into MedicationDetectionResult
      * New format: {"n":["name1"],"t":["type1"],"v":100,"u":"mg"}
      */
-    private fun parseGeminiResponse(jsonResponse: String, extractedText: String): MedicationDetectionResult? {
+    private fun parseGeminiResponse(jsonResponse: String): MedicationDetectionResult? {
         try {
             // Clean response (remove markdown code blocks if present)
             val cleanJson = jsonResponse
@@ -481,9 +475,8 @@ class MedicationDetector(private val context: Context) {
             val strengthValue = json.optDouble("v", Double.NaN)
             val strengthUnitStr = if (json.has("u")) json.optString("u")?.trim() else null
 
-            // Validate strength unit - MUST be from predefined list, convert to enum
+            // Strength unit must be from the predefined enum; reject anything else.
             val strength = if (!strengthValue.isNaN() && strengthValue > 0 && strengthUnitStr != null) {
-                // Convert string unit to enum (case-insensitive)
                 val unitEnum = MedicationStrengthUnit.fromValue(strengthUnitStr)
                 if (unitEnum != null) {
                     Log.d(TAG, "  Strength detected: $strengthValue ${unitEnum.value}")

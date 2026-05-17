@@ -57,26 +57,20 @@ class DiagnosticLogPersistenceTest {
         DiagnosticLog.e("Tag", "also before restart")
         awaitFlush()
 
-        // Simulate app restart: clear in-memory, reconfigure from same file
+        // Simulate restart: clear in-memory, reconfigure from the same file.
         DiagnosticLog.clear()
         awaitFlush()
-        // clear() writes empty string to file, so we need to write back the entries manually
-        // Actually, let's test the real flow: write entries, then "restart" without clearing the file
-        // Reset: write entries fresh
         DiagnosticLog.configure(logFile.absolutePath)
         awaitFlush()
 
         DiagnosticLog.w("Tag", "persistent entry")
         awaitFlush()
 
-        // Now simulate restart by creating a new log file path scenario:
-        // Re-read what's on disk
         val fileContent = logFile.readText().trim()
         assertTrue(fileContent.contains("persistent entry"))
 
-        // Clear in-memory only (don't touch file — simulating process death)
-        // We can't truly clear without touching file via public API,
-        // so instead verify the file has content and reconfigure loads it
+        // No public API truly clears in-memory without touching the file, so simulate process death
+        // by copying the on-disk content to a fresh file and reconfiguring from there.
         val tempFile2 = File.createTempFile("diagnostic_restart_", ".log")
         try {
             tempFile2.writeText(fileContent)

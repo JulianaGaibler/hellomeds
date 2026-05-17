@@ -27,7 +27,7 @@ sealed class StockEvent {
     /**
      * A dose was taken from this medication.
      */
-    data class DoseTaken(val logEventId: Int, val quantity: Double = 0.0) : StockEvent()
+    data class DoseTaken(val quantity: Double = 0.0) : StockEvent()
 
     /**
      * Stock was refilled or added.

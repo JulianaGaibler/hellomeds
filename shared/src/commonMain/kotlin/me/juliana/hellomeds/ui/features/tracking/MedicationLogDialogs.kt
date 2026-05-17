@@ -83,7 +83,7 @@ fun MedicationLogBottomSheet(
     onSave: (ProjectedEvent, LocalTime, Double, LogStatus?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = platformContext()
+    platformContext()
     val medication = eventWithMedication.medication
     val event = eventWithMedication.event
     val isNewLog = event.historyRecord == null

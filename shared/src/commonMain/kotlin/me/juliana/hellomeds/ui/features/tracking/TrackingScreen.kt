@@ -17,13 +17,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -31,7 +29,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,7 +53,6 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Instant
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.database.entities.Schedule
 import me.juliana.hellomeds.data.model.ProjectedEvent
@@ -67,6 +63,7 @@ import me.juliana.hellomeds.data.model.enums.MedicationStrengthUnit
 import me.juliana.hellomeds.data.model.enums.MedicationType
 import me.juliana.hellomeds.data.util.MissedDoseDetector
 import me.juliana.hellomeds.data.util.TimeProvider
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.accessibility_close_menu
 import me.juliana.hellomeds.shared.accessibility_collapsed
@@ -90,12 +87,12 @@ import me.juliana.hellomeds.shared.tracking_section_missed
 import me.juliana.hellomeds.shared.tracking_section_scheduled
 import me.juliana.hellomeds.shared.tracking_section_skipped
 import me.juliana.hellomeds.shared.tracking_section_taken
-import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.ui.compat.ExpandableFabMenu
 import me.juliana.hellomeds.ui.compat.FabMenuItem
 import me.juliana.hellomeds.ui.compat.ListItemShapes
 import me.juliana.hellomeds.ui.compat.LoadingIndicator
 import me.juliana.hellomeds.ui.compat.PlatformBackHandler
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.AutoBackupWarningBanner
 import me.juliana.hellomeds.ui.components.PermissionWarningBanners
@@ -121,6 +118,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * State holder for TrackingScreen display data.
@@ -210,7 +208,7 @@ fun TrackingScreen(
     val permissionState = LocalPermissionWarnings.current
     var dismissedWarnings by remember { mutableStateOf(emptySet<PermissionWarning>()) }
     var backupWarningDismissed by remember { mutableStateOf(false) }
-    val autoBackupPrefs = org.koin.compose.koinInject<me.juliana.hellomeds.data.preferences.AutoBackupPreferences>()
+    val autoBackupPrefs = koinInject<me.juliana.hellomeds.data.preferences.AutoBackupPreferences>()
     val backupEnabled by autoBackupPrefs.autoBackupEnabled.collectAsStateWithLifecycle(initial = false)
     val backupFailures by autoBackupPrefs.consecutiveFailures.collectAsStateWithLifecycle(initial = 0)
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
@@ -251,7 +249,7 @@ fun TrackingScreen(
             listState.firstVisibleItemIndex == 0 || !listState.canScrollForward
         }
     }
-    val focusRequester = FocusRequester()
+    FocusRequester()
 
     // Handle notification intent to auto-open log sheets
     LaunchedEffect(notificationEventIds, scheduledEvents) {
@@ -262,7 +260,6 @@ fun TrackingScreen(
 
         if (scheduledEvents.isEmpty()) return@LaunchedEffect
 
-        // Filter scheduled events by notification schedule IDs
         val notificationEvents = scheduledEvents.filter { eventWithMed ->
             eventWithMed.event.scheduleId in notificationEventIds
         }
@@ -561,7 +558,7 @@ fun TrackingScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 4.dp)
-                                .semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite },
+                                .semantics { liveRegion = LiveRegionMode.Polite },
                             colors = androidx.compose.material3.CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.errorContainer,
                             ),
@@ -728,7 +725,6 @@ fun TrackingScreen(
             mode = logMedicationMode,
             date = selectedDate,
             scheduledEvents = if (logMedicationMode == LogMedicationMode.SCHEDULED) {
-                // Use filtered events from notification if available, otherwise show all
                 filteredNotificationEvents ?: scheduledEvents
             } else {
                 emptyList()
@@ -825,7 +821,7 @@ private fun MedicationLogListItem(
     isCompleted: Boolean = false,
     timeOverride: String? = null,
 ) {
-    val context = platformContext()
+    platformContext()
     val medication = eventWithMedication.medication
     val event = eventWithMedication.event
 

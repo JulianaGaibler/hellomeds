@@ -117,25 +117,18 @@ fun CameraPreview(
                                     val imageHeight = imageProxy.height
                                     val rotation = imageProxy.imageInfo.rotationDegrees
 
-                                    // Convert to bitmap in sensor orientation (no rotation applied)
                                     val bitmap = imageProxy.toBitmap()
 
-                                    Log.d(TAG, "=== ANALYZER FRAME ===")
-                                    Log.d(TAG, "ImageProxy: $imageWidth×$imageHeight, rotation: $rotation°")
-                                    Log.d(TAG, "Bitmap: ${bitmap.width}×${bitmap.height} (sensor orientation)")
-
-                                    // Always capture the frame bitmap, regardless of detection result
-                                    // This ensures frozenFullBitmap gets set even when no object is detected
+                                    // Captured regardless of detection result so frozenFullBitmap is
+                                    // available even when no object is detected.
                                     onFrameCaptured(bitmap)
 
-                                    // Pass rotation to ML Kit - it will handle coordinate rotation internally
                                     medicationDetector.detectObject(
                                         bitmap = bitmap,
                                         rotation = rotation,
                                         onObjectDetected = { objectResult ->
                                             onObjectDetected(objectResult, imageWidth, imageHeight, rotation)
 
-                                            // Run OCR on detected object
                                             medicationDetector.recognizeText(
                                                 bitmap = objectResult.croppedBitmap,
                                                 onTextRecognized = onTextRecognized,

@@ -7,23 +7,15 @@ import me.juliana.hellomeds.data.dao.StockAdjustmentDao
 import me.juliana.hellomeds.data.database.entities.Medication
 
 /**
- * Calculates the effective stock value for low stock threshold comparison.
- *
- * Both EXACT and ESTIMATED modes use the ledger sum.
- * EXACT: total remaining doses.
- * ESTIMATED: total remaining containers.
+ * Effective stock for low-stock threshold comparisons. Both EXACT and ESTIMATED modes use the
+ * ledger sum — EXACT = remaining doses, ESTIMATED = remaining containers.
  */
 object StockThresholdCalculator {
     suspend fun calculateEffectiveStock(medication: Medication, stockAdjustmentDao: StockAdjustmentDao): Double {
         return stockAdjustmentDao.getCurrentStock(medication.id) ?: 0.0
     }
 
-    /**
-     * Get stock level severity for visual indicators.
-     * Returns one of: "CRITICAL", "LOW", "MEDIUM", "GOOD"
-     *
-     * This is a pure calculation with no UI dependencies, suitable for KMP commonMain.
-     */
+    /** One of: "CRITICAL", "LOW", "MEDIUM", "GOOD". */
     fun getStockSeverity(medication: Medication, currentStock: Double): String {
         val threshold = medication.lowStockThreshold ?: return "GOOD"
 

@@ -56,7 +56,7 @@ class NotificationActionReceiver : BroadcastReceiver(), KoinComponent {
                         TAG,
                         "Action: $action, medicationId: $medicationId, notificationId: $notificationId",
                     )
-                    handler.processDepletionAction(medicationId, notificationId)
+                    handler.processDepletionAction(medicationId)
                 } else {
                     // Standard medication actions — TAKEN, SKIPPED, SNOOZED
                     val scheduleIds = intent.getIntArrayExtra("scheduleIds")?.toList() ?: run {

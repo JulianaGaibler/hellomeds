@@ -351,10 +351,8 @@ private val defaultLabelDisplayNameRes: Map<String, StringResource> = mapOf(
 )
 
 /**
- * Returns the localized display name for an importance label.
- *
- * Built-in labels that haven't been renamed by the user return the localized
- * name from string resources. User-renamed or custom labels return the stored name.
+ * Built-in labels still using their default name resolve through string resources for
+ * localization; user-renamed or custom labels return the stored name verbatim.
  */
 @Composable
 fun ImportanceLabel.displayName(): String {

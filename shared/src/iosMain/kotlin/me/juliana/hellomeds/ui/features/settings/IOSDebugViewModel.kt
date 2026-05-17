@@ -29,17 +29,16 @@ import me.juliana.hellomeds.data.model.enums.NotificationGroupingMode
 import me.juliana.hellomeds.data.preferences.NotificationPreferences
 import me.juliana.hellomeds.data.preferences.OnboardingPreferences
 import me.juliana.hellomeds.data.service.ScheduleProjector
-import kotlin.time.Clock
-import me.juliana.hellomeds.ui.viewmodel.DatabaseHealth
-import me.juliana.hellomeds.ui.viewmodel.DetailedAlarmInfo
-import me.juliana.hellomeds.ui.viewmodel.PreferencesInfo
-import me.juliana.hellomeds.ui.viewmodel.TodayDoseInfo
-import me.juliana.hellomeds.ui.viewmodel.TodayOverview
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.depletion_notification_text
 import me.juliana.hellomeds.shared.depletion_notification_title
 import me.juliana.hellomeds.shared.low_stock_notification_text
 import me.juliana.hellomeds.shared.low_stock_notification_title
+import me.juliana.hellomeds.ui.viewmodel.DatabaseHealth
+import me.juliana.hellomeds.ui.viewmodel.DetailedAlarmInfo
+import me.juliana.hellomeds.ui.viewmodel.PreferencesInfo
+import me.juliana.hellomeds.ui.viewmodel.TodayDoseInfo
+import me.juliana.hellomeds.ui.viewmodel.TodayOverview
 import me.juliana.hellomeds.ui.viewmodel.toHumanDescription
 import org.jetbrains.compose.resources.getString
 import platform.Foundation.NSBundle
@@ -51,6 +50,7 @@ import platform.UserNotifications.UNMutableNotificationContent
 import platform.UserNotifications.UNNotificationRequest
 import platform.UserNotifications.UNUserNotificationCenter
 import kotlin.coroutines.resume
+import kotlin.time.Clock
 
 class IOSDebugViewModel(
     private val projector: ScheduleProjector,

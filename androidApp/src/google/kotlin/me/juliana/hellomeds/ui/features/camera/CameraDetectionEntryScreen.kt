@@ -30,22 +30,17 @@ import me.juliana.hellomeds.ui.components.GeminiDownloadDialog
 import me.juliana.hellomeds.ui.components.GeminiDownloadErrorDialog
 import org.koin.compose.koinInject
 
-/**
- * Flow states for camera entry screen
- */
 private enum class CameraEntryState {
-    LOADING, // Checking Gemini status and loading preferences
-    SHOW_CONSENT_DIALOG, // Showing initial consent dialog
-    SHOW_DOWNLOAD_DIALOG, // Downloading Gemini model
-    SHOW_ERROR_DIALOG, // Showing download error
-    READY, // All set, show camera
+    LOADING,
+    SHOW_CONSENT_DIALOG,
+    SHOW_DOWNLOAD_DIALOG,
+    SHOW_ERROR_DIALOG,
+    READY,
 }
 
 /**
- * Entry screen for camera detection that handles consent flow before showing camera.
- * This ensures dialogs are shown BEFORE entering the camera view.
- *
- * Uses an explicit state machine to ensure camera is never composed until ready.
+ * Entry screen for camera detection. An explicit state machine guarantees
+ * consent/download dialogs run before the camera is ever composed.
  */
 @Composable
 fun CameraDetectionEntryScreen(
@@ -56,57 +51,45 @@ fun CameraDetectionEntryScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // Preferences for first-time flow
     val cameraPreferences = koinInject<CameraPreferences>()
     val hasConsented by cameraPreferences.hasConsented.collectAsState(initial = null)
     val detectionMethod by cameraPreferences.detectionMethod.collectAsState(initial = DetectionMethod.GEMINI)
     val hasShownDialog by cameraPreferences.hasShownDialog.collectAsState(initial = null)
 
-    // Medication detector for Gemini status
     val medicationDetector = remember { MedicationDetector(context) }
 
-    // Gemini status
     var geminiStatus by remember { mutableStateOf<Int?>(null) }
     var geminiStatusLoaded by remember { mutableStateOf(false) }
 
-    // Flow state
     var flowState by remember { mutableStateOf(CameraEntryState.LOADING) }
 
     var downloadErrorMessage by remember { mutableStateOf("") }
 
-    // Download progress
     var downloadProgress by remember { mutableFloatStateOf(0f) }
     var downloadedMB by remember { mutableIntStateOf(0) }
     var totalMB by remember { mutableIntStateOf(60) }
 
-    // Check Gemini status on launch
     LaunchedEffect(Unit) {
         geminiStatus = medicationDetector.checkGeminiStatus()
         geminiStatusLoaded = true
     }
 
-    // Determine flow state based on preferences and Gemini status
     LaunchedEffect(hasConsented, hasShownDialog, geminiStatus, geminiStatusLoaded, detectionMethod) {
-        // Stay in LOADING until everything is loaded
         if (!geminiStatusLoaded || geminiStatus == null || hasConsented == null || hasShownDialog == null) {
             flowState = CameraEntryState.LOADING
             return@LaunchedEffect
         }
 
-        // Determine what to show based on consent status
         when {
-            // User hasn't consented or hasn't seen dialog - show appropriate consent dialog
             hasConsented == false || hasShownDialog == false -> {
                 flowState = CameraEntryState.SHOW_CONSENT_DIALOG
             }
 
-            // User previously chose Gemini but it's not downloaded - go straight to download
             hasConsented == true &&
                 hasShownDialog == true &&
                 detectionMethod == DetectionMethod.GEMINI &&
                 geminiStatus == FeatureStatus.DOWNLOADABLE -> {
                 flowState = CameraEntryState.SHOW_DOWNLOAD_DIALOG
-                // Start download
                 scope.launch {
                     medicationDetector.downloadGemini().collect { status ->
                         when (status) {
@@ -134,17 +117,14 @@ fun CameraDetectionEntryScreen(
                 }
             }
 
-            // All set - proceed to camera
             else -> {
                 flowState = CameraEntryState.READY
             }
         }
     }
 
-    // Render UI based on flow state
     when (flowState) {
         CameraEntryState.LOADING -> {
-            // Show blank background while loading
             Box(
                 modifier = modifier
                     .background(MaterialTheme.colorScheme.surface),
@@ -152,7 +132,6 @@ fun CameraDetectionEntryScreen(
         }
 
         CameraEntryState.SHOW_CONSENT_DIALOG -> {
-            // Show blank background behind dialog
             Box(
                 modifier = modifier
                     .background(MaterialTheme.colorScheme.surface),
@@ -172,7 +151,6 @@ fun CameraDetectionEntryScreen(
                         cameraPreferences.setDetectionMethod(method)
                         cameraPreferences.markDialogShown()
 
-                        // If user chose Gemini and it's not downloaded, start download
                         if (method == DetectionMethod.GEMINI &&
                             geminiStatus == FeatureStatus.DOWNLOADABLE
                         ) {
@@ -201,7 +179,6 @@ fun CameraDetectionEntryScreen(
                                 }
                             }
                         } else {
-                            // Proceed to camera immediately
                             flowState = CameraEntryState.READY
                         }
                     }
@@ -213,7 +190,6 @@ fun CameraDetectionEntryScreen(
         }
 
         CameraEntryState.SHOW_DOWNLOAD_DIALOG -> {
-            // Show blank background behind dialog
             Box(
                 modifier = modifier
                     .background(MaterialTheme.colorScheme.surface),
@@ -224,7 +200,7 @@ fun CameraDetectionEntryScreen(
                 downloadedMB = downloadedMB,
                 totalMB = totalMB,
                 onCancel = {
-                    // Fall back to heuristic
+                    // Fall back to heuristic.
                     scope.launch {
                         cameraPreferences.setDetectionMethod(DetectionMethod.HEURISTIC)
                         flowState = CameraEntryState.READY
@@ -234,7 +210,6 @@ fun CameraDetectionEntryScreen(
         }
 
         CameraEntryState.SHOW_ERROR_DIALOG -> {
-            // Show blank background behind dialog
             Box(
                 modifier = modifier
                     .background(MaterialTheme.colorScheme.surface),
@@ -271,7 +246,7 @@ fun CameraDetectionEntryScreen(
                     }
                 },
                 onDismiss = {
-                    // Fall back to heuristic
+                    // Fall back to heuristic.
                     scope.launch {
                         cameraPreferences.setDetectionMethod(DetectionMethod.HEURISTIC)
                         flowState = CameraEntryState.READY
@@ -281,7 +256,6 @@ fun CameraDetectionEntryScreen(
         }
 
         CameraEntryState.READY -> {
-            // All consent and download flows complete - show camera
             CameraDetectionScreen(
                 onNavigateBack = onNavigateBack,
                 onDetectionComplete = onDetectionComplete,

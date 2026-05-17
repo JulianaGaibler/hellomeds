@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -37,7 +38,6 @@ import me.juliana.hellomeds.shared.cycle_placebos_off_description
 import me.juliana.hellomeds.shared.cycle_placebos_on_description
 import me.juliana.hellomeds.shared.cycle_preset_label
 import me.juliana.hellomeds.shared.wizard_cycle_headline
-import androidx.compose.foundation.layout.padding
 import me.juliana.hellomeds.ui.components.common.ScreenHeader
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.IntegerInputTransformation
@@ -70,8 +70,6 @@ internal fun MedicationCycleStep(
     onHasPlacebosChange: (Boolean) -> Unit,
     onDayInCycleChange: (Int) -> Unit,
 ) {
-    val cycleLength = cycleDaysActive + cycleDaysBreak
-
     Column {
         ScreenHeader(
             headline = stringResource(Res.string.wizard_cycle_headline),
@@ -100,7 +98,6 @@ internal fun MedicationCycleStep(
                     cycleDaysBreak = cycleDaysBreak,
                     cycleHasPlacebos = cycleHasPlacebos,
                     cycleDayInCycle = cycleDayInCycle,
-                    cycleLength = cycleLength,
                     onDaysActiveChange = onDaysActiveChange,
                     onDaysBreakChange = onDaysBreakChange,
                     onHasPlacebosChange = onHasPlacebosChange,
@@ -172,7 +169,6 @@ fun CycleConfigFields(
     cycleDaysBreak: Int,
     cycleHasPlacebos: Boolean,
     cycleDayInCycle: Int,
-    cycleLength: Int,
     onDaysActiveChange: (Int) -> Unit,
     onDaysBreakChange: (Int) -> Unit,
     onHasPlacebosChange: (Boolean) -> Unit,

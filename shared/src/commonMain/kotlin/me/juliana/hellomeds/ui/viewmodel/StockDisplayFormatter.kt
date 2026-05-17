@@ -6,49 +6,21 @@ package me.juliana.hellomeds.ui.viewmodel
 import me.juliana.hellomeds.data.database.entities.Medication
 
 /**
- * Abstracts platform-specific stock display formatting.
+ * Platform-specific stock display formatting.
  *
- * On Android, this wraps Context + string resources (R.string, R.plurals)
- * for localized stock quantity display with proper pluralization.
- * On iOS, this would use NSLocalizedString or similar.
- *
- * This interface allows StockTrackingViewModel to live in commonMain
- * while keeping full-fidelity localized formatting on each platform.
+ * Lets StockTrackingViewModel live in commonMain while each platform plugs in localized resources
+ * with proper pluralization (Android `R.string` / `R.plurals`, iOS `NSLocalizedString`).
  */
 interface StockDisplayFormatter {
 
     /**
-     * Formats a stock quantity for display based on tracking precision.
-     *
-     * For EXACT mode:
-     * - With packaging: "10 bottles + 7 tablets"
-     * - Without packaging: "207 tablets"
-     *
-     * For ESTIMATED mode:
-     * - "3 dispensers" or "1 bottle"
-     *
-     * @param medication The medication (provides tracking precision, container type, etc.)
-     * @param currentStock The current stock quantity
-     * @return Localized, formatted stock string
+     * EXACT mode: "10 bottles + 7 tablets" (with packaging) or "207 tablets" (without).
+     * ESTIMATED mode: "3 dispensers" or "1 bottle".
      */
     fun formatStockQuantity(medication: Medication, currentStock: Double): String
 
-    /**
-     * Determines whether a low stock warning should be shown.
-     *
-     * @param medication The medication (provides lowStockThreshold)
-     * @param currentStock The current stock quantity
-     * @return true if currentStock <= lowStockThreshold
-     */
     fun shouldShowLowStockWarning(medication: Medication, currentStock: Double): Boolean
 
-    /**
-     * Returns a severity string for visual indicators.
-     * One of: "CRITICAL", "LOW", "MEDIUM", "GOOD"
-     *
-     * @param medication The medication (provides threshold data)
-     * @param currentStock The current stock quantity
-     * @return Severity string
-     */
+    /** One of: "CRITICAL", "LOW", "MEDIUM", "GOOD". */
     fun getStockSeverity(medication: Medication, currentStock: Double): String
 }

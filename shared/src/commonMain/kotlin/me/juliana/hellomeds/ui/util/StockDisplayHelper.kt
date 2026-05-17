@@ -16,9 +16,6 @@ import me.juliana.hellomeds.shared.stock_quantity_with_remainder
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
-/**
- * Helper object for formatting and displaying stock information (CMP version).
- */
 object StockDisplayHelper {
 
     @Composable

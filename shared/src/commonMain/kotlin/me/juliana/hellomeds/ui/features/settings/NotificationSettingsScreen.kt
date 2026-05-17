@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +61,7 @@ import me.juliana.hellomeds.shared.settings_notification_privacy_show_names_desc
 import me.juliana.hellomeds.shared.settings_notification_snooze_interval
 import me.juliana.hellomeds.shared.settings_notification_snooze_minutes_suffix
 import me.juliana.hellomeds.shared.settings_notification_snooze_title
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.PermissionWarningBanners
 import me.juliana.hellomeds.ui.components.list.IntegerInputTransformation

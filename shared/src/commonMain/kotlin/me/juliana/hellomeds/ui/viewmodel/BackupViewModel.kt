@@ -153,7 +153,7 @@ class BackupViewModel(
                     json.encodeToByteArray()
                 }
 
-                val result = ExportResult.Success(backup.medications.size)
+                val result = ExportResult.Success
                 _exportState.value = _exportState.value.copy(
                     isExporting = false,
                     exportResult = result,
@@ -308,7 +308,7 @@ data class MedicationExportItem(
 )
 
 sealed class ExportResult {
-    data class Success(val count: Int) : ExportResult()
+    data object Success : ExportResult()
     data class Error(val message: String) : ExportResult()
 }
 

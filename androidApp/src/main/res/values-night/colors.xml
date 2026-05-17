@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="action_on_background">#FF000000</color>
 
     <!-- Splash screen icon color (dark mode) — Material You dynamic primary -->
     <color name="splash_icon_color">@android:color/system_accent1_200</color>
-    <color name="action_background_success">#FF326A35</color>
-    <color name="action_background_neutral">#323E6A</color>
-    <color name="action_background_destructive">#FF973638</color>
 
     <!-- Medication foreground colors (dark mode) -->
     <color name="medication_foreground_rose">#FFFFB2BD</color>

@@ -4,8 +4,8 @@
 package me.juliana.hellomeds.ui.navigation3.entries
 
 import androidx.compose.runtime.Composable
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.features.tracking.TrackingScreen
 import me.juliana.hellomeds.ui.features.tracking.TrackingScreenActions
 import me.juliana.hellomeds.ui.features.tracking.TrackingScreenState

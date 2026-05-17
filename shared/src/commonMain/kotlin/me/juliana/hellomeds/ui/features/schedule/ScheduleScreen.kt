@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,16 +27,13 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
-import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.TimeZone
@@ -44,6 +43,7 @@ import me.juliana.hellomeds.data.database.entities.Schedule
 import me.juliana.hellomeds.data.model.enums.CycleType
 import me.juliana.hellomeds.data.model.enums.FrequencyType
 import me.juliana.hellomeds.data.model.enums.MedicationType
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.content_description_back
 import me.juliana.hellomeds.shared.schedule_add
@@ -77,7 +77,6 @@ import kotlin.time.Clock
 @Composable
 fun ScheduleScreen(
     schedules: List<Schedule>,
-    medicationId: Int,
     medicationType: MedicationType,
     onNavigateBack: () -> Unit,
     onAddSchedule: () -> Unit,
@@ -360,9 +359,8 @@ private fun ScheduleListItem(
     shapes: ListItemShapes,
     modifier: Modifier = Modifier,
 ) {
-    val context = platformContext()
+    platformContext()
 
-    // Use centralized formatters for all string assembly
     val title = formatScheduleTitle(schedule)
     val doseText = formatDoseText(schedule, medicationType)
     val endDateText = formatScheduleEndDate(schedule)
@@ -445,7 +443,6 @@ private fun ScheduleScreenPreview() {
                     isArchived = true,
                 ),
             ),
-            medicationId = 1,
             medicationType = MedicationType.INJECTION,
             onNavigateBack = {},
             onAddSchedule = {},

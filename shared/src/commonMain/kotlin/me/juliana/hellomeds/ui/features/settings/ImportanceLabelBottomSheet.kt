@@ -3,19 +3,16 @@
 
 package me.juliana.hellomeds.ui.features.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.width
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -25,8 +22,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Surface
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -39,7 +36,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -82,15 +82,15 @@ import me.juliana.hellomeds.shared.importance_label_notification_type
 import me.juliana.hellomeds.shared.importance_label_number_of_follow_ups
 import me.juliana.hellomeds.shared.importance_label_reset_to_default
 import me.juliana.hellomeds.shared.importance_label_send_reminders
-import me.juliana.hellomeds.shared.importance_preview_follow_up
-import me.juliana.hellomeds.shared.importance_preview_initial
-import me.juliana.hellomeds.shared.importance_preview_title
 import me.juliana.hellomeds.shared.importance_label_type_alarm
 import me.juliana.hellomeds.shared.importance_label_type_alarm_description
 import me.juliana.hellomeds.shared.importance_label_type_critical
 import me.juliana.hellomeds.shared.importance_label_type_critical_description
 import me.juliana.hellomeds.shared.importance_label_type_regular
 import me.juliana.hellomeds.shared.importance_label_type_regular_description
+import me.juliana.hellomeds.shared.importance_preview_follow_up
+import me.juliana.hellomeds.shared.importance_preview_initial
+import me.juliana.hellomeds.shared.importance_preview_title
 import me.juliana.hellomeds.shared.time_unit_minutes
 import me.juliana.hellomeds.ui.compat.ButtonGroupDefaults
 import me.juliana.hellomeds.ui.compat.ToggleButton

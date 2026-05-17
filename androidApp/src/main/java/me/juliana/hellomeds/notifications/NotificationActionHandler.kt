@@ -71,7 +71,6 @@ class NotificationActionHandler(
                 "Processing $action action for ${scheduleIds.size} schedules at time $scheduledTime",
             )
 
-            // Get the projected events for these schedules at this time
             val tolerance = 60_000L
             val events = projector.projectEvents(scheduledTime - tolerance, scheduledTime + tolerance)
             val matchingEvents = events.filter { event ->
@@ -357,7 +356,7 @@ class NotificationActionHandler(
      * Handle "Mark Depleted" action from a depletion reminder notification.
      * Records container depletion, which resets the alert flag and triggers notifiers.
      */
-    suspend fun processDepletionAction(medicationId: Int, notificationId: Int) {
+    suspend fun processDepletionAction(medicationId: Int) {
         Log.d(TAG, "Processing CONTAINER_DEPLETED for medicationId=$medicationId")
         stockTrackingRepository.recordContainerDepleted(medicationId)
         reconciler.reconcile()

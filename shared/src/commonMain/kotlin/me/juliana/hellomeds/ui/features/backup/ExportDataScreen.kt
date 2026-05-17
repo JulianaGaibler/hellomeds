@@ -33,7 +33,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -75,15 +74,16 @@ import me.juliana.hellomeds.shared.backup_medications_section
 import me.juliana.hellomeds.shared.backup_passphrase
 import me.juliana.hellomeds.shared.backup_passphrase_mismatch
 import me.juliana.hellomeds.shared.backup_select_all
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.components.common.AppScaffold
-import me.juliana.hellomeds.ui.features.settings.SettingsHeader
-import me.juliana.hellomeds.ui.features.settings.settingsContentPadding
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.SmartListInfoCard
 import me.juliana.hellomeds.ui.components.list.SmartListItem
 import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
 import me.juliana.hellomeds.ui.components.list.SmartListSwitchItem
 import me.juliana.hellomeds.ui.components.list.SmartListTextItem
+import me.juliana.hellomeds.ui.features.settings.SettingsHeader
+import me.juliana.hellomeds.ui.features.settings.settingsContentPadding
 import me.juliana.hellomeds.ui.util.rememberFileSaver
 import me.juliana.hellomeds.ui.util.rememberFileSharer
 import me.juliana.hellomeds.ui.viewmodel.BackupViewModel
@@ -95,7 +95,7 @@ import kotlin.time.Clock
 @Composable
 fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, modifier: Modifier = Modifier) {
     val state by viewModel.exportState.collectAsStateWithLifecycle()
-    val scope = rememberCoroutineScope()
+    rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberLazyListState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
@@ -178,7 +178,6 @@ fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             state = scrollState,
         ) {
-            // === OPTIONS SECTION ===
             item {
                 SettingsHeader(
                     text = stringResource(Res.string.backup_export_options),
@@ -243,7 +242,6 @@ fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
                 )
             }
 
-            // === ENCRYPTION SECTION ===
             item {
                 SettingsHeader(text = stringResource(Res.string.backup_encryption_title))
             }
@@ -309,7 +307,6 @@ fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
                 )
             }
 
-            // === MEDICATION SELECTION SECTION ===
             item {
                 Row(
                     modifier = Modifier
@@ -364,7 +361,6 @@ fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
                 )
             }
 
-            // === EXPORT BUTTONS ===
             item {
                 Spacer(modifier = Modifier.height(24.dp))
             }

@@ -44,18 +44,14 @@ fun NotificationPermissionScreen(onContinue: () -> Unit, onBack: () -> Unit) {
         mutableStateOf(PermissionUtils.areNotificationsEnabled(context))
     }
 
-    // 1. Setup the Permission Launcher for Android 13+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { granted ->
             isGranted = granted
-            // If granted immediately, we can optionally auto-advance
-            // if (granted) onContinue()
         },
     )
 
-    // 2. Keep this observer!
-    // It handles the case where the user goes to Settings (fallback) and comes back.
+    // Re-check on resume so the Settings fallback path updates the granted state.
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -75,27 +71,13 @@ fun NotificationPermissionScreen(onContinue: () -> Unit, onBack: () -> Unit) {
         primaryButtonText = stringResource(Res.string.onboarding_grant_permission),
         isPrimaryActionCompleted = isGranted,
 
-        // 3. Smart Button Logic
         onPrimaryButtonClick = {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                // On Android 13+, try to ask nicely first
                 if (!isGranted) {
                     launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
-
-                // Note: If the user has "Permanently Denied" the permission,
-                // the launcher will instantly return 'false' without showing UI.
-                // To be perfect, you could check `shouldShowRequestPermissionRationale`.
-                // If that fails, the user is likely blocked, so we can fall back:
-
-                if (!PermissionUtils.areNotificationsEnabled(context)) {
-                    // Ideally, checking if the launcher failed silently implies
-                    // we should open settings, but simply clicking again works too.
-                    // A simple approach: If they click and nothing happens (launcher returns false immediately),
-                    // they will click again. You can wire this to open settings if preferred.
-                }
             } else {
-                // On Android 12-, we must go to settings
+                // Android 12 and below: the system dialog isn't available, so settings is the only path.
                 PermissionUtils.openNotificationSettings(context)
             }
         },
@@ -104,7 +86,6 @@ fun NotificationPermissionScreen(onContinue: () -> Unit, onBack: () -> Unit) {
         onSecondaryButtonClick = {
             scope.launch {
                 notifPrefs.setNotificationsEnabled(false)
-                // No need to explicitly cancel - alarms won't be scheduled when notifications disabled
             }
             onContinue()
         },

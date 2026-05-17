@@ -167,7 +167,7 @@ private fun ImportanceLabelListItem(
     shapes: ListItemShapes,
     modifier: Modifier = Modifier,
 ) {
-    val context = platformContext()
+    platformContext()
     val description = formatImportanceLabelDescription(label)
 
     Card(

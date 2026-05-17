@@ -42,18 +42,15 @@ import androidx.compose.ui.util.lerp
 fun Modifier.predictiveBackCorners(progress: Float = 0f): Modifier {
     val density = LocalDensity.current
 
-    // Get hardware display cutout (includes corner radius on modern devices)
+    // Treat a non-trivial display-cutout top inset as a proxy for rounded hardware corners
+    // (Pixel/Samsung typically 32–48dp). Without a real API for hardware radius, this approximation
+    // matches the device well enough during the predictive-back shrink.
     val displayCutout = WindowInsets.displayCutout
-
-    // Calculate hardware corner radius
-    // Display cutout top inset often indicates rounded corners on modern devices
     val hardwareCornerRadius = remember(displayCutout) {
         with(density) {
-            // If device has significant display cutout, it likely has rounded corners
-            // Modern devices (Pixel, Samsung) typically have 32-48dp corner radius
             val topInset = displayCutout.getTop(density)
             if (topInset > 12.dp.toPx()) {
-                32.dp // Match or approximate hardware corners
+                32.dp
             } else {
                 0.dp // Square display
             }

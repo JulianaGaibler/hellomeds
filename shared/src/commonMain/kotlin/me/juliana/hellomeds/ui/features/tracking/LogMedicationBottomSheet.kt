@@ -96,10 +96,9 @@ fun LogMedicationBottomSheet(
     ) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = platformContext()
+    platformContext()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    // State for scheduled medications
     var scheduledMedicationStates by remember(scheduledEvents) {
         mutableStateOf(
             scheduledEvents.map { eventWithMed ->
@@ -118,7 +117,6 @@ fun LogMedicationBottomSheet(
         )
     }
 
-    // State for as-needed medications
     var asNeededMedicationStates by remember(allMedications) {
         mutableStateOf(
             allMedications.filter { !it.isArchived }.map { medication ->
@@ -227,7 +225,6 @@ fun LogMedicationBottomSheet(
                                     scheduledMedicationStates.toMutableList().apply {
                                         val current = this[index]
                                         this[index] = if (current.included) {
-                                            // Reset to defaults when un-logging
                                             current.copy(
                                                 included = false,
                                                 isExpanded = false,
@@ -342,7 +339,7 @@ private fun ScheduledMedicationItem(
     onExpandToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = platformContext()
+    platformContext()
     val medication = medicationLog.eventWithMedication.medication
     val event = medicationLog.eventWithMedication.event
     val selectedText = stringResource(Res.string.accessibility_selected)
@@ -350,13 +347,8 @@ private fun ScheduledMedicationItem(
 
     val isLogged = medicationLog.included
 
-    // Get display name (use displayName if set, otherwise name)
     val displayName = medication.displayName?.takeIf { it.isNotBlank() } ?: medication.name
-
-    // Get type and strength
     val typeAndStrength = formatMedicationTypeAndStrength(medication)
-
-    // Parse shape properties
     val foregroundShape = MedicationForegroundShape.fromNameOrDefault(medication.foregroundShape)
     val backgroundShape = MedicationBackgroundShape.fromNameOrDefault(medication.backgroundShape)
 
@@ -481,18 +473,13 @@ private fun AsNeededMedicationItem(
     onTimeChange: (LocalTime) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = platformContext()
+    platformContext()
     val medication = medicationLog.medication
     val selectedText = stringResource(Res.string.accessibility_selected)
     val notSelectedText = stringResource(Res.string.accessibility_not_selected)
 
-    // Get display name (use displayName if set, otherwise name)
     val displayName = medication.displayName?.takeIf { it.isNotBlank() } ?: medication.name
-
-    // Get type and strength
     val typeAndStrength = formatMedicationTypeAndStrength(medication)
-
-    // Parse shape properties
     val foregroundShape = MedicationForegroundShape.fromNameOrDefault(medication.foregroundShape)
     val backgroundShape = MedicationBackgroundShape.fromNameOrDefault(medication.backgroundShape)
 

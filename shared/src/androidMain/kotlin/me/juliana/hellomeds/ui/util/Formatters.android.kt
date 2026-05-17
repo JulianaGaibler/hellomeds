@@ -62,11 +62,6 @@ import kotlin.time.Instant
 // ── Time Formatting ─────────────────────────────────────────────────────────
 
 @Composable
-actual fun formatTime(hour: Int, minute: Int): String {
-    return formatTime(LocalTime(hour, minute))
-}
-
-@Composable
 actual fun formatTime(time: LocalTime): String {
     val context = LocalContext.current
     val is24Hour = DateFormat.is24HourFormat(context)
@@ -95,15 +90,9 @@ actual fun formatShortDate(date: LocalDate): String {
     return date.toJavaLocalDate().format(formatter)
 }
 
-actual fun formatShortDate(millis: Long): String {
-    val localDate = Instant.fromEpochMilliseconds(millis)
-        .toLocalDateTime(TimeZone.currentSystemDefault()).date
-    return formatShortDate(localDate)
-}
-
 @Composable
 actual fun formatDateWithRelativeWeekday(date: LocalDate): String {
-    val context = LocalContext.current
+    LocalContext.current
     val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val daysDifference = today.daysUntil(date)
 

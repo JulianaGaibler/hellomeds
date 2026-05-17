@@ -4,6 +4,7 @@
 package me.juliana.hellomeds.ui.features.medication
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -56,10 +56,10 @@ import me.juliana.hellomeds.shared.content_description_clear_display_name
 import me.juliana.hellomeds.shared.cycle_section_title
 import me.juliana.hellomeds.shared.medication_display_name_description
 import me.juliana.hellomeds.shared.medication_display_name_label
-import me.juliana.hellomeds.shared.medication_name_description
 import me.juliana.hellomeds.shared.medication_edit_title_format
 import me.juliana.hellomeds.shared.medication_has_strength
 import me.juliana.hellomeds.shared.medication_icon_label
+import me.juliana.hellomeds.shared.medication_name_description
 import me.juliana.hellomeds.shared.medication_name_label
 import me.juliana.hellomeds.shared.medication_name_section
 import me.juliana.hellomeds.shared.medication_strength_section
@@ -83,14 +83,14 @@ import me.juliana.hellomeds.ui.components.list.SmartListSwitchItem
 import me.juliana.hellomeds.ui.components.list.SmartListTextItem
 import me.juliana.hellomeds.ui.components.medication.MedicationIconCustomizer
 import me.juliana.hellomeds.ui.components.medication.MedicationIconStickyPreview
-import me.juliana.hellomeds.ui.util.displayNameRes
 import me.juliana.hellomeds.ui.components.pickers.TimeZonePickerDialog
 import me.juliana.hellomeds.ui.components.pickers.formatTimeZoneForDisplay
 import me.juliana.hellomeds.ui.features.settings.SettingsHeader
 import me.juliana.hellomeds.ui.features.settings.settingsContentPadding
 import me.juliana.hellomeds.ui.theme.MedicationColor
-import org.jetbrains.compose.resources.stringResource
+import me.juliana.hellomeds.ui.util.displayNameRes
 import me.juliana.hellomeds.ui.util.formatDecimalPlain
+import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -396,7 +396,6 @@ fun EditMedicationScreen(
                             cycleDaysBreak = cycleDaysBreak,
                             cycleHasPlacebos = cycleHasPlacebos,
                             cycleDayInCycle = cycleDayInCycle,
-                            cycleLength = cycleLength,
                             onDaysActiveChange = { cycleDaysActive = it },
                             onDaysBreakChange = { cycleDaysBreak = it },
                             onHasPlacebosChange = { cycleHasPlacebos = it },

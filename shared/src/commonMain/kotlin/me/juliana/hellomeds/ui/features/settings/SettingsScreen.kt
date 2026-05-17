@@ -3,6 +3,7 @@
 
 package me.juliana.hellomeds.ui.features.settings
 
+// TODO(BETA_ROLLBACK): closed-beta survey nudge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.ui.Alignment
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,17 +33,16 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
-import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -53,8 +52,13 @@ import me.juliana.hellomeds.data.preferences.AppearancePreferences
 import me.juliana.hellomeds.data.preferences.AutoBackupPreferences
 import me.juliana.hellomeds.data.preferences.CameraPreferences
 import me.juliana.hellomeds.data.preferences.NotificationPreferences
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_back
+import me.juliana.hellomeds.shared.auto_backup_disabled_banner
+import me.juliana.hellomeds.shared.closed_beta_survey_settings_description
+import me.juliana.hellomeds.shared.closed_beta_survey_settings_label
+import me.juliana.hellomeds.shared.closed_beta_survey_url
 import me.juliana.hellomeds.shared.debug_mode_enabled
 import me.juliana.hellomeds.shared.debug_screen_title
 import me.juliana.hellomeds.shared.importance_labels_section_description
@@ -66,18 +70,8 @@ import me.juliana.hellomeds.shared.settings_about_title
 import me.juliana.hellomeds.shared.settings_about_version
 import me.juliana.hellomeds.shared.settings_about_website
 import me.juliana.hellomeds.shared.settings_about_website_url
-import me.juliana.hellomeds.shared.settings_closed_beta_body
-import me.juliana.hellomeds.shared.settings_closed_beta_cta
-import me.juliana.hellomeds.shared.settings_closed_beta_support_cta
-import me.juliana.hellomeds.shared.settings_closed_beta_title
-import me.juliana.hellomeds.shared.settings_closed_beta_url
-// BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
-import me.juliana.hellomeds.shared.closed_beta_survey_settings_label
-import me.juliana.hellomeds.shared.closed_beta_survey_settings_description
-import me.juliana.hellomeds.shared.closed_beta_survey_url
 import me.juliana.hellomeds.shared.settings_appearance_dynamic_color
 import me.juliana.hellomeds.shared.settings_appearance_dynamic_color_description
-import me.juliana.hellomeds.shared.auto_backup_disabled_banner
 import me.juliana.hellomeds.shared.settings_auto_backup
 import me.juliana.hellomeds.shared.settings_auto_backup_disabled
 import me.juliana.hellomeds.shared.settings_auto_backup_enabled
@@ -86,6 +80,11 @@ import me.juliana.hellomeds.shared.settings_camera_configure_description
 import me.juliana.hellomeds.shared.settings_camera_description
 import me.juliana.hellomeds.shared.settings_camera_enable
 import me.juliana.hellomeds.shared.settings_camera_title
+import me.juliana.hellomeds.shared.settings_closed_beta_body
+import me.juliana.hellomeds.shared.settings_closed_beta_cta
+import me.juliana.hellomeds.shared.settings_closed_beta_support_cta
+import me.juliana.hellomeds.shared.settings_closed_beta_title
+import me.juliana.hellomeds.shared.settings_closed_beta_url
 import me.juliana.hellomeds.shared.settings_data_export
 import me.juliana.hellomeds.shared.settings_data_export_description
 import me.juliana.hellomeds.shared.settings_data_import
@@ -112,6 +111,7 @@ import me.juliana.hellomeds.shared.settings_screen_privacy
 import me.juliana.hellomeds.shared.settings_screen_privacy_description
 import me.juliana.hellomeds.shared.support_settings_description
 import me.juliana.hellomeds.shared.support_title
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.SmartListInfoCard
@@ -205,11 +205,11 @@ fun SettingsScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             state = scrollState,
         ) {
-            // === BETA: Closed-beta announcement card. Remove per BETA_ROLLBACK.md before release. ===
+            // TODO(BETA_ROLLBACK): closed-beta announcement card
             item {
                 val betaUriHandler = LocalUriHandler.current
                 val closedBetaUrl = stringResource(Res.string.settings_closed_beta_url)
-                // BETA: Closed-beta survey nudge — gate the survey link on 10-day window.
+                // TODO(BETA_ROLLBACK): gates the closed-beta survey link on a 10-day post-onboarding window.
                 val onboardingTimestamp by autoBackupPrefs.onboardingCompletedTimestamp
                     .collectAsStateWithLifecycle(0L)
                 val tenDaysMs = 10 * 24 * 60 * 60 * 1000L
@@ -262,9 +262,8 @@ fun SettingsScreen(
                                 visible = visible,
                             )
                         },
-                        // BETA: Closed-beta survey link — appears 10 days after onboarding so testers
-                        // always have a way to find the survey even if they dismissed the dialog.
-                        // Remove per BETA_ROLLBACK.md before public release.
+                        // TODO(BETA_ROLLBACK): closed-beta survey link (appears 10 days after onboarding
+                        // so testers can find the survey even after dismissing the dialog)
                         SmartListItemConfig(visible = showSurveyLink) { shapes, visible ->
                             SmartListItem(
                                 headlineContent = {
@@ -284,7 +283,6 @@ fun SettingsScreen(
 
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            // === NOTIFICATION SETTINGS ===
             item {
                 SettingsHeader(text = stringResource(Res.string.settings_notification_title))
             }
@@ -311,7 +309,6 @@ fun SettingsScreen(
             item {
                 AutoSmartList(
                     items = listOf(
-                        // Notification disabled warning
                         SmartListItemConfig(visible = showNotificationDisabledWarning) { shapes, visible ->
                             SmartListInfoCard(
                                 headlineContent = {
@@ -344,7 +341,6 @@ fun SettingsScreen(
                             )
                         },
 
-                        // Exact alarm warning
                         SmartListItemConfig(
                             visible = notificationsEnabled && !showNotificationDisabledWarning && (showExactAlarmWarning || showInexactWarning),
                         ) { shapes, visible ->
@@ -385,7 +381,6 @@ fun SettingsScreen(
                             )
                         },
 
-                        // Enable notifications switch
                         SmartListItemConfig(visible = true) { shapes, visible ->
                             SmartListSwitchItem(
                                 label = stringResource(Res.string.settings_notification_enable),
@@ -421,7 +416,6 @@ fun SettingsScreen(
                             )
                         },
 
-                        // Advanced notification settings
                         SmartListItemConfig(visible = notificationsEnabled) { shapes, visible ->
                             SmartListItem(
                                 headlineContent = {
@@ -439,7 +433,6 @@ fun SettingsScreen(
                 )
             }
 
-            // === GENERAL SETTINGS ===
             item {
                 SettingsHeader(text = stringResource(Res.string.settings_general_title))
             }
@@ -479,7 +472,6 @@ fun SettingsScreen(
                 )
             }
 
-            // === DATA SECTION ===
             item {
                 SettingsHeader(text = stringResource(Res.string.settings_data_title))
             }
@@ -566,7 +558,7 @@ fun SettingsScreen(
                 )
             }
 
-            // === CAMERA SETTINGS === (hidden for F-Droid builds)
+            // Camera section hidden for F-Droid builds.
             if (PlatformCapabilities.supportsCameraDetection()) {
                 item {
                     SettingsHeader(text = stringResource(Res.string.settings_camera_title))
@@ -575,7 +567,6 @@ fun SettingsScreen(
                 item {
                     AutoSmartList(
                         items = listOf(
-                            // Camera consent switch
                             SmartListItemConfig(visible = true) { shapes, visible ->
                                 SmartListSwitchItem(
                                     label = stringResource(Res.string.settings_camera_enable),
@@ -592,7 +583,6 @@ fun SettingsScreen(
                                 )
                             },
 
-                            // Configure subpage (privacy + detection method)
                             SmartListItemConfig(visible = hasConsented) { shapes, visible ->
                                 SmartListNavigationItem(
                                     label = stringResource(Res.string.settings_camera_configure),
@@ -605,15 +595,14 @@ fun SettingsScreen(
                         ),
                     )
                 }
-            } // end camera settings guard
+            }
 
-            // === ABOUT ===
             item {
                 SettingsHeader(text = stringResource(Res.string.settings_about_title))
             }
 
             item {
-                val versionText = PlatformCapabilities.appVersionString()
+                PlatformCapabilities.appVersionString()
                 val uriHandler = LocalUriHandler.current
                 val websiteUrl = stringResource(Res.string.settings_about_website_url)
                 val sourceCodeUrl = stringResource(Res.string.settings_about_source_code_url)

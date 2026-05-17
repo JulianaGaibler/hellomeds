@@ -5,7 +5,7 @@ package me.juliana.hellomeds.data.util
 
 @OptIn(kotlin.experimental.ExperimentalNativeApi::class)
 actual object AppLogger {
-    private val isDebug = kotlin.native.Platform.isDebugBinary
+    private val isDebug = Platform.isDebugBinary
 
     actual fun d(tag: String, message: String) {
         if (isDebug) println("D/$tag: $message")

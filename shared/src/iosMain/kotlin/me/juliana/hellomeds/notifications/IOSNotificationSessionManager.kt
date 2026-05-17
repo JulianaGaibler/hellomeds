@@ -8,10 +8,10 @@ import me.juliana.hellomeds.data.dao.NotificationSessionDao
 import me.juliana.hellomeds.data.database.entities.NotificationSessionEntity
 import me.juliana.hellomeds.data.model.NotificationSession
 import me.juliana.hellomeds.data.util.AppLogger
-import kotlin.time.Clock
 import platform.UserNotifications.UNNotificationRequest
 import platform.UserNotifications.UNUserNotificationCenter
 import kotlin.coroutines.resume
+import kotlin.time.Clock
 
 private const val TAG = "IOSSessionManager"
 

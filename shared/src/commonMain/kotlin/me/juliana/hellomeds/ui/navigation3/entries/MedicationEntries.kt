@@ -7,7 +7,6 @@ package me.juliana.hellomeds.ui.navigation3.entries
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -21,6 +20,7 @@ import me.juliana.hellomeds.data.database.entities.Schedule
 import me.juliana.hellomeds.data.model.StockStatus
 import me.juliana.hellomeds.data.preferences.NotificationPreferences
 import me.juliana.hellomeds.domain.ml.MedicationDetectionResult
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.graph.models.StockLine
 import me.juliana.hellomeds.ui.features.medication.AddMedicationFlowScreen
@@ -56,8 +56,6 @@ fun MedicationListScreenEntry(
     onAddMedication: () -> Unit,
     onAddWithCamera: () -> Unit,
     onMedicationClick: (medicationId: Int) -> Unit,
-    onEditSchedule: (medicationId: Int) -> Unit,
-    onEditLabel: (medicationId: Int) -> Unit,
 ) {
     val medicationViewModel: MedicationViewModel = koinViewModel()
 
@@ -68,7 +66,6 @@ fun MedicationListScreenEntry(
         onAddMedication = onAddMedication,
         onAddWithCamera = onAddWithCamera,
         onMedicationClick = onMedicationClick,
-        onEditLabel = onEditLabel,
     )
 }
 
@@ -85,7 +82,7 @@ fun MedicationDetailScreenEntry(
     onEditLabel: (medicationId: Int) -> Unit,
     onManageStock: (medicationId: Int) -> Unit,
 ) {
-    val context = platformContext()
+    platformContext()
     val medicationViewModel: MedicationViewModel = koinViewModel()
     val labelViewModel: ImportanceLabelViewModel = koinViewModel()
 
@@ -240,7 +237,6 @@ fun EditScheduleScreenEntry(
     medication?.let { med ->
         ScheduleScreen(
             schedules = schedules,
-            medicationId = medicationId,
             medicationType = med.type,
             onNavigateBack = onNavigateBack,
             onAddSchedule = {
@@ -338,7 +334,6 @@ fun EditLabelScreenEntry(medicationId: Int, onNavigateBack: () -> Unit, onNaviga
                 val updatedMed = med.copy(importanceLabelId = labelId)
                 medicationViewModel.updateMedication(updatedMed)
 
-                // Check if the selected label is critical and show one-time dialog
                 val selectedLabel = labels.find { it.id == labelId }
                 val isCriticalLabel = selectedLabel != null &&
                     (selectedLabel.isCritical || selectedLabel.criticalAfterFollowUp != null)
@@ -370,16 +365,6 @@ fun EditLabelScreenEntry(medicationId: Int, onNavigateBack: () -> Unit, onNaviga
             },
         )
     }
-}
-
-/**
- * Entry point for the Camera Detection screen.
- * Uses ML Kit to detect medication information from camera.
- */
-@Composable
-fun CameraDetectionScreenEntry(onNavigateBack: () -> Unit, onDetectionComplete: (MedicationDetectionResult) -> Unit) {
-    // Camera detection is platform-specific - stub here, real impl in app module
-    // This entry is called from the app-level navigation which provides the real screen
 }
 
 /**

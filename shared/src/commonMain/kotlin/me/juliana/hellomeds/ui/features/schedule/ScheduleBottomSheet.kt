@@ -32,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.LocalTime
@@ -42,6 +41,7 @@ import kotlinx.datetime.toLocalDateTime
 import me.juliana.hellomeds.data.database.entities.Schedule
 import me.juliana.hellomeds.data.model.enums.FrequencyType
 import me.juliana.hellomeds.data.model.enums.MedicationType
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_cancel
 import me.juliana.hellomeds.shared.action_delete
@@ -130,7 +130,7 @@ fun ScheduleBottomSheet(
     onUnarchive: ((Schedule) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    val context = platformContext()
+    platformContext()
     // Parse existing schedule or set defaults
     val isNewSchedule = schedule == null
     val isManuallyArchived = schedule?.isManuallyArchived() == true
@@ -545,8 +545,6 @@ fun ScheduleBottomSheet(
                 }
             }
 
-            // Time and dose settings
-            // Get the dose unit string using plurals for label
             val doseUnitRes = getDoseUnitPluralRes(medicationType)
 
             val doseQuantity = dose.toInt()

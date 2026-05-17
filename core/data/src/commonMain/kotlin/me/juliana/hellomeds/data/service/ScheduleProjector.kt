@@ -416,8 +416,6 @@ class ScheduleProjector(
         return events
     }
 
-    // --- Diagnostic Methods ---
-
     /**
      * Generate a dose overview for a given day.
      * Used by both BugReportService and debug ViewModels.
@@ -444,11 +442,11 @@ class ScheduleProjector(
 
         return me.juliana.hellomeds.data.support.DoseOverviewDiagnostic(
             totalCount = doses.size,
-            takenCount = doses.count { it.status == me.juliana.hellomeds.data.database.entities.MedicationHistory.STATUS_TAKEN },
+            takenCount = doses.count { it.status == MedicationHistory.STATUS_TAKEN },
             pendingCount = doses.count { it.status == "PENDING" },
             skippedCount = doses.count {
-                it.status == me.juliana.hellomeds.data.database.entities.MedicationHistory.STATUS_SKIPPED ||
-                    it.status == me.juliana.hellomeds.data.database.entities.MedicationHistory.STATUS_AUTO_SKIPPED
+                it.status == MedicationHistory.STATUS_SKIPPED ||
+                    it.status == MedicationHistory.STATUS_AUTO_SKIPPED
             },
             overdueCount = doses.count { it.isOverdue },
             doses = doses,

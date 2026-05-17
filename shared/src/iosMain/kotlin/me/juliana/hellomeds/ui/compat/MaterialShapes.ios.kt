@@ -110,12 +110,10 @@ actual object MaterialShapes {
 
     // 4-vertex polygon: top 2 corners fully rounded, bottom 2 slightly rounded, rotated -135°
     actual val Arch: RoundedPolygon = run {
-        // Build 4-vertex polygon then manually rotate vertices by -135°
         val angle = -135f / 360f * 2f * PI.toFloat()
         val cosA = cos(angle)
         val sinA = sin(angle)
-        // Default 4-vertex polygon vertices (inscribed in unit circle, starting at right)
-        // Vertex order: right(0°), bottom(90°), left(180°), top(270°)
+        // Inscribed in unit circle. Vertex order: right(0°), bottom(90°), left(180°), top(270°).
         val baseVerts = listOf(
             1f to 0f, // vertex 0
             0f to 1f, // vertex 1

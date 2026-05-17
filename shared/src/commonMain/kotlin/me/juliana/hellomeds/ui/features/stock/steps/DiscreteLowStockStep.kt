@@ -41,7 +41,7 @@ fun DiscreteLowStockStep(
     medication: Medication,
     modifier: Modifier = Modifier,
 ) {
-    val context = platformContext()
+    platformContext()
     // Get unit name from medication type
     val stockUnit = stringResource(medication.type.pluralFormRes)
 

@@ -5,6 +5,8 @@ package me.juliana.hellomeds.notifications
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import me.juliana.hellomeds.notifications.NotificationDeepLinkState.consume
+import me.juliana.hellomeds.notifications.NotificationDeepLinkState.isAlarmNotification
 
 /**
  * Observable state for notification tap → deep link.

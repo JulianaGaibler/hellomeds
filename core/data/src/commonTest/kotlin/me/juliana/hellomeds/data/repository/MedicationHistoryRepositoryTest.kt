@@ -67,10 +67,7 @@ class MedicationHistoryRepositoryTest {
         )
     }
 
-    // ================================================================
-    // Test 1: "Double Tap" — duplicate insert becomes update, stock only decremented once
-    // ================================================================
-
+    // "Double Tap" — duplicate insert becomes update, stock only decremented once.
     @Test
     fun markAsTaken_calledTwice_createsOnlyOneRecord() = runTest {
         val medication = createMedication(id = 1, stockTrackingEnabled = true)
@@ -98,10 +95,7 @@ class MedicationHistoryRepositoryTest {
         assertEquals(1, adjustments.size, "Should have exactly 1 stock adjustment, not 2")
     }
 
-    // ================================================================
-    // Test 2: "Self-Healing Deletion" — cleans up pre-existing duplicates
-    // ================================================================
-
+    // "Self-Healing Deletion" — cleans up pre-existing duplicates.
     @Test
     fun deleteHistoryRecord_removesAllDuplicatesAndReversesStock() = runTest {
         val medication = createMedication(id = 1, stockTrackingEnabled = true)
@@ -142,7 +136,6 @@ class MedicationHistoryRepositoryTest {
             ),
         ).toInt()
 
-        // Create matching stock adjustments for each
         stockAdjustmentDao.insert(
             createStockAdjustment(medicationId = 1, historyId = id1, quantityChange = -1.0),
         )
@@ -170,16 +163,9 @@ class MedicationHistoryRepositoryTest {
         )
     }
 
-    // ================================================================
-    // Test 3: "PRN Null Safety" — as-needed deletion doesn't crash or wipe siblings
-    // ================================================================
-
-    // ================================================================
-    // Test 4: "Stale dialog id" — deleteHistoryRecord(event) for a scheduled event
-    // must remove the row even when event.historyRecord.id no longer matches any row.
-    // Guards against the silent-no-op bug seen in user testing.
-    // ================================================================
-
+    // "Stale dialog id" — deleteHistoryRecord(event) must remove the scheduled row even when
+    // event.historyRecord.id no longer matches any row. Guards against the silent-no-op bug seen in
+    // user testing.
     @Test
     fun deleteHistoryRecord_byEvent_removesScheduledRow_whenHistoryRecordIdIsStale() = runTest {
         val medication = createMedication(id = 1, stockTrackingEnabled = true)

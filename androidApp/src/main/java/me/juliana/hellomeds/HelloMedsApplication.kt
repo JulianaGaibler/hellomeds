@@ -44,8 +44,7 @@ class HelloMedsApplication : Application(), Configuration.Provider {
 
         // Enable file-backed diagnostic log persistence (before any service code runs)
         DiagnosticLog.configure(filesDir.resolve("diagnostic.log").absolutePath)
-        // BETA: forced verbose for closed-beta diagnostic-report richness.
-        // Revert per BETA_ROLLBACK.md before public release.
+        // TODO(BETA_ROLLBACK): forced verbose for closed-beta diagnostic-report
         DiagnosticLog.verbose = true
 
         ComposeMaterial3Flags.isSnackbarStylingFixEnabled = true

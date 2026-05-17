@@ -54,30 +54,15 @@ class NotificationBuilder(private val context: Context) {
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     /**
-     * Build a complete notification for medication reminders.
+     * Build a medication-reminder notification.
      *
-     * @param events Pending projected events to include
-     * @param medications Matching medication entities (same order as events)
-     * @param channelId NORMAL or CRITICAL channel ID
-     * @param notificationId Stable ID for this notification (from NotificationIdGenerator)
-     * @param scheduledTime Original scheduled time for the event group
-     * @param lockScreenVisibility Privacy setting for lock screen
-     * @param isFollowUp Whether this is a follow-up reminder
-     */
-    /**
-     * Build a complete notification for medication reminders.
-     *
-     * @param events Pending projected events to include
-     * @param medications Matching medication entities (same order as events)
-     * @param channelId NORMAL or CRITICAL channel ID
-     * @param notificationId Stable ID for this notification (from NotificationIdGenerator)
-     * @param scheduledTime Original scheduled time for the event group
-     * @param lockScreenVisibility Privacy setting for lock screen
-     * @param isFollowUp Whether this is a follow-up reminder
-     * @param isSnoozed Whether this is a snoozed reminder
-     * @param groupKey Notification group key for visual grouping (always set for time-slot notifications)
-     * @param isFollowUpAlert When true, sets setOnlyAlertOnce(false) — ignored for children
-     *   when GROUP_ALERT_SUMMARY is active on the summary, since children are muted by the OS
+     * @param events Pending projected events to include.
+     * @param medications Matching entities in the same order as [events].
+     * @param notificationId Stable ID from NotificationIdGenerator.
+     * @param scheduledTime Original time for the event group.
+     * @param groupKey Always set for time-slot notifications — drives visual grouping.
+     * @param isFollowUpAlert When true, sets `setOnlyAlertOnce(false)`. Ignored for children when
+     *   `GROUP_ALERT_SUMMARY` is active on the summary, since children are muted by the OS.
      */
     fun buildNotification(
         events: List<ProjectedEvent>,
@@ -562,7 +547,7 @@ class NotificationBuilder(private val context: Context) {
             .setAutoCancel(true)
             .setOnlyAlertOnce(true)
 
-        builder.setContentIntent(createStockDetailIntent(medication.id, notificationId))
+        builder.setContentIntent(createStockDetailIntent(medication.id))
 
         return builder.build()
     }
@@ -621,7 +606,7 @@ class NotificationBuilder(private val context: Context) {
                 .setAutoCancel(true)
                 .setOnlyAlertOnce(true)
 
-        builder.setContentIntent(createStockDetailIntent(medication.id, notificationId))
+        builder.setContentIntent(createStockDetailIntent(medication.id))
         builder.addAction(createContainerDepletedAction(medication.id, notificationId))
 
         return builder.build()
@@ -646,7 +631,7 @@ class NotificationBuilder(private val context: Context) {
         ).build()
     }
 
-    private fun createStockDetailIntent(medicationId: Int, notificationId: Int): PendingIntent {
+    private fun createStockDetailIntent(medicationId: Int): PendingIntent {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra("OPEN_STOCK_DETAIL", true)

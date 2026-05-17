@@ -14,32 +14,23 @@ import androidx.compose.runtime.setValue
 import me.juliana.hellomeds.domain.ml.MedicationDetectionResult
 import me.juliana.hellomeds.util.camera.CoordinateTransformer
 
-/**
- * Analysis phase - only used when camera is frozen
- */
+/** Analysis phases while the camera is frozen. */
 enum class AnalysisPhase {
-    INITIALIZING, // Positioning reticle after freeze
-    READY, // Reticle positioned, awaiting/showing OCR results
-    INSUFFICIENT_TEXT, // OCR found < 4 words
-    GRACE_PERIOD, // Sufficient text, 3s countdown before Gemini
-    PROCESSING, // Calling Gemini
-    NO_DATA, // Gemini returned no valid data
-    COMPLETE, // Analysis complete, results ready
+    INITIALIZING,
+    READY,
+    INSUFFICIENT_TEXT,
+    GRACE_PERIOD,
+    PROCESSING,
+    NO_DATA,
+    COMPLETE,
 }
 
-/**
- * Object detection state (while live camera is scanning)
- */
 enum class ObjectState {
-    NO_OBJECT, // No object detected
-    OBJECT_NO_TEXT, // Object detected but no/insufficient text
-    OBJECT_WITH_TEXT, // Object detected with sufficient text
+    NO_OBJECT,
+    OBJECT_NO_TEXT,
+    OBJECT_WITH_TEXT,
 }
 
-/**
- * State holder for camera detection screen.
- * Manages all mutable state for both live scanning and frozen analysis modes.
- */
 @Stable
 class CameraDetectionState {
     // Camera mode

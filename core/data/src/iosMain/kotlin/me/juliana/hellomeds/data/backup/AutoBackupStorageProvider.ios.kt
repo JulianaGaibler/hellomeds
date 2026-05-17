@@ -61,10 +61,7 @@ actual class AutoBackupStorageProvider(
         return getOrCreateBackupDirectory() != null
     }
 
-    /**
-     * Returns the auto-backup directory path.
-     * Prefers iCloud ubiquity container if available, falls back to local Documents.
-     */
+    /** Prefers the iCloud ubiquity container; falls back to local Documents. */
     private fun getOrCreateBackupDirectory(): String? {
         val fm = NSFileManager.defaultManager
 
@@ -84,7 +81,6 @@ actual class AutoBackupStorageProvider(
             (docUrl?.path ?: return null) + "/AutoBackups"
         }
 
-        // Create directory if it doesn't exist
         if (!fm.fileExistsAtPath(baseDir)) {
             fm.createDirectoryAtPath(
                 baseDir,

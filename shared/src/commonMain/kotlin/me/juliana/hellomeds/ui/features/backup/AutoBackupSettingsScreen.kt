@@ -6,16 +6,16 @@ package me.juliana.hellomeds.ui.features.backup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -37,7 +37,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,6 +50,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_cancel
@@ -62,8 +63,8 @@ import me.juliana.hellomeds.shared.auto_backup_destination_icloud
 import me.juliana.hellomeds.shared.auto_backup_destination_unavailable
 import me.juliana.hellomeds.shared.auto_backup_disabled_banner
 import me.juliana.hellomeds.shared.auto_backup_enable
-import me.juliana.hellomeds.shared.auto_backup_enabled_banner
 import me.juliana.hellomeds.shared.auto_backup_enable_description
+import me.juliana.hellomeds.shared.auto_backup_enabled_banner
 import me.juliana.hellomeds.shared.auto_backup_hours_ago
 import me.juliana.hellomeds.shared.auto_backup_intro_p1
 import me.juliana.hellomeds.shared.auto_backup_intro_p2
@@ -90,14 +91,15 @@ import me.juliana.hellomeds.shared.auto_backup_status_failed
 import me.juliana.hellomeds.shared.auto_backup_title
 import me.juliana.hellomeds.shared.auto_backup_trigger
 import me.juliana.hellomeds.shared.content_description_back
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.components.common.AppScaffold
-import me.juliana.hellomeds.ui.features.settings.SettingsHeader
-import me.juliana.hellomeds.ui.features.settings.settingsContentPadding
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.SmartListInfoCard
 import me.juliana.hellomeds.ui.components.list.SmartListItem
 import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
 import me.juliana.hellomeds.ui.components.list.SmartListSwitchItem
+import me.juliana.hellomeds.ui.features.settings.SettingsHeader
+import me.juliana.hellomeds.ui.features.settings.settingsContentPadding
 import me.juliana.hellomeds.ui.util.PlatformCapabilities
 import me.juliana.hellomeds.ui.viewmodel.AutoBackupEvent
 import me.juliana.hellomeds.ui.viewmodel.AutoBackupUiState
@@ -109,9 +111,6 @@ import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.isActive
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -214,7 +213,6 @@ fun AutoBackupSettingsScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // === Intro ===
             item {
                 Text(
                     text = stringResource(Res.string.auto_backup_intro_p1),
@@ -234,7 +232,6 @@ fun AutoBackupSettingsScreen(
                 )
             }
 
-            // === Status banner (enabled / disabled) ===
             item {
                 AutoSmartList(
                     items = listOf(
@@ -282,7 +279,6 @@ fun AutoBackupSettingsScreen(
                 )
             }
 
-            // === Enable + Back up now ===
             item {
                 AutoSmartList(
                     items = listOf(
@@ -330,7 +326,6 @@ fun AutoBackupSettingsScreen(
                 )
             }
 
-            // === Settings ===
             item {
                 SettingsHeader(stringResource(Res.string.auto_backup_settings_title))
             }

@@ -173,11 +173,8 @@ class BackupImportService(
         var historyImported = 0
         var stockAdjustmentsImported = 0
 
-        // Step 1: Resolve importance labels
         val existingLabels = importanceLabelDao.getAll().first()
         val labelNameToId = mutableMapOf<String, Int>()
-
-        // Pre-populate with existing labels
         existingLabels.forEach { labelNameToId[it.name] = it.id }
 
         for (backupLabel in backup.importanceLabels) {
@@ -194,7 +191,7 @@ class BackupImportService(
             if (exactMatch != null) {
                 labelNameToId[backupLabel.name] = exactMatch.id
             } else {
-                // Check if name already taken (different config)
+                // Same name with different config — disambiguate to avoid clobbering existing label.
                 val nameMatch = existingLabels.find { it.name == backupLabel.name }
                 val labelName = if (nameMatch != null) {
                     "${backupLabel.name} (imported)"
@@ -207,7 +204,6 @@ class BackupImportService(
             }
         }
 
-        // Step 2: Import medications
         val existingMedications = medicationDao.getAll().first()
 
         for (backupMed in backup.medications) {
@@ -316,8 +312,6 @@ class BackupImportService(
     }
 }
 
-// === Entity conversion helpers ===
-
 private fun BackupImportanceLabel.toEntity(name: String = this.name) = ImportanceLabel(
     name = name,
     shouldRemind = shouldRemind,
@@ -399,8 +393,6 @@ private fun BackupStockAdjustment.toEntity(medicationId: Int, remappedHistoryId:
     notes = notes,
 )
 
-// === Enum parsing with fallbacks ===
-
 internal fun parseMedicationType(value: String): MedicationType? = try {
     MedicationType.valueOf(value)
 } catch (_: Exception) {
@@ -437,8 +429,8 @@ internal fun parseTimeZoneMode(value: String): TimeZoneMode? = try {
     null
 }
 
-internal fun parseLocalDate(value: String): kotlinx.datetime.LocalDate? = try {
-    kotlinx.datetime.LocalDate.parse(value)
+internal fun parseLocalDate(value: String): LocalDate? = try {
+    LocalDate.parse(value)
 } catch (_: Exception) {
     null
 }
@@ -448,8 +440,6 @@ internal fun parseMedicationContainer(value: String): MedicationContainer? = try
 } catch (_: Exception) {
     null
 }
-
-// === Date/time parsing ===
 
 internal fun parseIsoToMillis(iso: String?): Long? {
     if (iso == null) return null

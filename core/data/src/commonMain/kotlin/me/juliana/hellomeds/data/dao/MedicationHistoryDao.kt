@@ -153,11 +153,7 @@ interface MedicationHistoryDao {
     @Query("DELETE FROM medication_history WHERE medicationId = :medicationId")
     suspend fun deleteByMedicationId(medicationId: Int)
 
-    /**
-     * Delete history records older than the given cutoff timestamp.
-     * Used by periodic cleanup tasks to keep the database size manageable.
-     * Returns the number of records deleted.
-     */
+    /** Called by periodic cleanup to keep the database size bounded. */
     @Query(
         """
     DELETE FROM medication_history

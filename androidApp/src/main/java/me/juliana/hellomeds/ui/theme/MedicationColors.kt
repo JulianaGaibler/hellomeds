@@ -10,13 +10,8 @@ import androidx.compose.ui.res.colorResource
 import me.juliana.hellomeds.R
 
 /**
- * Converts MedicationColor enum to Compose Color for foreground/shape elements.
- *
- * Automatically adapts to light/dark theme via Android's resource qualifier system:
- * - Light mode: uses darker pastel shades (from values/colors.xml)
- * - Dark mode: uses lighter pastel shades (from values-night/colors.xml)
- *
- * This provides better contrast between foreground shapes and backgrounds.
+ * Foreground shade per medication color. Light mode uses darker pastels (values/colors.xml),
+ * dark mode uses lighter ones (values-night/colors.xml) — selected via resource qualifiers.
  */
 @Composable
 @ReadOnlyComposable
@@ -36,15 +31,7 @@ fun MedicationColor.toForegroundColor(): Color = when (this) {
     MedicationColor.Monochrome -> colorResource(R.color.medication_foreground_monochrome)
 }
 
-/**
- * Converts MedicationColor enum to Compose Color for background elements.
- *
- * Automatically adapts to light/dark theme via Android's resource qualifier system:
- * - Light mode: uses lighter pastel shades (from values/colors.xml)
- * - Dark mode: uses darker pastel shades (from values-night/colors.xml)
- *
- * This provides better contrast with foreground shapes.
- */
+/** Background shade per medication color. Light mode uses lighter pastels, dark mode darker. */
 @Composable
 @ReadOnlyComposable
 fun MedicationColor.toBackgroundColor(): Color = when (this) {

@@ -65,12 +65,9 @@ reorderable = "3.0.0"
 
 # Testing
 junit = "4.13.2"
-junitAndroidx = "1.3.0"
-espressoCore = "3.7.0"
 mockk = "1.13.9"
 turbine = "1.0.0"
-coreTesting = "2.2.0"
-testRules = "1.5.0"
+testRunner = "1.5.2"
 screengrab = "2.1.1"
 uiautomator = "2.3.0"
 [libraries]
@@ -86,9 +83,7 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui" }
 androidx-compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
-androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
-androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 
 # Material 3
@@ -150,20 +145,14 @@ reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reo
 
 # Testing
 junit = { module = "junit:junit", version.ref = "junit" }
-androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitAndroidx" }
-androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
 # kotlin-reflect: needed by tests that invoke private suspend methods via
 # Kotlin reflection (kotlin.reflect.full.callSuspend). Not transitively
 # provided by MockK 1.13; pulling it in directly keeps the test surface honest.
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
-androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "work" }
-androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
-androidx-core-testing = { module = "androidx.arch.core:core-testing", version.ref = "coreTesting" }
-androidx-test-rules = { module = "androidx.test:rules", version.ref = "testRules" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "testRunner" }
 fastlane-screengrab = { module = "tools.fastlane:screengrab", version.ref = "screengrab" }
 androidx-test-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
 [plugins]

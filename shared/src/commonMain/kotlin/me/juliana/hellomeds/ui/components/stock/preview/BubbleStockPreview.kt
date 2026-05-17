@@ -78,10 +78,8 @@ fun calculateGridDimensions(totalQuantity: Int): GridDimensions {
 }
 
 /**
- * Calculates the optimal circle diameter for pills based on quantity and available space.
- * Uses logarithmic scaling to keep circles readable for large quantities.
+ * Calculates the optimal circle diameter for pills based on available space and grid layout.
  *
- * @param totalQuantity Total number of pills
  * @param canvasWidth Available canvas width in pixels
  * @param canvasHeight Available canvas height in pixels
  * @param gridDimensions Pre-calculated grid dimensions
@@ -95,7 +93,6 @@ fun calculateGridDimensions(totalQuantity: Int): GridDimensions {
  * @return Optimal circle diameter in pixels
  */
 fun calculateCircleDiameter(
-    totalQuantity: Int,
     canvasWidth: Float,
     canvasHeight: Float,
     gridDimensions: GridDimensions,
@@ -144,7 +141,6 @@ fun BubbleStockPreview(
     val primaryColor = MaterialTheme.colorScheme.primary
     val density = LocalDensity.current
 
-    // Convert dp values to pixels
     with(density) { BubblePreviewConstants.GRID_PADDING_START.toPx() }
     with(density) { BubblePreviewConstants.GRID_PADDING_END.toPx() }
     with(density) { BubblePreviewConstants.GRID_PADDING_TOP.toPx() }
@@ -202,7 +198,6 @@ fun BubbleStockPreview(
 
             // Calculate circle diameter using minimum padding
             val circleDiameter = calculateCircleDiameter(
-                totalQuantity = totalQuantity,
                 canvasWidth = size.width,
                 canvasHeight = size.height,
                 gridDimensions = gridDimensions,

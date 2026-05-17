@@ -235,16 +235,9 @@ internal fun MedicationForegroundShape.toDrawables(): ShapeDrawables = when (thi
 }
 
 /**
- * A composable that renders a medication shape icon with a single user-chosen color.
- * Duo-tone shapes get an automatic white complement for the second part.
- * The background is white (light) / dark-mode equivalent (dark) when a color is set.
- *
- * @param foregroundShape The shape of the medication icon (pill, tablet, etc.)
- * @param backgroundShape The background shape from MaterialShapes
- * @param color1 Primary color for the foreground (or only color for single-color shapes)
- * @param size The size of the icon
+ * Single-color medication shape icon. Duo-tone shapes get an automatic white complement for the
+ * second part. Background is white (light) / dark-mode equivalent (dark) when a color is set.
  */
-
 @Composable
 fun MedicationShapeIcon(
     foregroundShape: MedicationForegroundShape,
@@ -301,17 +294,7 @@ fun MedicationShapeIcon(
     }
 }
 
-/**
- * An animated version of MedicationShapeIcon that morphs between two background shapes.
- * Useful for previewing shape changes with a smooth animation.
- *
- * @param foregroundShape The shape of the medication icon (pill, tablet, etc.)
- * @param fromShape The starting background shape
- * @param toShape The ending background shape (will morph between fromShape and toShape)
- * @param color1 Primary color for the foreground (or only color for single-color shapes)
- * @param size The size of the icon
- */
-
+/** Animated version that morphs between two background shapes — used to preview shape changes. */
 @Composable
 fun AnimatedMorphingMedicationIcon(
     foregroundShape: MedicationForegroundShape,
@@ -386,16 +369,9 @@ fun AnimatedMorphingMedicationIcon(
 }
 
 /**
- * A transitioning version of MedicationShapeIcon that smoothly transitions between shapes and colors.
- * Unlike AnimatedMorphingMedicationIcon, this performs a one-time transition animation when values change,
- * rather than continuously looping.
- *
- * @param foregroundShape The shape of the medication icon (pill, tablet, etc.)
- * @param backgroundShape The current background shape (will transition from previous when changed)
- * @param color1 Primary color for the foreground (will transition from previous when changed)
- * @param size The size of the icon
+ * Plays a one-shot transition on shape/color changes (vs. [AnimatedMorphingMedicationIcon] which
+ * loops continuously).
  */
-
 @Composable
 fun TransitioningMedicationIcon(
     foregroundShape: MedicationForegroundShape,
@@ -407,10 +383,9 @@ fun TransitioningMedicationIcon(
     var currentFromShape by remember { mutableStateOf(backgroundShape) }
     var currentToShape by remember { mutableStateOf(backgroundShape) }
 
-    // Use Animatable for better control over resetting animation
+    // Animatable lets us snap progress back to 0 when the source/target shapes change mid-animation.
     val morphProgress = remember { Animatable(1f) }
 
-    // Track previous foreground shape for animation triggering
     var previousForegroundShape by remember { mutableStateOf(foregroundShape) }
     val foregroundScale = remember { Animatable(1f) }
     val foregroundRotation = remember { Animatable(0f) }

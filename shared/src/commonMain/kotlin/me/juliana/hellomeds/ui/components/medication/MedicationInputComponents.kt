@@ -100,19 +100,15 @@ fun MedicationTypeSelector(
         type to stringResource(type.displayNameRes)
     }
 
-    // Most common medication types (top 3)
     val commonTypes = listOf(MedicationType.TABLET, MedicationType.CAPSULE, MedicationType.LIQUID)
 
-    // Determine which types to show in the top group
+    // Camera-detected types take precedence; otherwise fall back to the common-types shortlist.
     val topGroupTypes = if (detectedTypes.isNotEmpty()) {
-        // Use detected types if available
         allTypes.filter { (type, _) -> type in detectedTypes }
     } else {
-        // Otherwise use most common types
         allTypes.filter { (type, _) -> type in commonTypes }
     }
 
-    // Remaining types (excluding top group)
     val topGroupTypeEnums = topGroupTypes.map { it.first }
     val remainingTypes = allTypes.filter { (type, _) -> type !in topGroupTypeEnums }
 
@@ -120,10 +116,9 @@ fun MedicationTypeSelector(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // Show top group with header only if detected types were provided
         if (topGroupTypes.isNotEmpty()) {
             Column {
-                // Only show header if types were actually detected (not just common types)
+                // Header only fires for camera-detected types, not the fallback common-types group.
                 if (detectedTypes.isNotEmpty()) {
                     SmartListHeader(text = stringResource(Res.string.camera_detection_from_camera))
                 }

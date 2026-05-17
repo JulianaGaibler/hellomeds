@@ -269,7 +269,7 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        /** Hard cap on incoming backup file size to prevent OOM from oversized/malicious URIs. */
+        /** Cap on incoming backup file size to prevent OOM from oversized URIs. */
         private const val MAX_IMPORT_FILE_BYTES = 50L * 1024L * 1024L // 50 MB
     }
 }

@@ -253,10 +253,9 @@ internal val highContrastDarkColorScheme = darkColorScheme(
 )
 
 /**
- * Overrides container colors in contrast schemes with standard-scheme values.
- * M3 contrast schemes invert containers (dark containers + white onContainer text),
- * but this app uses onContainer colors outside of containers. Keeping container
- * colors stable prevents white-on-light text regressions.
+ * Pins container colors to the standard scheme even under M3 contrast variants.
+ * M3 inverts containers in contrast mode, but onContainer colors are used outside
+ * of containers here — letting the inversion through would cause white-on-light regressions.
  */
 internal fun applyStableContainers(scheme: ColorScheme, darkTheme: Boolean): ColorScheme {
     val base = if (darkTheme) darkScheme else lightScheme

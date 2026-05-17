@@ -57,16 +57,10 @@ class HeuristicMedicationEngine : MedicationIntelligenceEngine {
     }
 
     /**
-     * Extract medication name suggestions using multi-factor scoring.
-     *
-     * Algorithm:
-     * 1. Normalize OCR text (fix common errors)
-     * 2. Tokenize into individual words
-     * 3. Score each token based on multiple heuristics
-     * 4. Return top N tokens with positive scores, sorted by score (descending)
+     * Extracts medication name candidates from OCR text using multi-factor token scoring.
      *
      * @param text OCR text to analyze
-     * @return List of up to MAX_NAME_SUGGESTIONS medication name candidates, sorted by score
+     * @return Up to MAX_NAME_SUGGESTIONS candidates, sorted by score descending
      */
     private fun extractNameSuggestions(text: String): List<String> {
         AppLogger.d(TAG, "  Extracting name suggestions from OCR text...")
@@ -80,23 +74,20 @@ class HeuristicMedicationEngine : MedicationIntelligenceEngine {
         val tokens = preprocessTokens(normalized)
         AppLogger.d(TAG, "    Tokens (>=$MIN_TOKEN_LENGTH chars): ${tokens.joinToString(", ")}")
 
-        // Generate bigrams for compound names like "vitamin d3"
-        // We need to use the original normalized text to catch short tokens like "d3"
-        val bigrams = generateBigrams(normalized, tokens)
+        // Bigrams catch compound names like "vitamin d3" where d3 alone is below MIN_TOKEN_LENGTH.
+        val bigrams = generateBigrams(normalized)
         if (bigrams.isNotEmpty()) {
             AppLogger.d(TAG, "    Bigrams: ${bigrams.joinToString(", ")}")
         }
 
-        // Combine tokens and bigrams for scoring
         val candidates = tokens + bigrams
         AppLogger.d(TAG, "    Scoring ${candidates.size} candidates...")
 
-        // Score all candidates and keep sorted by score
         val scoredTokens = candidates
             .map { token -> token to scoreToken(token) }
-            .filter { (_, score) -> score > 0 } // Only keep tokens with positive scores
-            .sortedByDescending { (_, score) -> score } // Sort by score descending
-            .distinctBy { (token, _) -> token } // Remove duplicates, keeping highest score
+            .filter { (_, score) -> score > 0 }
+            .sortedByDescending { (_, score) -> score }
+            .distinctBy { (token, _) -> token }
             .take(MAX_NAME_SUGGESTIONS)
             .also { scored ->
                 if (scored.isNotEmpty()) {
@@ -109,7 +100,7 @@ class HeuristicMedicationEngine : MedicationIntelligenceEngine {
                 }
             }
             .map { (token, _) -> cleanAndCapitalize(token) }
-            .filter { it.isNotEmpty() } // Remove any that became empty after cleaning
+            .filter { it.isNotEmpty() }
 
         return scoredTokens
     }
@@ -345,19 +336,11 @@ class HeuristicMedicationEngine : MedicationIntelligenceEngine {
      * @return StrengthSuggestion if found, null otherwise
      */
     private fun extractStrengthSuggestion(text: String, nameSuggestions: List<String>): StrengthSuggestion? {
-        // Build regex pattern from allowed units
-        // Requires: word boundary OR whitespace before the number
-        // Pattern: (?:^|\s)(\d+(?:\.\d+)?|\.\d+)\s*(mg|ml|mcg|g|iu|%)
-        // Explanation:
-        // - (?:^|\s) - start of string or whitespace (non-capturing)
-        // - (\d+(?:\.\d+)?|\.\d+) - number (capture group 1)
-        // - \s* - optional whitespace
-        // - (unit) - unit (capture group 2)
+        // Captures `<number> <unit>` after a word boundary or whitespace; unit list defined in ALLOWED_UNITS.
         val unitsPattern = ALLOWED_UNITS.joinToString("|")
         val regex =
             Regex("""(?:^|\s)(\d+(?:\.\d+)?|\.\d+)\s*($unitsPattern)\b""", RegexOption.IGNORE_CASE)
 
-        // Find all matches
         val matches = regex.findAll(text).toList()
 
         if (matches.isEmpty()) {
@@ -406,7 +389,6 @@ class HeuristicMedicationEngine : MedicationIntelligenceEngine {
         val valueStr = bestMatch.groupValues[1]
         val unitStr = bestMatch.groupValues[2].lowercase()
 
-        // Convert string unit to enum (case-insensitive)
         val unitEnum = MedicationStrengthUnit.fromValue(unitStr)
         if (unitEnum == null) {
             AppLogger.w(TAG, "Invalid strength unit detected: $unitStr")
@@ -483,10 +465,9 @@ class HeuristicMedicationEngine : MedicationIntelligenceEngine {
      * filtered out during tokenization (e.g., "d3" < 4 chars).
      *
      * @param normalizedText The normalized OCR text (before tokenization)
-     * @param tokens List of preprocessed tokens (>=4 chars)
      * @return List of bigrams (space-separated two-word combinations)
      */
-    private fun generateBigrams(normalizedText: String, tokens: List<String>): List<String> {
+    private fun generateBigrams(normalizedText: String): List<String> {
         val bigrams = mutableListOf<String>()
 
         // Split normalized text into ALL words (including short ones)

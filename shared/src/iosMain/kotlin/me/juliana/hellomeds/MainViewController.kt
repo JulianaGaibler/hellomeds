@@ -17,11 +17,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import me.juliana.hellomeds.data.util.DiagnosticLog
 import me.juliana.hellomeds.data.di.dataModule
 import me.juliana.hellomeds.data.interfaces.ScheduleReconciler
 import me.juliana.hellomeds.data.repository.MedicationHistoryRepository
 import me.juliana.hellomeds.data.service.ScheduleProjector
+import me.juliana.hellomeds.data.util.DiagnosticLog
 import me.juliana.hellomeds.notifications.IOSNotificationSessionManager
 import me.juliana.hellomeds.notifications.NotificationActionStrings
 import me.juliana.hellomeds.notifications.NotificationDeepLinkState
@@ -30,14 +30,13 @@ import me.juliana.hellomeds.notifications.createIosNotificationModule
 import me.juliana.hellomeds.notifications.isAlarmKitAuthorized
 import me.juliana.hellomeds.notifications.isAlarmKitAvailable
 import me.juliana.hellomeds.notifications.registerNotificationCategory
+import me.juliana.hellomeds.notifications.startAlarmSound
+import me.juliana.hellomeds.notifications.stopAlarmSound
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.depletion_notification_action_mark_depleted
 import me.juliana.hellomeds.shared.notification_action_skipped
 import me.juliana.hellomeds.shared.notification_action_snooze
 import me.juliana.hellomeds.shared.notification_action_taken
-import org.jetbrains.compose.resources.getString
-import me.juliana.hellomeds.notifications.startAlarmSound
-import me.juliana.hellomeds.notifications.stopAlarmSound
 import me.juliana.hellomeds.ui.HelloMedsApp
 import me.juliana.hellomeds.ui.di.iosPlatformModule
 import me.juliana.hellomeds.ui.di.sharedUiModule
@@ -53,6 +52,7 @@ import me.juliana.hellomeds.ui.util.PermissionUtils
 import me.juliana.hellomeds.ui.util.PlatformCapabilities
 import me.juliana.hellomeds.ui.util.updateScreenPrivacyState
 import me.juliana.hellomeds.workers.IOSBackgroundTaskManager
+import org.jetbrains.compose.resources.getString
 import org.koin.core.context.startKoin
 import org.koin.mp.KoinPlatform
 import platform.Foundation.NSCachesDirectory
@@ -80,7 +80,7 @@ fun MainViewController(): UIViewController {
             error = null,
         )
         cachesDir?.path?.let { DiagnosticLog.configure("$it/diagnostic.log") }
-        DiagnosticLog.verbose = kotlin.native.Platform.isDebugBinary
+        DiagnosticLog.verbose = Platform.isDebugBinary
 
         // Core DI — no iOS notification classes referenced in iosPlatformModule
         startKoin {
@@ -96,7 +96,6 @@ fun MainViewController(): UIViewController {
         // classes only inside Koin lambdas, after startKoin has completed)
         KoinPlatform.getKoin().loadModules(listOf(createIosNotificationModule()), allowOverride = true)
 
-        // Set up notification system (category registration, delegate, etc.)
         setupNotifications()
 
         // Register and schedule background tasks (BGTaskScheduler).
@@ -115,15 +114,8 @@ fun MainViewController(): UIViewController {
                 updateScreenPrivacyState(screenPrivacy)
             }
 
-            // Refresh the 7-day notification batch every time the app becomes active.
-            // iOS BGAppRefreshTask is aggressively throttled — if the user doesn't open the
-            // app for days, iOS may stop running background tasks entirely. Reconciling on
-            // resume guarantees notifications are replenished whenever the user opens the app.
-            //
-            // This lives inside the Compose body (rather than setupNotifications()) so that
-            // ScheduleReconciler resolution — which transitively constructs AppDatabase —
-            // is deferred until SwiftUI actually realizes this view. The user cannot reach
-            // this point pre-first-unlock, so the Keychain is guaranteed to be readable.
+            // Reconcile on resume because BGAppRefreshTask is aggressively throttled —
+            // iOS may stop running it entirely if the app isn't opened for days.
             val resumeScope = rememberCoroutineScope()
             DisposableEffect(Unit) {
                 val reconciler = KoinPlatform.getKoin().get<ScheduleReconciler>()
@@ -255,20 +247,9 @@ fun MainViewController(): UIViewController {
     }
 }
 
-/**
- * Initializes the iOS notification system:
- * 1. Registers notification category with Take/Skip/Snooze actions
- * 2. Sets the notification delegate for action handling + foreground presentation
- *
- * Note: Permission is now requested during the onboarding flow
- * via IOSNotificationPermissionScreen, not at app startup.
- */
 private fun setupNotifications() {
-    // Pre-resolve localized action-button titles via CMP resources. Registration
-    // itself must be synchronous (iOS requires the category to exist before any
-    // notification using it is scheduled), but CMP's `getString` is `suspend`.
-    // `runBlocking(Dispatchers.Default)` parks the Main thread on Default so a
-    // potential internal Main dispatch inside `getString` can't deadlock us.
+    // Categories must register before any notification using them is scheduled; runBlocking
+    // on Default avoids a potential Main re-dispatch deadlock inside the suspend `getString`.
     val actionStrings = runBlocking(Dispatchers.Default) {
         NotificationActionStrings(
             take = getString(Res.string.notification_action_taken),
@@ -278,22 +259,17 @@ private fun setupNotifications() {
         )
     }
 
-    // Register the notification category (must happen before scheduling)
     registerNotificationCategory(actionStrings)
 
-    // Query actual notification authorization status early so the cache is warm
-    // before any UI reads it. The composable isNotificationPermissionGranted() also
-    // queries, but it only runs when the Settings screen is composed.
+    // Warm the permission cache before any UI reads it.
     UNUserNotificationCenter.currentNotificationCenter()
         .getNotificationSettingsWithCompletionHandler { settings ->
             PermissionUtils.cachedNotificationsEnabled =
                 settings?.authorizationStatus == platform.UserNotifications.UNAuthorizationStatusAuthorized ||
                 settings?.authorizationStatus == platform.UserNotifications.UNAuthorizationStatusProvisional
-            // Cache critical alert authorization for PlatformCapabilities
             PlatformCapabilities.criticalAlertsAuthorized =
                 settings?.criticalAlertSetting == platform.UserNotifications.UNNotificationSettingEnabled
 
-            // Cache AlarmKit authorization status (iOS 26+)
             if (isAlarmKitAvailable()) {
                 CoroutineScope(Dispatchers.Main).launch {
                     PlatformCapabilities.alarmKitAuthorized = isAlarmKitAuthorized()
@@ -301,31 +277,11 @@ private fun setupNotifications() {
             }
         }
 
-    // Set the notification delegate for handling user actions.
-    // Safe at cold launch: the delegate's DB-touching collaborators are resolved lazily
-    // (see IOSNotificationDelegate), so no AppDatabase construction happens here.
-    // Retrieve via NotificationHandlerHolder (pure Kotlin wrapper — Koin can't reflect on NSObject subclasses).
+    // Retrieved via NotificationHandlerHolder — Koin can't reflect on NSObject subclasses.
     val holder = KoinPlatform.getKoin().get<NotificationHandlerHolder>()
     UNUserNotificationCenter.currentNotificationCenter().delegate = holder.delegate
-
-    // The "reconcile on resume" observer used to live here, but it eagerly resolved
-    // ScheduleReconciler — which transitively constructs AppDatabase, which on iOS
-    // requires the Keychain to be unlocked. A foreground launch attempt while the
-    // device is post-reboot pre-first-unlock would crash here. The observer has been
-    // moved into a DisposableEffect inside the Compose body, which only runs after
-    // SwiftUI realizes the WindowGroup — i.e., after first unlock.
 }
 
-/**
- * Registers and schedules iOS background tasks via BGTaskScheduler.
- *
- * Two tasks mirror Android's WorkManager workers:
- * 1. Reconcile (every ~4h): re-schedules notifications + auto-skips overdue events
- * 2. Cleanup (every ~24h): removes old history records + re-reconciles
- *
- * Registration MUST happen before the app finishes launching (iOS requirement).
- * Scheduling is safe to call multiple times — duplicate requests replace previous ones.
- */
 private fun setupBackgroundTasks() {
     val taskManager = KoinPlatform.getKoin().get<IOSBackgroundTaskManager>()
     taskManager.registerTasks()

@@ -33,6 +33,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
+import me.juliana.hellomeds.data.database.DefaultLabelType
 import me.juliana.hellomeds.data.database.entities.ImportanceLabel
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.model.enums.CycleType
@@ -43,7 +44,6 @@ import me.juliana.hellomeds.shared.action_finish
 import me.juliana.hellomeds.shared.action_next
 import me.juliana.hellomeds.shared.content_description_back
 import me.juliana.hellomeds.shared.screen_add_medication
-import me.juliana.hellomeds.data.database.DefaultLabelType
 import me.juliana.hellomeds.ui.compat.PlatformBackHandler
 import me.juliana.hellomeds.ui.components.common.AppScaffold
 import me.juliana.hellomeds.ui.features.medication.steps.MedicationCycleStep

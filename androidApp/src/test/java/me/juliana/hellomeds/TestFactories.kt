@@ -24,10 +24,8 @@ import me.juliana.hellomeds.data.model.enums.StockAdjustmentType
 import me.juliana.hellomeds.data.model.enums.TimeZoneMode
 import me.juliana.hellomeds.data.model.enums.TrackingPrecision
 
-// These factories mirror core/data/src/commonTest/.../TestFactories.kt.
-// KMP test sources are module-scoped, so androidApp/src/test/ cannot import
-// from core/data/src/commonTest/. If you change the common factories,
-// update these too.
+// Mirror of core/data/src/commonTest/.../TestFactories.kt — duplicated because KMP test
+// sources are module-scoped and androidApp/src/test/ cannot import from core/data/commonTest.
 
 fun createSchedule(
     id: Int = 1,

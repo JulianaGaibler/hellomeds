@@ -43,7 +43,6 @@ struct MedicationInfo {
 /// Wraps Apple's Foundation Models framework for on-device medication text extraction.
 @objc public class FoundationModelBridge: NSObject {
 
-    /// Check if Foundation Models is available on this device
     @objc public static func isAvailable() -> Bool {
         if #available(iOS 26.0, *) {
             return SystemLanguageModel.default.availability == .available

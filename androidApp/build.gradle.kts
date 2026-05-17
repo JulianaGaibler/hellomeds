@@ -111,7 +111,6 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.material3.expressive)
     implementation(libs.androidx.material3.adaptive)
     implementation(libs.androidx.graphics.shapes)
@@ -162,24 +161,16 @@ dependencies {
     testImplementation(libs.kotlin.reflect)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.androidx.work.testing)
-    testImplementation(libs.androidx.room.testing)
     testImplementation(libs.turbine)
-    testImplementation(libs.androidx.core.testing)
 
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.mockk.android)
-    androidTestImplementation(libs.androidx.work.testing)
     androidTestImplementation(libs.kotlinx.coroutines.test)
-    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.runner)
 
     // Screengrab (used only by the screenshotDebug instrumentation test variant)
     "androidTestScreenshotDebugImplementation"(libs.fastlane.screengrab)
     "androidTestScreenshotDebugImplementation"(libs.androidx.test.uiautomator)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

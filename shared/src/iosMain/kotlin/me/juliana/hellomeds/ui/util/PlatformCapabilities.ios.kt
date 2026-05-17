@@ -7,7 +7,7 @@ import platform.Foundation.NSBundle
 
 actual object PlatformCapabilities {
     @OptIn(kotlin.experimental.ExperimentalNativeApi::class)
-    actual fun isDebugBuild(): Boolean = kotlin.native.Platform.isDebugBinary
+    actual fun isDebugBuild(): Boolean = Platform.isDebugBinary
 
     actual fun supportsDynamicColor(): Boolean = false
 

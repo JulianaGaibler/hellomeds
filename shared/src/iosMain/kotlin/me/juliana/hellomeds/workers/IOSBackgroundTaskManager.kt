@@ -14,46 +14,27 @@ import me.juliana.hellomeds.data.interfaces.ScheduleReconciler
 import me.juliana.hellomeds.data.repository.MedicationHistoryRepository
 import me.juliana.hellomeds.data.util.AppLogger
 import org.koin.mp.KoinPlatform
-import kotlin.time.Clock
 import platform.BackgroundTasks.BGAppRefreshTaskRequest
 import platform.BackgroundTasks.BGProcessingTaskRequest
 import platform.BackgroundTasks.BGTask
 import platform.BackgroundTasks.BGTaskScheduler
 import platform.Foundation.NSDate
 import platform.Foundation.dateByAddingTimeInterval
+import kotlin.time.Clock
 
 /**
- * Manages iOS background tasks via BGTaskScheduler.
+ * Schedules and handles iOS background tasks via BGTaskScheduler: a reconcile task
+ * (BGAppRefreshTask, ~4h) and a history-cleanup task (BGProcessingTask, ~24h).
  *
- * This is a pure Kotlin class (NOT an NSObject subclass) so it is safe
- * to register directly in Koin without wrapper indirection.
- *
- * Provides two background tasks mirroring Android's WorkManager workers:
- *
- * 1. **Reconcile task** (BGAppRefreshTask, ~4 hours):
- *    - Re-schedules upcoming notification batch via ScheduleReconciler
- *    - Auto-skips overdue events via MedicationHistoryRepository
- *
- * 2. **Cleanup task** (BGProcessingTask, ~24 hours):
- *    - Removes old history records (>90 days)
- *
- * IMPORTANT:
- * - Task registration (registerTasks) MUST be called before the app finishes
- *   launching. In practice, call it from MainViewController before Compose setup.
- * - BGTaskScheduler methods must be called on the main thread.
- * - Task identifiers must be listed in Info.plist under
- *   BGTaskSchedulerPermittedIdentifiers.
+ * Task identifiers must be listed in Info.plist under BGTaskSchedulerPermittedIdentifiers,
+ * and [registerTasks] must run before the app finishes launching.
  */
 class IOSBackgroundTaskManager(
     private val clock: Clock = Clock.System,
 ) {
 
-    // Lazy resolution: registerTasks() is called from MainViewController during cold launch,
-    // but the BGTask handlers only fire later, when the OS schedules them. Resolving these
-    // collaborators eagerly would pull AppDatabase through their constructors, which on iOS
-    // requires the Keychain to be unlocked — and a foreground launch attempted in the
-    // post-reboot pre-first-unlock window would crash. Lazy delegates push resolution to
-    // task-fire time, which always runs after the device has been unlocked at least once.
+    // Lazy: handlers fire post-first-unlock, so deferred DI avoids a Keychain crash
+    // if eager resolution ran during a pre-unlock launch.
     private val reconciler: ScheduleReconciler by lazy { KoinPlatform.getKoin().get() }
     private val historyRepository: MedicationHistoryRepository by lazy { KoinPlatform.getKoin().get() }
     private val historyDao: MedicationHistoryDao by lazy { KoinPlatform.getKoin().get() }
@@ -62,13 +43,7 @@ class IOSBackgroundTaskManager(
     private var currentReconcileJob: Job? = null
     private var currentCleanupJob: Job? = null
 
-    /**
-     * Registers BGTask launch handlers for both task identifiers.
-     *
-     * Must be called exactly once, before the app finishes launching.
-     * Calling this multiple times for the same identifier will cause the
-     * system to kill the app.
-     */
+    /** Must be called exactly once, before the app finishes launching — duplicate registration kills the app. */
     fun registerTasks() {
         val scheduler = BGTaskScheduler.sharedScheduler
 
@@ -105,13 +80,7 @@ class IOSBackgroundTaskManager(
         }
     }
 
-    /**
-     * Schedules the periodic reconciliation task.
-     * Uses BGAppRefreshTaskRequest with a 4-hour earliest begin date.
-     *
-     * Safe to call multiple times — submitting a request for an already-queued
-     * task replaces the previous request.
-     */
+    /** Safe to call multiple times — a new request for an already-queued identifier replaces the previous one. */
     fun scheduleReconcileTask() {
         val request = BGAppRefreshTaskRequest(identifier = RECONCILE_TASK_ID)
         request.earliestBeginDate = NSDate().dateByAddingTimeInterval(RECONCILE_INTERVAL_SECONDS)
@@ -127,11 +96,6 @@ class IOSBackgroundTaskManager(
         }
     }
 
-    /**
-     * Schedules the daily cleanup task.
-     * Uses BGProcessingTaskRequest with a 24-hour earliest begin date.
-     * Does not require network or external power.
-     */
     fun scheduleCleanupTask() {
         val request = BGProcessingTaskRequest(identifier = CLEANUP_TASK_ID).apply {
             earliestBeginDate = NSDate().dateByAddingTimeInterval(CLEANUP_INTERVAL_SECONDS)
@@ -147,18 +111,10 @@ class IOSBackgroundTaskManager(
         }
     }
 
-    /**
-     * Handles the reconcile background task when the system launches it.
-     *
-     * 1. Sets an expiration handler to cancel the coroutine if time runs out
-     * 2. Runs reconciliation + auto-skip in a coroutine
-     * 3. Reports success/failure to the system
-     * 4. Schedules the next occurrence
-     */
     private fun handleReconcileTask(task: BGTask) {
         AppLogger.i(TAG, "Reconcile task started")
 
-        // Schedule the next occurrence immediately so it's queued even if this one fails
+        // Queue the next occurrence first so it survives a failure here.
         scheduleReconcileTask()
 
         val job = scope.launch {
@@ -174,7 +130,6 @@ class IOSBackgroundTaskManager(
         }
         currentReconcileJob = job
 
-        // If the system needs to terminate us early, cancel the coroutine
         task.expirationHandler = {
             AppLogger.w(TAG, "Reconcile task expired, cancelling")
             job.cancel()
@@ -182,21 +137,13 @@ class IOSBackgroundTaskManager(
         }
     }
 
-    /**
-     * Handles the cleanup background task when the system launches it.
-     *
-     * 1. Deletes history records older than 90 days
-     * 2. Runs reconciliation to ensure notification schedule is current
-     */
     private fun handleCleanupTask(task: BGTask) {
         AppLogger.i(TAG, "Cleanup task started")
 
-        // Schedule the next occurrence immediately
         scheduleCleanupTask()
 
         val job = scope.launch {
             try {
-                // Delete history records older than 90 days
                 val cutoff = clock.now().toEpochMilliseconds() - HISTORY_RETENTION_MS
                 val deletedCount = historyDao.deleteOlderThan(cutoff)
                 if (deletedCount > 0) {

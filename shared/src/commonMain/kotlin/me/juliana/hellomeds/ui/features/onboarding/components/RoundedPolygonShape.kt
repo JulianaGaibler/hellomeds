@@ -43,19 +43,16 @@ class RoundedPolygonShape(
             points.add(Offset(x, y))
         }
 
-        // Draw path with smooth curves between points
         path.moveTo(points[0].x, points[0].y)
 
         for (i in 1 until points.size) {
             val p0 = points[i - 1]
             val p1 = points[i]
-            // Create control point for smooth curve
             val cp1x = p0.x + (p1.x - p0.x) * curvature
             val cp1y = p0.y + (p1.y - p0.y) * curvature
             path.quadraticTo(cp1x, cp1y, p1.x, p1.y)
         }
 
-        // Close the loop smoothly
         val pLast = points.last()
         val pFirst = points.first()
         val cpX = pLast.x + (pFirst.x - pLast.x) * curvature

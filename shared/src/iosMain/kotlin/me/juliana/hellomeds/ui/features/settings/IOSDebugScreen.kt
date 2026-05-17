@@ -123,25 +123,21 @@ fun IOSDebugScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // ── Section 1: Today's Doses ──
             item { SmartListLabel(text = "Today's Doses") }
             item { TodayDosesSection(todayOverview) }
 
-            // ── Section 2: Notifications (iOS) ──
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SmartListLabel(text = "Notifications")
             }
             item { NotificationStatusSection(notificationStatus) }
 
-            // ── Section 3: Upcoming Schedules ──
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SmartListLabel(text = "Upcoming Schedules")
             }
             item { UpcomingSchedulesSection(scheduledAlarms) }
 
-            // ── Section 4: System & Preferences ──
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SmartListLabel(text = "System & Preferences")
@@ -180,7 +176,8 @@ fun IOSDebugScreen(
                         SmartListItemConfig(visible = true) { shapes, _ ->
                             SmartListItem(
                                 headlineContent = { Text("App version") },
-                                trailingContent = { Text(preferences.detectionMethod) }, // Repurposed for iOS version
+                                // detectionMethod field is repurposed to hold the iOS version string.
+                                trailingContent = { Text(preferences.detectionMethod) },
                                 shapes = shapes,
                             )
                         },
@@ -197,7 +194,6 @@ fun IOSDebugScreen(
                 )
             }
 
-            // ── Section 5: Database Health ──
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SmartListLabel(text = "Database Health")
@@ -223,7 +219,6 @@ fun IOSDebugScreen(
                 )
             }
 
-            // ── Section 5b: Encryption ──
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SmartListLabel(text = "Encryption")
@@ -233,7 +228,6 @@ fun IOSDebugScreen(
                 EncryptionSection(keyManager = keyManager)
             }
 
-            // ── Section 6: Actions ──
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SmartListLabel(text = "Actions")
@@ -315,7 +309,7 @@ fun IOSDebugScreen(
                                 shapes = shapes,
                                 onClick = {
                                     scope.launch {
-                                        val threeDaysAgo = kotlin.time.Clock.System.now()
+                                        val threeDaysAgo = Clock.System.now()
                                             .toEpochMilliseconds() - (3 * 24 * 60 * 60 * 1000L)
                                         autoBackupPrefs.setOnboardingCompletedTimestamp(threeDaysAgo)
                                         autoBackupPrefs.setBackupNudgeDismissed(false)
@@ -324,7 +318,7 @@ fun IOSDebugScreen(
                                 },
                             )
                         },
-                        // BETA: Closed-beta survey nudge. Remove per BETA_ROLLBACK.md before public release.
+                        // TODO(BETA_ROLLBACK): closed-beta survey nudge
                         SmartListItemConfig(visible = true) { shapes, _ ->
                             SmartListItem(
                                 headlineContent = {
@@ -338,7 +332,7 @@ fun IOSDebugScreen(
                                 shapes = shapes,
                                 onClick = {
                                     scope.launch {
-                                        val elevenDaysAgo = kotlin.time.Clock.System.now()
+                                        val elevenDaysAgo = Clock.System.now()
                                             .toEpochMilliseconds() - (11 * 24 * 60 * 60 * 1000L)
                                         autoBackupPrefs.setOnboardingCompletedTimestamp(elevenDaysAgo)
                                         autoBackupPrefs.setClosedBetaSurveyNudgeDismissed(false)
@@ -357,8 +351,6 @@ fun IOSDebugScreen(
         }
     }
 }
-
-// ── Section Composables ──
 
 @Composable
 private fun EncryptionSection(keyManager: DatabaseKeyManager) {

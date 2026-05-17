@@ -61,8 +61,6 @@ class DebugViewModel(
 
     private val _refreshTrigger = MutableStateFlow(0)
 
-    // --- Today's Doses ---
-
     val todayOverview: StateFlow<TodayOverview> = combine(
         scheduleDao.getActive(),
         _refreshTrigger,
@@ -77,7 +75,7 @@ class DebugViewModel(
 
             val diagnostic = projector.getDoseOverview(startOfDay, endOfDay, now)
 
-            // Map diagnostic data to UI model (resolve real names for debug display)
+            // Resolve real medication and schedule names for the debug display.
             val events = projector.projectEvents(startOfDay, endOfDay).sortedBy { it.scheduledTime }
             val doses = events.map { event ->
                 val medication = medicationDao.getByIdSync(event.medicationId)
@@ -106,8 +104,6 @@ class DebugViewModel(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = TodayOverview(),
     )
-
-    // --- Upcoming Schedules (next 7 days, pending only) ---
 
     val scheduledAlarms: StateFlow<List<DetailedAlarmInfo>> = combine(
         scheduleDao.getActive(),
@@ -141,19 +137,15 @@ class DebugViewModel(
         initialValue = emptyList(),
     )
 
-    // --- Reconciler & Sessions ---
-
     val reconcilerStatus: StateFlow<ReconcilerStatus> = combine(
         scheduleDao.getActive(),
         _refreshTrigger,
     ) { _, _ ->
         withContext(Dispatchers.IO) {
-            // Get shared diagnostic summary from reconciler
             val diagnostic = reconciler.getDiagnosticSummary()
             val now = System.currentTimeMillis()
             val nextWakeup = reconciler.computeNextWakeupTime()
 
-            // Map string-based diagnostic details back to typed UI model
             val wakeupReason = when (diagnostic.details["wakeupReason"]) {
                 "FOLLOW_UP" -> WakeupReason.FOLLOW_UP
                 "SNOOZE" -> WakeupReason.SNOOZE
@@ -167,7 +159,7 @@ class DebugViewModel(
                 else -> AlarmType.NONE
             }
 
-            // Resolve session details for the UI (needs real medication names)
+            // Resolve real medication names for each session.
             val sessions = sessionManager.getAllSessions()
             val sessionDetails = sessions.map { session ->
                 val medNames = session.scheduleIds.mapNotNull { scheduleId ->
@@ -197,8 +189,6 @@ class DebugViewModel(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = ReconcilerStatus(),
     )
-
-    // --- System Status ---
 
     val systemStatus: StateFlow<SystemStatus> = _refreshTrigger.combine(
         flow { emit(Unit) },

@@ -19,7 +19,6 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,7 +26,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
@@ -37,6 +35,7 @@ import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toLocalDateTime
 import me.juliana.hellomeds.data.model.enums.MedicationBackgroundShape
 import me.juliana.hellomeds.data.model.enums.MedicationForegroundShape
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.accessibility_loading
 import me.juliana.hellomeds.shared.illustration_empty_tracking
@@ -50,6 +49,7 @@ import me.juliana.hellomeds.ui.compat.ButtonGroupDefaults
 import me.juliana.hellomeds.ui.compat.LoadingIndicator
 import me.juliana.hellomeds.ui.compat.ToggleButton
 import me.juliana.hellomeds.ui.compat.ToggleButtonDefaults
+import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.common.AppScaffold
 import me.juliana.hellomeds.ui.components.common.EmptyState
@@ -78,17 +78,13 @@ fun StockScreen(
     modifier: Modifier = Modifier,
     viewModel: StockTrackingViewModel = koinViewModel(),
 ) {
-    val context = platformContext()
+    platformContext()
     val trackedMedications by viewModel.trackedMedications.collectAsStateWithLifecycle()
     val hasLoaded by viewModel.hasLoaded.collectAsStateWithLifecycle()
 
-    // Stock statuses computed in parallel in ViewModel
     val stockStatuses by viewModel.stockStatuses.collectAsStateWithLifecycle()
-
-    // Stock graph lines cached in ViewModel with debounce
     val allStockLines by viewModel.allStockGraphLines.collectAsStateWithLifecycle()
 
-    // Use medication icon colors when available, fall back to theme colors
     val isDark = isSystemInDarkTheme()
     val medicationColorMap = remember(trackedMedications, isDark) {
         trackedMedications.mapNotNull { display ->

@@ -103,9 +103,6 @@ object TimeFormatter {
         else -> ""
     }
 
-    /**
-     * Get the interval in milliseconds between X-axis labels for a given zoom level.
-     */
     fun getLabelInterval(zoomLevel: ZoomLevel): Long {
         return when (zoomLevel) {
             ZoomLevel.DAY -> 3 * 60 * 60 * 1000L // Every 3 hours

@@ -94,10 +94,6 @@ class StockSettingsRepositoryTest {
         unmockkStatic(Log::class)
     }
 
-    // ================================================================
-    // updateLowStockThreshold
-    // ================================================================
-
     @Test
     fun updateLowStockThreshold_setsFromNull() = runTest {
         val medication = exactMedication(lowStockThreshold = null)
@@ -140,10 +136,6 @@ class StockSettingsRepositoryTest {
         coVerify(exactly = 0) { medicationDao.update(any()) }
     }
 
-    // ================================================================
-    // updateContainerType
-    // ================================================================
-
     @Test
     fun updateContainerType_setsType() = runTest {
         val medication = exactMedication(medicationContainer = null)
@@ -175,10 +167,6 @@ class StockSettingsRepositoryTest {
         coVerify(exactly = 0) { medicationDao.update(any()) }
     }
 
-    // ================================================================
-    // updatePackagingQuantity
-    // ================================================================
-
     @Test
     fun updatePackagingQuantity_updatesAndRecalculates() = runTest {
         val medication = exactMedication(packagingQuantity = 30.0)
@@ -199,10 +187,6 @@ class StockSettingsRepositoryTest {
 
         coVerify(exactly = 0) { medicationDao.update(any()) }
     }
-
-    // ================================================================
-    // updateDepletionReminderEnabled
-    // ================================================================
 
     @Test
     fun updateDepletionReminderEnabled_enables() = runTest {
@@ -225,10 +209,6 @@ class StockSettingsRepositoryTest {
 
         assertEquals(false, captured.captured.depletionReminderEnabled)
     }
-
-    // ================================================================
-    // Helpers
-    // ================================================================
 
     private fun exactMedication(
         packagingQuantity: Double? = 30.0,

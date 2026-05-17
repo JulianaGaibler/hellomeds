@@ -23,7 +23,6 @@ import me.juliana.hellomeds.data.preferences.ReliabilityPreferences
 import me.juliana.hellomeds.data.service.ScheduleProjector
 import me.juliana.hellomeds.data.support.ReconcilerDiagnostic
 import me.juliana.hellomeds.data.util.AppLogger
-import kotlin.time.Clock
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.notification_text_time_log_generic
 import me.juliana.hellomeds.shared.notification_text_time_log_named
@@ -48,6 +47,7 @@ import platform.UserNotifications.UNNotificationSettingEnabled
 import platform.UserNotifications.UNNotificationSound
 import platform.UserNotifications.UNUserNotificationCenter
 import kotlin.coroutines.resume
+import kotlin.time.Clock
 
 /**
  * Filter the snooze session's captured scheduleIds down to the subset that is
@@ -118,8 +118,6 @@ class IOSScheduleReconciler(
         return timeFormatter.stringFromDate(date)
     }
 
-    // Constants moved to NotificationConstants.kt to avoid class initialization issues.
-    // Private constants kept here as they are only used within this class.
     private val TAG = "IOSScheduleReconciler"
     private val LOOKAHEAD_MS = SCHEDULING_WINDOW_MS
     private val TIME_SLOT_TOLERANCE_MS = 60_000L
@@ -168,8 +166,7 @@ class IOSScheduleReconciler(
         val center = UNUserNotificationCenter.currentNotificationCenter()
         val now = clock.now().toEpochMilliseconds()
 
-        // Step 0: Clear expired snoozes so they can be rescheduled normally.
-        // This is the iOS equivalent of Android's GlobalAlarmReceiver.getDueSnoozes().
+        // Expired snoozes must be cleared before reschedule so they fire normally again.
         val dueSnoozes = sessionManager.getDueSnoozes(now)
         for (snooze in dueSnoozes) {
             sessionManager.clearSnooze(snooze.timeSlotKey)
@@ -280,7 +277,6 @@ class IOSScheduleReconciler(
                 continue
             }
 
-            // Check if this slot has alarm-importance medications
             val hasAlarmMed = slotEvents.any { event ->
                 val med = medicationDao.getByIdSync(event.medicationId)
                 val label = med?.let { importanceLabelDao.getByIdSync(it.importanceLabelId) }

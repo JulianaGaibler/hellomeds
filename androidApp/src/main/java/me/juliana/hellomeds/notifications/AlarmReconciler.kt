@@ -117,10 +117,10 @@ class AlarmReconciler(
                 TAG,
                 "Next wakeup $nextWakeup is in the past (${deltaMin(nextWakeup, now)}), triggering immediate alarm",
             )
-            setAlarm(now + 100L, isCritical = true)
+            setAlarm(now + 100L)
         } else {
             val isCritical = isNextWakeupCritical(nextWakeup)
-            setAlarm(nextWakeup, isCritical)
+            setAlarm(nextWakeup)
             AppLogger.i(
                 TAG,
                 "reconcile() now=$now, nextWakeup=$nextWakeup (${deltaMin(nextWakeup, now)}), critical=$isCritical",
@@ -264,7 +264,7 @@ class AlarmReconciler(
         }
     }
 
-    private suspend fun setAlarm(triggerTime: Long, isCritical: Boolean) {
+    private suspend fun setAlarm(triggerTime: Long) {
         val pendingIntent = createPendingIntent()
 
         // Permission check must run BEFORE scheduling: on Android 12+, calling
@@ -351,7 +351,7 @@ class AlarmReconciler(
         }
 
         // Wakeup reason
-        val nextEventTime = projector.findNextPendingEvent(now)?.scheduledTime
+        projector.findNextPendingEvent(now)?.scheduledTime
         val nextFollowUpTime = sessions.mapNotNull { it.nextFollowUpTime }.filter { it > now }.minOrNull()
         val nextSnoozeTime = sessions.mapNotNull { it.snoozeUntilTime }.filter { it > now }.minOrNull()
         val wakeupReason = when {

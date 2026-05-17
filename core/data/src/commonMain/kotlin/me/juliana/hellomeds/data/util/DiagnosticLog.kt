@@ -136,7 +136,7 @@ object DiagnosticLog {
         }
     }
 
-    // --- File I/O (runs under ioMutex on background scope) ---
+    // File I/O below runs under ioMutex on the background scope.
 
     private fun loadFromFile(path: String) {
         val content = try {
@@ -192,9 +192,7 @@ object DiagnosticLog {
         }
     }
 
-    // --- Line encoding/decoding ---
-    // Format: timestamp|W|tag|message
-    // Pipes in tag/message escaped as \|, newlines as \n, backslashes as \\
+    // Line format: timestamp|W|tag|message. Pipes in tag/message escape as \|, newlines as \n, backslashes as \\.
 
     internal fun encodeLine(entry: LogEntry): String {
         val levelChar = when (entry.level) {

@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import me.juliana.hellomeds.ui.components.medication.MedicationActionIconButton
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -71,6 +70,7 @@ import me.juliana.hellomeds.shared.medication_notes_label
 import me.juliana.hellomeds.shared.schedule_action_archive
 import me.juliana.hellomeds.shared.schedule_action_unarchive
 import me.juliana.hellomeds.ui.compat.platformContext
+import me.juliana.hellomeds.ui.components.medication.MedicationActionIconButton
 import me.juliana.hellomeds.ui.components.medication.MedicationShapeIcon
 import me.juliana.hellomeds.ui.theme.HelloMedsTheme
 import me.juliana.hellomeds.ui.theme.MedicationColor
@@ -117,7 +117,7 @@ fun MedicationDetailBottomSheet(
 
     // Delete confirmation dialog
     if (showDeleteDialog) {
-        val context = platformContext()
+        platformContext()
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text(stringResource(Res.string.medication_dialog_delete_title)) },
@@ -155,7 +155,7 @@ fun MedicationDetailBottomSheet(
 
     // Archive/Unarchive confirmation dialog
     if (showArchiveDialog) {
-        val context = platformContext()
+        platformContext()
         AlertDialog(
             onDismissRequest = { showArchiveDialog = false },
             title = {

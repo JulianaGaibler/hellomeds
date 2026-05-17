@@ -42,24 +42,21 @@ class CoordinateTransformer(
         private const val TAG = "CoordinateTransformer"
     }
 
-    // ML Kit returns coordinates in rotated space
-    // Calculate the effective dimensions after rotation
+    // ML Kit returns coordinates in rotated space.
     val rotatedWidth: Int = if (rotation == 90 || rotation == 270) bitmapHeight else bitmapWidth
     val rotatedHeight: Int = if (rotation == 90 || rotation == 270) bitmapWidth else bitmapHeight
 
-    // Calculate scale factor (FILL_CENTER = use max to fill screen)
+    // FILL_CENTER scaling: use max so the bitmap fills the screen.
     val scaleX: Float = screenWidth / rotatedWidth
     val scaleY: Float = screenHeight / rotatedHeight
     val scale: Float = maxOf(scaleX, scaleY)
 
-    // Calculate offsets for centering the scaled bitmap
     val scaledBitmapWidth: Float = rotatedWidth * scale
     val scaledBitmapHeight: Float = rotatedHeight * scale
     val offsetX: Float = (screenWidth - scaledBitmapWidth) / 2f
     val offsetY: Float = (screenHeight - scaledBitmapHeight) / 2f
 
-    // Calculate visible bitmap bounds (what's actually shown on screen after FILL_CENTER crop)
-    // These are in the ROTATED coordinate space (same as ML Kit output)
+    // Visible bitmap bounds after FILL_CENTER crop, in rotated (ML Kit) space.
     val visibleBitmapLeft: Int = if (offsetX < 0) (-offsetX / scale).toInt() else 0
     val visibleBitmapTop: Int = if (offsetY < 0) (-offsetY / scale).toInt() else 0
     val visibleBitmapRight: Int =
@@ -134,46 +131,32 @@ class CoordinateTransformer(
      * This applies reverse rotation to get back to sensor coordinates.
      */
     fun screenRectToSensorBitmap(left: Float, top: Float, right: Float, bottom: Float): Rect {
-        // First get coordinates in rotated (ML Kit) space
         val rotatedRect = screenRectToBitmap(left, top, right, bottom)
 
-        // Convert from rotated space back to sensor space
-        // Rotated space dimensions are rotatedWidth × rotatedHeight
-        // Sensor space dimensions are bitmapWidth × bitmapHeight
+        // Inverse rotation from ML Kit space back to sensor space.
         return when (rotation) {
-            90 -> {
-                // 90° CW: Rotated (480×640) → Sensor (640×480)
-                // Point (rx, ry) in rotated → (ry, rotatedWidth - rx) in sensor
-                Rect(
-                    rotatedRect.top,
-                    rotatedWidth - rotatedRect.right,
-                    rotatedRect.bottom,
-                    rotatedWidth - rotatedRect.left,
-                )
-            }
+            90 -> Rect(
+                rotatedRect.top,
+                rotatedWidth - rotatedRect.right,
+                rotatedRect.bottom,
+                rotatedWidth - rotatedRect.left,
+            )
 
-            180 -> {
-                // 180°: Point (rx, ry) → (rotatedWidth - rx, rotatedHeight - ry)
-                Rect(
-                    rotatedWidth - rotatedRect.right,
-                    rotatedHeight - rotatedRect.bottom,
-                    rotatedWidth - rotatedRect.left,
-                    rotatedHeight - rotatedRect.top,
-                )
-            }
+            180 -> Rect(
+                rotatedWidth - rotatedRect.right,
+                rotatedHeight - rotatedRect.bottom,
+                rotatedWidth - rotatedRect.left,
+                rotatedHeight - rotatedRect.top,
+            )
 
-            270 -> {
-                // 270° CW: Rotated (480×640) → Sensor (640×480)
-                // Point (rx, ry) → (rotatedHeight - ry, rx)
-                Rect(
-                    rotatedHeight - rotatedRect.bottom,
-                    rotatedRect.left,
-                    rotatedHeight - rotatedRect.top,
-                    rotatedRect.right,
-                )
-            }
+            270 -> Rect(
+                rotatedHeight - rotatedRect.bottom,
+                rotatedRect.left,
+                rotatedHeight - rotatedRect.top,
+                rotatedRect.right,
+            )
 
-            else -> rotatedRect // 0° - no transformation needed
+            else -> rotatedRect
         }
     }
 
@@ -185,18 +168,15 @@ class CoordinateTransformer(
      * @return true if at least `threshold` fraction of the rectangle is visible on screen
      */
     fun isInVisibleArea(bitmapRect: Rect, threshold: Float = 0.5f): Boolean {
-        // Calculate intersection with visible bitmap bounds
         val intersectLeft = maxOf(bitmapRect.left, visibleBitmapLeft)
         val intersectTop = maxOf(bitmapRect.top, visibleBitmapTop)
         val intersectRight = minOf(bitmapRect.right, visibleBitmapRight)
         val intersectBottom = minOf(bitmapRect.bottom, visibleBitmapBottom)
 
-        // Check if there's any intersection
         if (intersectLeft >= intersectRight || intersectTop >= intersectBottom) {
             return false
         }
 
-        // Calculate areas
         val intersectionArea = (intersectRight - intersectLeft) * (intersectBottom - intersectTop)
         val totalArea = bitmapRect.width() * bitmapRect.height()
 
@@ -216,7 +196,6 @@ class CoordinateTransformer(
         val intersectRight = minOf(bitmapRect.right, visibleBitmapRight)
         val intersectBottom = minOf(bitmapRect.bottom, visibleBitmapBottom)
 
-        // Check if there's any intersection
         if (intersectLeft >= intersectRight || intersectTop >= intersectBottom) {
             return null
         }
