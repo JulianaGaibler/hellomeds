@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- This ensures only YOUR app can trigger the "Taken/Skipped" actions, preventing other apps from messing with your data. -->
+    <!-- This ensures only HelloMeds app can trigger the "Taken/Skipped" actions, preventing other apps from messing with the apps data. -->
     <permission android:name="${applicationId}.NOTIFICATION_PROCESSED" />
 
     <!-- 2. NOTIFICATION & ALARM PERMISSIONS -->
@@ -20,11 +20,11 @@
     <uses-permission
         android:name="android.permission.ACCESS_NETWORK_STATE"
         tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
 
-    <!-- Form factor targeting: phones and tablets only.
-         Note: type.watch and type.automotive are opt-in markers — omitting them
-         excludes those form factors. Declaring them with required="false" is
-         rejected by Play Console. -->
+    <!-- Form factor targeting: phones and tablets only. -->
     <uses-feature android:name="android.hardware.touchscreen" android:required="true" />
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.type.television" android:required="false" />
@@ -42,7 +42,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.HelloMeds">
 
-        <!-- Remove default WorkManager initializer (app uses on-demand init via Configuration.Provider) -->
+        <!-- Remove default WorkManager initializer. Using on-demand init via Configuration.Provider instead -->
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
@@ -55,9 +55,7 @@
         </provider>
 
         <!-- singleTask: ensures one instance in the app's own task. When opened from
-             another app (e.g., Telegram sharing a .hmbackup file), Android routes to
-             the existing instance via onNewIntent() instead of creating a duplicate
-             in the sender's task. Without this, the app appears twice in the switcher. -->
+             another app (e.g., sharing a .hmbackup file) -->
         <activity
             android:name=".MainActivity"
             android:enableOnBackInvokedCallback="true"
@@ -104,7 +102,7 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- Full-screen alarm activity for medication reminders (wakes screen, shows over lock screen) -->
+        <!-- Full-screen alarm activity for medication reminders -->
         <activity
             android:name=".notifications.AlarmActivity"
             android:exported="false"
@@ -113,7 +111,7 @@
             android:turnScreenOn="true"
             android:theme="@style/Theme.HelloMeds" />
 
-        <!-- Global alarm receiver (single reconciler alarm) -->
+        <!-- Global alarm receiver -->
         <receiver
             android:name=".notifications.GlobalAlarmReceiver"
             android:exported="false">
@@ -122,7 +120,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- Added the permission attribute here. Now this receiver rejects signals that don't have your signature. -->
+        <!-- This receiver rejects signals that do not have the correct signature. -->
         <receiver
             android:name=".notifications.NotificationActionReceiver"
             android:exported="false"
