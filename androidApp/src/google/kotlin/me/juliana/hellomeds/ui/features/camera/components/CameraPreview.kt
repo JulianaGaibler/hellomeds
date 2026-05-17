@@ -5,7 +5,6 @@ package me.juliana.hellomeds.ui.features.camera.components
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.camera.core.CameraSelector
 import me.juliana.hellomeds.data.util.AppLogger
 import androidx.camera.core.ImageAnalysis
@@ -65,15 +64,11 @@ fun CameraPreview(
     // Make isCameraLive reactive so the analyzer can check it dynamically
     var isActiveState by remember { mutableStateOf(isCameraLive) }
 
-    // Update isActiveState when isCameraLive parameter changes
     LaunchedEffect(isCameraLive) {
-        Log.d(TAG, "Camera active state changed: isCameraLive=$isCameraLive")
         isActiveState = isCameraLive
     }
 
-    // Handle freeze/unfreeze
     LaunchedEffect(isFrozen) {
-        Log.d(TAG, "Camera freeze state changed: isFrozen=$isFrozen")
         if (isFrozen) {
             preview?.surfaceProvider = null
         } else {
@@ -81,11 +76,9 @@ fun CameraPreview(
         }
     }
 
-    // Handle torch/flash control
     LaunchedEffect(torchEnabled, camera) {
         camera?.let {
             try {
-                Log.d(TAG, "Setting torch: torchEnabled=$torchEnabled")
                 it.cameraControl.enableTorch(torchEnabled)
             } catch (e: Exception) {
                 AppLogger.e(TAG, "Failed to set torch state", e)

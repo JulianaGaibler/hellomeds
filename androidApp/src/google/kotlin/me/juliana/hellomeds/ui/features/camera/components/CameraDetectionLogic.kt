@@ -4,17 +4,15 @@
 package me.juliana.hellomeds.ui.features.camera.components
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.ui.unit.Density
-import me.juliana.hellomeds.data.util.AppLogger
 import androidx.compose.ui.unit.dp
+import me.juliana.hellomeds.data.util.AppLogger
 import me.juliana.hellomeds.ml.detector.MedicationDetector
 import me.juliana.hellomeds.util.camera.CoordinateTransformer
 
 private const val TAG = "CameraDetectionLogic"
 
 fun CameraDetectionState.resumeLiveCamera() {
-    Log.d(TAG, "=== RESUMING LIVE CAMERA ===")
     isCameraLive = true
     analysisPhase = null
 
@@ -39,9 +37,6 @@ fun CameraDetectionState.resumeLiveCamera() {
     gracePeriodVersion = 0
 
     isTorchOn = wasTorchOnBeforeFreeze
-    Log.d(TAG, "Flash state restored: isTorchOn=$isTorchOn")
-
-    Log.d(TAG, "Live camera resumed")
 }
 
 fun CameraDetectionState.freezeCameraAndInitializeReticle(
@@ -49,8 +44,6 @@ fun CameraDetectionState.freezeCameraAndInitializeReticle(
     density: Density,
     medicationDetector: MedicationDetector,
 ) {
-    Log.d(TAG, "=== FREEZING CAMERA AND INITIALIZING RETICLE ===")
-
     if (frozenFullBitmap == null) {
         AppLogger.e(TAG, "Cannot freeze: no frozen bitmap available")
         return
@@ -65,10 +58,6 @@ fun CameraDetectionState.freezeCameraAndInitializeReticle(
 
     val bitmap = frozenFullBitmap!!
 
-    Log.d(TAG, "Screen: $currentScreenWidth×$currentScreenHeight")
-    Log.d(TAG, "Bitmap: ${bitmap.width}×${bitmap.height}")
-    Log.d(TAG, "Rotation: $frozenImageRotation°")
-
     val transformer = CoordinateTransformer(
         bitmapWidth = bitmap.width,
         bitmapHeight = bitmap.height,
@@ -80,10 +69,7 @@ fun CameraDetectionState.freezeCameraAndInitializeReticle(
 
     if (detectedObjectBox != null) {
         val box = detectedObjectBox!!
-        Log.d(TAG, "Positioning reticle on detected object: $box")
-
         val isVisible = transformer.isInVisibleArea(box, threshold = 0.3f)
-        Log.d(TAG, "Object is visible: $isVisible")
 
         if (isVisible) {
             val screenRect = transformer.bitmapRectToScreen(box)
@@ -95,16 +81,10 @@ fun CameraDetectionState.freezeCameraAndInitializeReticle(
             reticleTop = screenRect.top.coerceAtLeast(topInset).coerceAtMost(maxBottom)
             reticleRight = screenRect.right.coerceIn(0f, currentScreenWidth)
             reticleBottom = screenRect.bottom.coerceIn(topInset, maxBottom)
-
-            Log.d(
-                TAG,
-                "Reticle positioned on object (clamped): [$reticleLeft,$reticleTop-$reticleRight,$reticleBottom]",
-            )
         } else {
             positionReticleCentered(topInset, density)
         }
     } else {
-        Log.d(TAG, "No detected object, using centered fallback")
         positionReticleCentered(topInset, density)
     }
 
@@ -126,16 +106,9 @@ fun CameraDetectionState.positionReticleCentered(topInset: Float, density: Densi
     reticleTop = centeredTop.coerceAtLeast(topInset)
     reticleRight = (reticleLeft + reticleWidthPx).coerceAtMost(currentScreenWidth)
     reticleBottom = (reticleTop + reticleHeightPx).coerceAtMost(maxBottom)
-
-    Log.d(
-        TAG,
-        "Reticle positioned centered (safe area): [$reticleLeft,$reticleTop-$reticleRight,$reticleBottom]",
-    )
 }
 
 fun CameraDetectionState.runOCROnReticle(medicationDetector: MedicationDetector) {
-    Log.d(TAG, "=== RUNNING OCR ON RETICLE ===")
-
     val reticleWidth = reticleRight - reticleLeft
     val reticleHeight = reticleBottom - reticleTop
 
@@ -161,11 +134,6 @@ fun CameraDetectionState.runOCROnReticle(medicationDetector: MedicationDetector)
         reticleBottom,
     )
 
-    Log.d(
-        TAG,
-        "Screen rect [$reticleLeft,$reticleTop-$reticleRight,$reticleBottom] → Sensor bitmap rect $cropRect",
-    )
-
     val cropWidth = cropRect.width()
     val cropHeight = cropRect.height()
 
@@ -184,13 +152,9 @@ fun CameraDetectionState.runOCROnReticle(medicationDetector: MedicationDetector)
             cropHeight,
         )
 
-        Log.d(TAG, "Running OCR on cropped region: $cropWidth×$cropHeight")
-
         medicationDetector.recognizeText(croppedBitmap) { text, newWordCount ->
             extractedText = text
             wordCount = newWordCount
-
-            Log.d(TAG, "OCR result: $newWordCount words")
 
             if (newWordCount < 4) {
                 analysisPhase = AnalysisPhase.INSUFFICIENT_TEXT
