@@ -18,8 +18,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxDefaults
+import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -121,7 +122,13 @@ fun SwipeableListItem(
         val scope = rememberCoroutineScope()
         val haptic = LocalHapticFeedback.current
 
-        val dismissState = rememberSwipeToDismissBoxState()
+        val positionalThreshold = SwipeToDismissBoxDefaults.positionalThreshold
+        val dismissState = remember {
+            SwipeToDismissBoxState(
+                initialValue = SwipeToDismissBoxValue.Settled,
+                positionalThreshold = positionalThreshold,
+            )
+        }
 
         var containerWidth by remember { mutableFloatStateOf(1f) }
         var isProcessing by remember { mutableStateOf(false) }
