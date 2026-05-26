@@ -1,5 +1,8 @@
 # HelloMeds
 
+> [!NOTE]
+> Android closed beta is running. **[sign up here](https://juliana.me/projects/hellomeds/closedbeta/)** to help test before public release.
+
 A medication tracking app for Android and iOS. Learn more at [juliana.me/projects/hellomeds](https://juliana.me/projects/hellomeds).
 
 ## Overview
