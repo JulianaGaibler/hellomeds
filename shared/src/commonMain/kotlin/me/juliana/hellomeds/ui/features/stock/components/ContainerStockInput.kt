@@ -24,11 +24,16 @@ import kotlinx.coroutines.delay
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
 import me.juliana.hellomeds.shared.Res
+import me.juliana.hellomeds.shared.container_inline_generic
 import me.juliana.hellomeds.shared.stock_auto_correct_message
 import me.juliana.hellomeds.shared.stock_container_generic
 import me.juliana.hellomeds.shared.stock_containers_generic
+import me.juliana.hellomeds.shared.stock_current_total_compound
+import me.juliana.hellomeds.shared.stock_current_total_single
 import me.juliana.hellomeds.shared.stock_input_full_containers
 import me.juliana.hellomeds.shared.stock_input_units_from_current
+import me.juliana.hellomeds.shared.stock_new_total_compound
+import me.juliana.hellomeds.shared.stock_new_total_single
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.DecimalInputTransformation
@@ -36,26 +41,22 @@ import me.juliana.hellomeds.ui.components.list.IntegerInputTransformation
 import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
 import me.juliana.hellomeds.ui.components.list.SmartListTextItem
 import me.juliana.hellomeds.ui.util.displayNameLowerRes
+import me.juliana.hellomeds.ui.util.doseUnitPluralRes
 import me.juliana.hellomeds.ui.util.formatDecimal
 import me.juliana.hellomeds.ui.util.formatDecimalPlain
+import me.juliana.hellomeds.ui.util.inlinePluralRes
 import me.juliana.hellomeds.ui.util.labelPluralRes
 import me.juliana.hellomeds.ui.util.pluralFormRes
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import kotlin.math.abs
+import kotlin.math.floor
 
 /**
- * Dual input for full containers + partial units with auto-correction.
- * Automatically converts overflow in partial units to full containers.
- *
- * @param fullContainers Number of full containers
- * @param partialUnits Number of partial units
- * @param onFullContainersChange Callback when full containers changes
- * @param onPartialUnitsChange Callback when partial units changes
- * @param medication Medication entity (for deriving unit name)
- * @param packagingQuantity Number of units per container
- * @param medicationContainer Type of container (for display name)
+ * Dual input for full containers + partial units with auto-correction:
+ * partial units that exceed [packagingQuantity] roll into full containers.
  */
-
 @Composable
 fun ContainerStockInput(
     fullContainers: String,
@@ -68,12 +69,10 @@ fun ContainerStockInput(
     modifier: Modifier = Modifier,
 ) {
     platformContext()
-    // Get unit name from medication type
     val stockUnit = stringResource(medication.type.pluralFormRes)
     rememberCoroutineScope()
     var errorText by remember { mutableStateOf<String?>(null) }
 
-    // Auto-clear error text after 3 seconds
     LaunchedEffect(errorText) {
         if (errorText != null) {
             delay(3000)
@@ -81,10 +80,8 @@ fun ContainerStockInput(
         }
     }
 
-    // Pre-compute auto-correct message template
     val autoCorrectTemplate = stringResource(Res.string.stock_auto_correct_message, 0, "0")
 
-    // Validate and auto-correct when partial units exceed capacity
     fun validateAndCorrect() {
         val partial = partialUnits.toDoubleOrNull() ?: return
         val capacity = packagingQuantity ?: return
@@ -97,20 +94,10 @@ fun ContainerStockInput(
             onFullContainersChange((currentFull + extraContainers).toString())
             onPartialUnitsChange(formatDecimalPlain(remainder))
 
-            // Build error message without @Composable (template already resolved)
             errorText = autoCorrectTemplate
         }
     }
 
-    // Calculate total stock
-    val total = remember(fullContainers, partialUnits, packagingQuantity) {
-        val full = fullContainers.toIntOrNull() ?: 0
-        val partial = partialUnits.toDoubleOrNull() ?: 0.0
-        val capacity = packagingQuantity ?: 1.0
-        (full * capacity) + partial
-    }
-
-    // Get container name with pluralization (for full containers label)
     val containerLabel = if (medicationContainer != null) {
         pluralStringResource(medicationContainer.labelPluralRes, 2)
     } else {
@@ -118,13 +105,11 @@ fun ContainerStockInput(
     }
     val containerName = stringResource(Res.string.stock_input_full_containers, containerLabel)
 
-    // Get singular container name (for partial units label)
     val containerLower = medicationContainer?.let {
         stringResource(it.displayNameLowerRes)
     } ?: stringResource(Res.string.stock_container_generic)
-    // The unit (e.g. "tablets") is lowercase in en — title-case it for use as a
-    // field label. No-op for German, where nouns like "Tabletten" are already
-    // capitalized.
+    // Title-case the unit for use as a field label; no-op in de where nouns
+    // are already capitalized.
     val partialLabel = stringResource(
         Res.string.stock_input_units_from_current,
         stockUnit.replaceFirstChar { it.uppercase() },
@@ -137,13 +122,12 @@ fun ContainerStockInput(
     ) {
         AutoSmartList(
             items = listOf(
-                // REVERSED ORDER: Partial first, then full
                 SmartListItemConfig(visible = true) { shapes, visible ->
                     SmartListTextItem(
-                        label = partialLabel, // Dynamic: "Tablets from current blister pack"
+                        label = partialLabel,
                         value = partialUnits,
                         onValueChange = onPartialUnitsChange,
-                        suffix = null, // REMOVED: No suffix to avoid duplication
+                        suffix = null,
                         shapes = shapes,
                         visible = visible,
                         inputTransformation = DecimalInputTransformation(),
@@ -156,10 +140,10 @@ fun ContainerStockInput(
                 },
                 SmartListItemConfig(visible = true) { shapes, visible ->
                     SmartListTextItem(
-                        label = containerName, // Dynamic: "Full blister packs"
+                        label = containerName,
                         value = fullContainers,
                         onValueChange = onFullContainersChange,
-                        suffix = null, // REMOVED: No suffix to avoid duplication
+                        suffix = null,
                         shapes = shapes,
                         visible = visible,
                         inputTransformation = IntegerInputTransformation(),
@@ -168,23 +152,6 @@ fun ContainerStockInput(
             ),
         )
 
-        // Total display outside SmartList, centered
-        val totalFormatted = if (total % 1.0 == 0.0) {
-            total.toInt().toString() // Whole number: "5" not "5.0"
-        } else {
-            formatDecimal(total) // With decimal: "5.5"
-        }
-        Text(
-            text = "You have $totalFormatted ${stockUnit.ifBlank { "units" }} in total.",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-        )
-
-        // Show auto-correction message
         if (errorText != null) {
             Text(
                 text = errorText!!,
@@ -194,4 +161,141 @@ fun ContainerStockInput(
             )
         }
     }
+}
+
+/** Previews the new total after a top-up; hidden until something is added. */
+@Composable
+fun StockNewTotalSummary(
+    medication: Medication,
+    isEstimated: Boolean,
+    currentTotal: Double,
+    added: Double,
+    packagingQuantity: Double?,
+    container: MedicationContainer?,
+    modifier: Modifier = Modifier,
+) {
+    if (!added.isFinite() || added <= 0.0) return
+    StockTotalText(
+        total = currentTotal + added,
+        medication = medication,
+        isEstimated = isEstimated,
+        packagingQuantity = packagingQuantity,
+        container = container,
+        singleTemplate = Res.string.stock_new_total_single,
+        compoundTemplate = Res.string.stock_new_total_compound,
+        modifier = modifier,
+    )
+}
+
+/** Describes the entered/current stock total. */
+@Composable
+fun StockCurrentTotalSummary(
+    medication: Medication,
+    isEstimated: Boolean,
+    total: Double,
+    packagingQuantity: Double?,
+    container: MedicationContainer?,
+    modifier: Modifier = Modifier,
+) {
+    if (!total.isFinite() || total <= 0.0) return
+    StockTotalText(
+        total = total,
+        medication = medication,
+        isEstimated = isEstimated,
+        packagingQuantity = packagingQuantity,
+        container = container,
+        singleTemplate = Res.string.stock_current_total_single,
+        compoundTemplate = Res.string.stock_current_total_compound,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun StockTotalText(
+    total: Double,
+    medication: Medication,
+    isEstimated: Boolean,
+    packagingQuantity: Double?,
+    container: MedicationContainer?,
+    singleTemplate: StringResource,
+    compoundTemplate: StringResource,
+    modifier: Modifier = Modifier,
+) {
+    val packagingEnabled = !isEstimated &&
+        packagingQuantity != null && packagingQuantity > 0.0 && container != null
+
+    val rendered: String = when {
+        isEstimated && container != null -> {
+            val count = total.toInt().coerceAtLeast(0)
+            val noun = pluralStringResource(container.inlinePluralRes, count)
+            stringResource(singleTemplate, formatCount(count.toDouble()), noun)
+        }
+        isEstimated -> {
+            val count = total.toInt().coerceAtLeast(0)
+            val noun = pluralStringResource(Res.plurals.container_inline_generic, count)
+            stringResource(singleTemplate, formatCount(count.toDouble()), noun)
+        }
+        packagingEnabled -> {
+            val cap = packagingQuantity!!
+            val full = floor(total / cap).toInt().coerceAtLeast(0)
+            // Clamp floating-point drift (both directions) before zero-checks.
+            val rawPartial = total - full * cap
+            val partialDoses = if (rawPartial < 1e-9) 0.0 else rawPartial
+            when {
+                full == 0 -> {
+                    val noun = pluralStringResource(
+                        medication.type.doseUnitPluralRes,
+                        cldrPluralCount(partialDoses),
+                    )
+                    stringResource(singleTemplate, formatCount(partialDoses), noun)
+                }
+                partialDoses == 0.0 -> {
+                    val noun = pluralStringResource(container!!.inlinePluralRes, full)
+                    stringResource(singleTemplate, formatCount(full.toDouble()), noun)
+                }
+                else -> {
+                    val containerNoun = pluralStringResource(container!!.inlinePluralRes, full)
+                    val doseNoun = pluralStringResource(
+                        medication.type.doseUnitPluralRes,
+                        cldrPluralCount(partialDoses),
+                    )
+                    stringResource(
+                        compoundTemplate,
+                        formatCount(full.toDouble()),
+                        containerNoun,
+                        formatCount(partialDoses),
+                        doseNoun,
+                    )
+                }
+            }
+        }
+        else -> {
+            val noun = pluralStringResource(
+                medication.type.doseUnitPluralRes,
+                cldrPluralCount(total),
+            )
+            stringResource(singleTemplate, formatCount(total), noun)
+        }
+    }
+
+    Text(
+        text = rendered,
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp),
+    )
+}
+
+// Strip trailing ".0" so integer counts don't render as "250,0" in de.
+private fun formatCount(n: Double): String = if (n % 1.0 == 0.0) n.toInt().toString() else formatDecimal(n)
+
+// FIXME (i18n): noun-splicing into a static sentence only works for languages
+// where the noun form depends solely on count (en, de, Romance). Slavic/Arabic
+// locales need full-sentence plurals or a Double-aware CLDR category lookup.
+private fun cldrPluralCount(n: Double): Int {
+    val rounded = n.toInt()
+    return if (abs(n - rounded) < 1e-9) rounded else 2
 }

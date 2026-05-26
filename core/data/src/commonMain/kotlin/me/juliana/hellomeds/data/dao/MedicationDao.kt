@@ -10,6 +10,7 @@ import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import me.juliana.hellomeds.data.database.entities.Medication
+import me.juliana.hellomeds.data.model.enums.BubbleFlowDirection
 
 @Dao
 interface MedicationDao {
@@ -79,6 +80,11 @@ interface MedicationDao {
 
     @Query("SELECT * FROM medications WHERE stockTrackingEnabled = 1 AND isArchived = 0")
     fun getStockTracked(): Flow<List<Medication>>
+
+    @Query(
+        "UPDATE medications SET bubbleManualLayout = :manualLayout, bubbleFlowDirection = :flow WHERE id = :medicationId",
+    )
+    suspend fun updateBubbleLayout(medicationId: Int, manualLayout: String?, flow: BubbleFlowDirection)
 
     @Query("SELECT * FROM medications WHERE id IN (:ids)")
     suspend fun getByIds(ids: List<Int>): List<Medication>

@@ -6,6 +6,7 @@ package me.juliana.hellomeds.ui.util
 import androidx.compose.runtime.Composable
 import me.juliana.hellomeds.data.database.DefaultLabelType
 import me.juliana.hellomeds.data.database.entities.ImportanceLabel
+import me.juliana.hellomeds.data.model.enums.BubbleFlowDirection
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
 import me.juliana.hellomeds.data.model.enums.MedicationStrengthUnit
 import me.juliana.hellomeds.data.model.enums.MedicationType
@@ -22,6 +23,17 @@ import me.juliana.hellomeds.shared.container_dispenser
 import me.juliana.hellomeds.shared.container_dispenser_lower
 import me.juliana.hellomeds.shared.container_inhaler
 import me.juliana.hellomeds.shared.container_inhaler_lower
+import me.juliana.hellomeds.shared.container_inline_ampoule
+import me.juliana.hellomeds.shared.container_inline_blister_pack
+import me.juliana.hellomeds.shared.container_inline_bottle
+import me.juliana.hellomeds.shared.container_inline_canister
+import me.juliana.hellomeds.shared.container_inline_dispenser
+import me.juliana.hellomeds.shared.container_inline_inhaler
+import me.juliana.hellomeds.shared.container_inline_jar
+import me.juliana.hellomeds.shared.container_inline_package
+import me.juliana.hellomeds.shared.container_inline_pen
+import me.juliana.hellomeds.shared.container_inline_tube
+import me.juliana.hellomeds.shared.container_inline_vial
 import me.juliana.hellomeds.shared.container_jar
 import me.juliana.hellomeds.shared.container_jar_lower
 import me.juliana.hellomeds.shared.container_label_ampoule
@@ -83,6 +95,8 @@ import me.juliana.hellomeds.shared.dose_unit_suppository
 import me.juliana.hellomeds.shared.dose_unit_tablet
 import me.juliana.hellomeds.shared.dose_unit_topical
 import me.juliana.hellomeds.shared.medication_type_capsule
+import me.juliana.hellomeds.shared.stock_layout_flow_ltr_top
+import me.juliana.hellomeds.shared.stock_layout_flow_rtl_bottom
 import me.juliana.hellomeds.shared.medication_type_capsule_plural
 import me.juliana.hellomeds.shared.medication_type_cream
 import me.juliana.hellomeds.shared.medication_type_cream_plural
@@ -297,6 +311,27 @@ val MedicationContainer.labelPluralRes: PluralStringResource
         MedicationContainer.JAR -> Res.plurals.container_label_jar
     }
 
+/**
+ * Container plural for mid-sentence use ("New total will be 3 blister packs").
+ * Lowercase in English; capitalized in German (where nouns are always
+ * capitalized). Distinct from [labelPluralRes] which is Title-Case in English
+ * for use as a UI label.
+ */
+val MedicationContainer.inlinePluralRes: PluralStringResource
+    get() = when (this) {
+        MedicationContainer.PACKAGE -> Res.plurals.container_inline_package
+        MedicationContainer.BOTTLE -> Res.plurals.container_inline_bottle
+        MedicationContainer.DISPENSER -> Res.plurals.container_inline_dispenser
+        MedicationContainer.BLISTER_PACK -> Res.plurals.container_inline_blister_pack
+        MedicationContainer.TUBE -> Res.plurals.container_inline_tube
+        MedicationContainer.VIAL -> Res.plurals.container_inline_vial
+        MedicationContainer.INHALER -> Res.plurals.container_inline_inhaler
+        MedicationContainer.PEN -> Res.plurals.container_inline_pen
+        MedicationContainer.AMPOULE -> Res.plurals.container_inline_ampoule
+        MedicationContainer.CANISTER -> Res.plurals.container_inline_canister
+        MedicationContainer.JAR -> Res.plurals.container_inline_jar
+    }
+
 val MedicationContainer.currentLabelRes: StringResource
     get() = when (this) {
         MedicationContainer.PACKAGE -> Res.string.stock_summary_current_package
@@ -325,6 +360,14 @@ val MedicationContainer.fullRemainingPluralRes: PluralStringResource
         MedicationContainer.AMPOULE -> Res.plurals.stock_summary_full_ampoule
         MedicationContainer.CANISTER -> Res.plurals.stock_summary_full_canister
         MedicationContainer.JAR -> Res.plurals.stock_summary_full_jar
+    }
+
+// ── BubbleFlowDirection extensions ───────────────────────────────────────────
+
+val BubbleFlowDirection.displayNameRes: StringResource
+    get() = when (this) {
+        BubbleFlowDirection.LTR_TOP_BOTTOM -> Res.string.stock_layout_flow_ltr_top
+        BubbleFlowDirection.RTL_BOTTOM_TOP -> Res.string.stock_layout_flow_rtl_bottom
     }
 
 // ── MedicationStrengthUnit extensions ────────────────────────────────────────

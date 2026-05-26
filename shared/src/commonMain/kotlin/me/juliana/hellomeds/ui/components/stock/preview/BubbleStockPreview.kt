@@ -12,13 +12,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import me.juliana.hellomeds.data.model.enums.BubbleFlowDirection
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.stock_preview_bubble
 import org.jetbrains.compose.resources.stringResource
@@ -27,113 +31,101 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 /**
- * Grid dimensions for bubble preview.
+ * Geometric grid layout for the bubble preview.
  *
- * @param rows Number of rows in the grid
- * @param columns Number of columns in the grid
+ * @param rows Number of rows in the grid.
+ * @param columns Number of columns in the grid.
+ * @param spacerIndices Cells (LTR top→bottom geometric order) that render as empty placeholders
+ *   instead of pill bubbles. Empty for full grids.
  */
-data class GridDimensions(
+data class GridLayout(
     val rows: Int,
     val columns: Int,
+    val spacerIndices: List<Int> = emptyList(),
 )
 
 /**
- * Calculates optimal grid dimensions based on total quantity.
- * Prefers wider layouts (more columns than rows) for better visual balance.
+ * Choose columns/rows for [totalQuantity] pills and place any wasted cells as spacers symmetrically
+ * across the last row. Replaces the old visual-only `rowOffset` centering: spacers are now real grid
+ * cells, so the renderer just iterates and skips them.
  *
- * @param totalQuantity Total number of pills to display
- * @return Grid dimensions with rows and columns
+ * Spacer placement rules (last row only — `cells - qty` is always < cols by construction):
+ * - 1 → rightmost cell of last row
+ * - 2 → leftmost + rightmost
+ * - 3 → leftmost + center + rightmost
+ * - 4+ → alternate outside→in (L, R, L+1, R-1, ...)
  */
-fun calculateGridDimensions(totalQuantity: Int): GridDimensions {
-    if (totalQuantity <= 0) return GridDimensions(0, 0)
+fun autoLayout(totalQuantity: Int): GridLayout {
+    if (totalQuantity <= 0) return GridLayout(0, 0)
 
-    // Small quantities fit in two rows
+    val columns: Int
+    val rows: Int
     if (totalQuantity <= 10) {
-        return GridDimensions(
-            rows = 2,
-            columns = ceil(totalQuantity.toDouble() / 2).toInt(),
-        )
+        columns = ceil(totalQuantity.toDouble() / 2).toInt()
+        rows = 2
+    } else {
+        // Aspect ratio target 1.3 — prefer slightly wider than tall.
+        val idealColumns = ceil(sqrt(totalQuantity.toDouble() * 1.3f)).toInt()
+        var cols = idealColumns.coerceIn(MIN_COLUMNS, 10)
+        var r = ceil(totalQuantity.toDouble() / cols).toInt()
+        // A single orphan in the last row reads as a typo — drop one column to absorb it.
+        val orphan = totalQuantity % cols
+        if (orphan == 1 && totalQuantity > 1) {
+            cols = (cols - 1).coerceAtLeast(MIN_COLUMNS)
+            r = ceil(totalQuantity.toDouble() / cols).toInt()
+        }
+        columns = cols
+        rows = r
     }
 
-    // Target aspect ratio: prefer slightly wider layouts (1.3 = 30% wider than tall)
-    val targetAspectRatio = 1.3f
-
-    // Calculate columns based on target aspect ratio
-    // Formula: columns ≈ sqrt(totalQuantity * aspectRatio)
-    val idealColumns = ceil(sqrt(totalQuantity.toDouble() * targetAspectRatio)).toInt()
-
-    // Clamp to reasonable range (2-10 columns)
-    var columns = idealColumns.coerceIn(2, 10)
-    var rows = ceil(totalQuantity.toDouble() / columns).toInt()
-
-    // Avoid single pill in last row
-    val pillsInLastRow = totalQuantity % columns
-    if (pillsInLastRow == 1 && totalQuantity > 1) {
-        // Reduce columns to avoid single pill
-        columns = (columns - 1).coerceAtLeast(2)
-        rows = ceil(totalQuantity.toDouble() / columns).toInt()
+    val cells = rows * columns
+    val numSpacers = cells - totalQuantity
+    val spacerIndices = if (numSpacers == 0) {
+        emptyList()
+    } else {
+        val base = (rows - 1) * columns
+        pickSymmetricLastRow(columns, numSpacers).map { base + it }
     }
-
-    return GridDimensions(rows = rows, columns = columns)
+    return GridLayout(rows, columns, spacerIndices)
 }
 
 /**
- * Calculates the optimal circle diameter for pills based on available space and grid layout.
- *
- * @param canvasWidth Available canvas width in pixels
- * @param canvasHeight Available canvas height in pixels
- * @param gridDimensions Pre-calculated grid dimensions
- * @param minDiameter Minimum circle diameter in pixels
- * @param maxDiameter Maximum circle diameter in pixels
- * @param spacing Spacing between circles in pixels
- * @param paddingStart Left padding in pixels
- * @param paddingEnd Right padding in pixels
- * @param paddingTop Top padding in pixels
- * @param paddingBottom Bottom padding in pixels
- * @return Optimal circle diameter in pixels
+ * Pick [k] indices from `[0, cols)` to act as spacers in the last row. See [autoLayout] for the rules.
  */
-fun calculateCircleDiameter(
-    canvasWidth: Float,
-    canvasHeight: Float,
-    gridDimensions: GridDimensions,
-    minDiameter: Float,
-    maxDiameter: Float,
-    spacing: Float,
-    paddingStart: Float,
-    paddingEnd: Float,
-    paddingTop: Float,
-    paddingBottom: Float,
-): Float {
-    if (gridDimensions.columns == 0 || gridDimensions.rows == 0) return minDiameter
-
-    // Calculate available space
-    val availableWidth = canvasWidth - paddingStart - paddingEnd
-    val availableHeight = canvasHeight - paddingTop - paddingBottom
-
-    // Calculate maximum diameter that fits in the grid
-    val horizontalSpace = availableWidth / gridDimensions.columns
-    val verticalSpace = availableHeight / gridDimensions.rows
-
-    val maxFitDiameter = min(horizontalSpace, verticalSpace) - spacing
-
-    // Clamp to min/max bounds
-    return maxFitDiameter.coerceIn(minDiameter, maxDiameter)
+private fun pickSymmetricLastRow(cols: Int, k: Int): List<Int> {
+    if (k <= 0) return emptyList()
+    if (k == 1) return listOf(cols - 1) // Plan: single spacer goes to the rightmost cell.
+    val picks = mutableListOf<Int>()
+    var left = 0
+    var right = cols - 1
+    while (picks.size < k && left <= right) {
+        picks.add(left)
+        if (picks.size < k) picks.add(right)
+        left++
+        right--
+    }
+    return picks.sorted()
 }
 
 /**
- * Bubble preview showing pills/tablets in a grid.
- * Taken pills are shown darker, remaining pills are lighter.
- * Wrapped in a rounded container with padding.
+ * Bubble preview showing pills in a grid. Taken pills are hidden, remaining pills shown opaque (exact)
+ * or with a gradient band at the boundary (estimated). Spacer cells render as dashed-outline
+ * placeholders.
  *
- * @param totalQuantity Total number of pills in the package
- * @param remainingQuantity Number of pills remaining (not taken)
- * @param modifier Modifier for the container
+ * @param layoutOverride When non-null, overrides the auto-derived layout. The caller is responsible
+ *   for validating the override against [totalQuantity]; an invalid override produces wrong-looking
+ *   bubbles but never crashes.
+ * @param flowDirection Order in which pills are consumed. Both options empty bubbles starting from
+ *   the bottom-right; they differ on the second-pill direction (column-sweep upward vs row-sweep
+ *   leftward). See [BubbleFlowDirection].
  */
 @Composable
 fun BubbleStockPreview(
     totalQuantity: Int,
     remainingQuantity: Int,
     isEstimated: Boolean = false,
+    layoutOverride: GridLayout? = null,
+    flowDirection: BubbleFlowDirection = BubbleFlowDirection.LTR_TOP_BOTTOM,
     modifier: Modifier = Modifier,
 ) {
     val primaryContainer = MaterialTheme.colorScheme.primaryContainer
@@ -141,162 +133,199 @@ fun BubbleStockPreview(
     val primaryColor = MaterialTheme.colorScheme.primary
     val density = LocalDensity.current
 
-    with(density) { BubblePreviewConstants.GRID_PADDING_START.toPx() }
-    with(density) { BubblePreviewConstants.GRID_PADDING_END.toPx() }
-    with(density) { BubblePreviewConstants.GRID_PADDING_TOP.toPx() }
-    with(density) { BubblePreviewConstants.GRID_PADDING_BOTTOM.toPx() }
     val minPadding = with(density) { BubblePreviewConstants.MIN_PADDING.toPx() }
     val spacing = with(density) { BubblePreviewConstants.CIRCLE_SPACING.toPx() }
     val minDiameter = with(density) { BubblePreviewConstants.MIN_CIRCLE_DIAMETER.toPx() }
     val maxDiameter = with(density) { BubblePreviewConstants.MAX_CIRCLE_DIAMETER.toPx() }
 
-    // wrapContentSize lets the Surface shrink to fit the Canvas instead of stretching to the
-    // parent's full width. Combined with the Canvas modifier chain below, this preserves the
-    // grid's true aspect ratio across portrait, landscape, phone, and tablet form factors.
+    // wrapContentSize lets the Surface shrink to fit the Canvas instead of stretching to the parent's
+    // full width. Combined with the Canvas modifier chain below, this preserves the grid's true
+    // aspect ratio across portrait, landscape, phone, and tablet form factors.
     Surface(
         modifier = modifier.wrapContentSize(Alignment.Center),
         shape = RoundedCornerShape(16.dp),
         color = primaryContainer,
     ) {
-        // Calculate grid dimensions first
-        val gridDimensions = calculateGridDimensions(totalQuantity)
+        val layout = layoutOverride ?: autoLayout(totalQuantity)
+        val cellCount = layout.rows * layout.columns
 
-        // Calculate estimated grid size (using max diameter as estimate)
         val estimatedGridWidth =
-            gridDimensions.columns * maxDiameter + (gridDimensions.columns - 1) * spacing
+            layout.columns * maxDiameter + (layout.columns - 1).coerceAtLeast(0) * spacing
         val estimatedGridHeight =
-            gridDimensions.rows * maxDiameter + (gridDimensions.rows - 1) * spacing
-
-        // Calculate canvas size with equal padding on all sides
+            layout.rows * maxDiameter + (layout.rows - 1).coerceAtLeast(0) * spacing
         val estimatedCanvasWidth = estimatedGridWidth + 2 * minPadding
         val estimatedCanvasHeight = estimatedGridHeight + 2 * minPadding
-
-        // Aspect ratio derived from canvas dimensions (keeps internal padding equal)
-        val dynamicAspectRatio = estimatedCanvasWidth / estimatedCanvasHeight
+        val dynamicAspectRatio =
+            if (estimatedCanvasHeight > 0f) estimatedCanvasWidth / estimatedCanvasHeight else 1f
 
         val bubbleDescription = stringResource(Res.string.stock_preview_bubble, remainingQuantity, totalQuantity)
 
-        // Modifier chain rationale (from a senior Compose review):
-        // 1. widthIn / heightIn cap the Canvas to its natural grid size; on screens larger than
-        //    that the bubble does not artificially inflate.
-        // 2. fillMaxWidth is intentionally absent — locking minWidth=maxWidth would prevent
-        //    aspectRatio from shrinking the width when height is the binding constraint
-        //    (e.g. landscape), which is what produced the wide-with-empty-padding bug.
-        // 3. aspectRatio uses the default matchHeightConstraintsFirst = false so Compose
-        //    automatically picks the binding axis: width-bound on portrait phones, height-bound
-        //    on short landscapes.
-        Canvas(
-            modifier = Modifier
-                .widthIn(max = with(density) { estimatedCanvasWidth.toDp() })
-                .heightIn(max = with(density) { estimatedCanvasHeight.toDp() })
-                .aspectRatio(dynamicAspectRatio)
-                .clearAndSetSemantics {
-                    contentDescription = bubbleDescription
-                },
-        ) {
-            if (totalQuantity <= 0) return@Canvas
+        // Pin the canvas to LTR so bubbleFlowDirection is the sole source of direction logic,
+        // independent of system locale (Arabic/Hebrew would otherwise flip the coordinate axes).
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            // Modifier chain rationale: widthIn/heightIn cap the Canvas at its natural size so the
+            // bubble doesn't inflate on tablets; fillMaxWidth is intentionally absent so aspectRatio
+            // can shrink the width when height is the binding constraint (landscape).
+            Canvas(
+                modifier = Modifier
+                    .widthIn(max = with(density) { estimatedCanvasWidth.toDp() })
+                    .heightIn(max = with(density) { estimatedCanvasHeight.toDp() })
+                    .aspectRatio(dynamicAspectRatio)
+                    .clearAndSetSemantics {
+                        contentDescription = bubbleDescription
+                    },
+            ) {
+                if (totalQuantity <= 0 || cellCount <= 0) return@Canvas
 
-            // Calculate circle diameter using minimum padding
-            val circleDiameter = calculateCircleDiameter(
-                canvasWidth = size.width,
-                canvasHeight = size.height,
-                gridDimensions = gridDimensions,
-                minDiameter = minDiameter,
-                maxDiameter = maxDiameter,
-                spacing = spacing,
-                paddingStart = minPadding,
-                paddingEnd = minPadding,
-                paddingTop = minPadding,
-                paddingBottom = minPadding,
-            )
-
-            // Calculate total grid size
-            val totalGridWidth =
-                gridDimensions.columns * circleDiameter + (gridDimensions.columns - 1) * spacing
-            val totalGridHeight =
-                gridDimensions.rows * circleDiameter + (gridDimensions.rows - 1) * spacing
-
-            // Calculate dynamic padding to ensure equal spacing on all sides
-            val dynamicPaddingX = ((size.width - totalGridWidth) / 2).coerceAtLeast(minPadding)
-            val dynamicPaddingY = ((size.height - totalGridHeight) / 2).coerceAtLeast(minPadding)
-
-            // Estimated mode: precompute gradient band (same logic as FillStockPreview)
-            val gradientBottom: Int
-            val gradientTop: Int
-            val maxOpacityLevels = 4
-            if (isEstimated) {
-                val gradientFraction =
-                    (0.5f - (totalQuantity - 8f) / 80f).coerceIn(0.25f, 0.5f)
-                val gradientDoses =
-                    (totalQuantity * gradientFraction).toInt().coerceAtLeast(2)
-                gradientBottom = (remainingQuantity - gradientDoses / 2).coerceAtLeast(0)
-                gradientTop = (gradientBottom + gradientDoses).coerceAtMost(totalQuantity)
-            } else {
-                gradientBottom = 0
-                gradientTop = 0
-            }
-
-            // Draw each pill as a circle
-            for (index in 0 until totalQuantity) {
-                val row = index / gridDimensions.columns
-                val col = index % gridDimensions.columns
-
-                // Calculate pills in this row to center incomplete rows
-                val pillsInRow = min(gridDimensions.columns, totalQuantity - row * gridDimensions.columns)
-                val isIncompleteRow = pillsInRow < gridDimensions.columns
-
-                // Calculate offset to center incomplete rows
-                val rowOffset = if (isIncompleteRow) {
-                    ((gridDimensions.columns - pillsInRow) * (circleDiameter + spacing)) / 2
-                } else {
-                    0f
-                }
-
-                val centerX =
-                    dynamicPaddingX + rowOffset + col * (circleDiameter + spacing) + circleDiameter / 2
-                val centerY = dynamicPaddingY + row * (circleDiameter + spacing) + circleDiameter / 2
-
-                // Draw pouch (larger filled circle)
-                drawCircle(
-                    color = surfaceContainerColor,
-                    radius = circleDiameter / 2,
-                    center = Offset(centerX, centerY),
+                val circleDiameter = calculateCircleDiameter(
+                    canvasWidth = size.width,
+                    canvasHeight = size.height,
+                    rows = layout.rows,
+                    columns = layout.columns,
+                    minDiameter = minDiameter,
+                    maxDiameter = maxDiameter,
+                    spacing = spacing,
+                    padding = minPadding,
                 )
 
-                // Determine pill visibility
-                // fillIndex: 0 = bottom-right (first filled), totalQuantity-1 = top-left (last filled)
-                val fillIndex = totalQuantity - 1 - index
-                val pillAlpha: Float
+                val totalGridWidth =
+                    layout.columns * circleDiameter + (layout.columns - 1).coerceAtLeast(0) * spacing
+                val totalGridHeight =
+                    layout.rows * circleDiameter + (layout.rows - 1).coerceAtLeast(0) * spacing
+                val dynamicPaddingX = ((size.width - totalGridWidth) / 2).coerceAtLeast(minPadding)
+                val dynamicPaddingY = ((size.height - totalGridHeight) / 2).coerceAtLeast(minPadding)
 
+                val spacerSet = layout.spacerIndices.toSet()
+                val pillCellsInTakingOrder = buildPillTakingOrder(layout, flowDirection, spacerSet)
+                val takenCount = (totalQuantity - remainingQuantity).coerceIn(0, totalQuantity)
+
+                val gradientBottom: Int
+                val gradientTop: Int
+                val maxOpacityLevels = 4
                 if (isEstimated) {
-                    pillAlpha = when {
-                        fillIndex < gradientBottom -> 1.0f // Definitely present
-                        fillIndex >= gradientTop -> 0f // Definitely gone
-                        else -> {
-                            // Gradient zone: stepped opacity bands
-                            val gradientSize = gradientTop - gradientBottom
-                            val t = (fillIndex - gradientBottom).toFloat() / gradientSize
-                            val level = ((1f - t) * maxOpacityLevels).toInt()
-                                .coerceIn(0, maxOpacityLevels - 1)
-                            (level + 1).toFloat() / maxOpacityLevels
-                        }
-                    }
+                    val gradientFraction =
+                        (0.5f - (totalQuantity - 8f) / 80f).coerceIn(0.25f, 0.5f)
+                    val gradientDoses =
+                        (totalQuantity * gradientFraction).toInt().coerceAtLeast(2)
+                    gradientBottom = (takenCount - gradientDoses / 2).coerceAtLeast(0)
+                    gradientTop = (gradientBottom + gradientDoses).coerceAtMost(totalQuantity)
                 } else {
-                    pillAlpha = if (index < remainingQuantity) 1.0f else 0f
+                    gradientBottom = 0
+                    gradientTop = 0
                 }
 
-                // Draw pill (smaller filled circle) when present
-                if (pillAlpha > 0f) {
+                for (cellIdx in 0 until cellCount) {
+                    val row = cellIdx / layout.columns
+                    val col = cellIdx % layout.columns
+                    val centerX = dynamicPaddingX + col * (circleDiameter + spacing) + circleDiameter / 2
+                    val centerY = dynamicPaddingY + row * (circleDiameter + spacing) + circleDiameter / 2
+                    val center = Offset(centerX, centerY)
+
+                    // Spacer cells render nothing in the read-only preview — the gap itself reads as
+                    // "deliberately blank" without an outline cluttering the final layout. The editor
+                    // grid still draws a dashed outline so users can see and drag the empty slots.
+                    if (cellIdx in spacerSet) continue
+
+                    // Pouch (filled background circle) — always drawn for pill cells.
                     drawCircle(
-                        color = primaryColor,
-                        radius = circleDiameter * 0.35f,
-                        center = Offset(centerX, centerY),
-                        alpha = pillAlpha,
+                        color = surfaceContainerColor,
+                        radius = circleDiameter / 2,
+                        center = center,
                     )
+
+                    val ordinal = pillCellsInTakingOrder[cellIdx]
+                    val pillAlpha: Float = if (isEstimated) {
+                        when {
+                            ordinal < gradientBottom -> 0f // Definitely taken
+                            ordinal >= gradientTop -> 1f // Definitely present
+                            else -> {
+                                val gradientSize = (gradientTop - gradientBottom).coerceAtLeast(1)
+                                val t = (ordinal - gradientBottom).toFloat() / gradientSize
+                                val level = (t * maxOpacityLevels).toInt()
+                                    .coerceIn(0, maxOpacityLevels - 1)
+                                (level + 1).toFloat() / maxOpacityLevels
+                            }
+                        }
+                    } else {
+                        if (ordinal >= takenCount) 1f else 0f
+                    }
+
+                    if (pillAlpha > 0f) {
+                        drawCircle(
+                            color = primaryColor,
+                            radius = circleDiameter * 0.35f,
+                            center = center,
+                            alpha = pillAlpha,
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+/**
+ * Per-cell ordinal in the consumption sequence — the Nth-to-be-taken pill has ordinal N. Spacers
+ * get a sentinel (-1) but they're never read because the renderer skips them.
+ *
+ * Both flow directions start at the bottom-right cell (that's the universal first pill taken in a
+ * blister); they differ only in which neighbour is taken second.
+ */
+private fun buildPillTakingOrder(
+    layout: GridLayout,
+    flowDirection: BubbleFlowDirection,
+    spacerSet: Set<Int>,
+): IntArray {
+    val cellCount = layout.rows * layout.columns
+    val ordinals = IntArray(cellCount) { -1 }
+    val cellsInFlow: Sequence<Int> = when (flowDirection) {
+        // Column sweep: bottom→top inside a column, then jump one column to the left.
+        BubbleFlowDirection.LTR_TOP_BOTTOM -> sequence {
+            for (c in (layout.columns - 1) downTo 0) {
+                for (r in (layout.rows - 1) downTo 0) {
+                    yield(r * layout.columns + c)
+                }
+            }
+        }
+        // Row sweep: right→left inside a row, then jump one row up.
+        BubbleFlowDirection.RTL_BOTTOM_TOP -> sequence {
+            for (r in (layout.rows - 1) downTo 0) {
+                for (c in (layout.columns - 1) downTo 0) {
+                    yield(r * layout.columns + c)
+                }
+            }
+        }
+    }
+    var ordinal = 0
+    for (cellIdx in cellsInFlow) {
+        if (cellIdx in spacerSet) continue
+        ordinals[cellIdx] = ordinal++
+    }
+    return ordinals
+}
+
+/**
+ * Optimal pill diameter for the available canvas — divides the usable space (canvas minus padding)
+ * across the grid, then clamps to [minDiameter]..[maxDiameter]. The min clamp keeps very dense grids
+ * legible on small screens; the max clamp prevents sparse grids from looking like balloons on tablets.
+ */
+fun calculateCircleDiameter(
+    canvasWidth: Float,
+    canvasHeight: Float,
+    rows: Int,
+    columns: Int,
+    minDiameter: Float,
+    maxDiameter: Float,
+    spacing: Float,
+    padding: Float,
+): Float {
+    if (columns == 0 || rows == 0) return minDiameter
+    val availableWidth = canvasWidth - 2 * padding
+    val availableHeight = canvasHeight - 2 * padding
+    val horizontalSpace = availableWidth / columns
+    val verticalSpace = availableHeight / rows
+    val maxFit = min(horizontalSpace, verticalSpace) - spacing
+    return maxFit.coerceIn(minDiameter, maxDiameter)
 }
 
 @Composable
@@ -344,5 +373,23 @@ private fun BubblePreview_25Pills_5Remaining() {
     BubbleStockPreview(
         totalQuantity = 25,
         remainingQuantity = 5,
+    )
+}
+
+@Composable
+private fun BubblePreview_ManualLayout() {
+    BubbleStockPreview(
+        totalQuantity = 10,
+        remainingQuantity = 7,
+        layoutOverride = GridLayout(rows = 3, columns = 4, spacerIndices = listOf(5, 6)),
+    )
+}
+
+@Composable
+private fun BubblePreview_RtlBottomTop() {
+    BubbleStockPreview(
+        totalQuantity = 10,
+        remainingQuantity = 5,
+        flowDirection = BubbleFlowDirection.RTL_BOTTOM_TOP,
     )
 }

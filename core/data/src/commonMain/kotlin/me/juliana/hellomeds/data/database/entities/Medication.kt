@@ -3,11 +3,13 @@
 
 package me.juliana.hellomeds.data.database.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.datetime.LocalDate
+import me.juliana.hellomeds.data.model.enums.BubbleFlowDirection
 import me.juliana.hellomeds.data.model.enums.CycleType
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
 import me.juliana.hellomeds.data.model.enums.MedicationStrengthUnit
@@ -67,4 +69,11 @@ data class Medication(
     val anchorTimeZone: String? = null, // IANA timezone ID for FIXED mode (e.g., "America/New_York")
     // Custom sorting
     val displayOrder: Int = 0, // Custom display order for user-defined sorting
+    // Bubble preview layout (only meaningful for bubble-rendered containers: BLISTER_PACK, PACKAGE, BOTTLE).
+    // null ⇒ auto. Non-null format: "{cols},{spacerIdx1},{spacerIdx2},..." — cols + zero-or-more spacer indices.
+    // Decoded via BubbleLayoutCodec; renderer falls back to auto on any invariant violation.
+    val bubbleManualLayout: String? = null,
+    // SQL default lets the v4→v5 migration backfill existing rows without an explicit per-row UPDATE.
+    @ColumnInfo(defaultValue = "LTR_TOP_BOTTOM")
+    val bubbleFlowDirection: BubbleFlowDirection = BubbleFlowDirection.LTR_TOP_BOTTOM,
 )

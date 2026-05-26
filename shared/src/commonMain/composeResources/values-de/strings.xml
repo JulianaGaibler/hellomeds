@@ -890,6 +890,11 @@
 	<string name="stock_update_sealed_title">Behälter aktualisieren</string>
 	<string name="stock_update_sealed_label">Versiegelte Behälter</string>
 
+	<string name="stock_new_total_single">Neuer Gesamtbestand: %1$s %2$s</string>
+	<string name="stock_new_total_compound">Neuer Gesamtbestand: %1$s %2$s und %3$s %4$s</string>
+	<string name="stock_current_total_single">Du hast insgesamt %1$s %2$s</string>
+	<string name="stock_current_total_compound">Du hast insgesamt %1$s %2$s und %3$s %4$s</string>
+
 	<string name="stock_action_container_depleted">Behälter als aufgebraucht markieren</string>
 	<string name="stock_container_generic">Behälter</string>
 
@@ -1129,4 +1134,19 @@
 
 	<!-- Overdue -->
 	<string name="tracking_overdue_section_title">Überfällig</string>
+
+	<!-- Bubble layout customization -->
+	<string name="stock_layout_setting_title">Anordnung</string>
+	<string name="stock_layout_editor_title">Bubble-Anordnung</string>
+	<string name="stock_layout_mode_auto">Automatisch</string>
+	<string name="stock_layout_mode_manual">Manuell</string>
+	<string name="stock_layout_columns">Spalten</string>
+	<string name="stock_layout_flow_direction">Reihenfolge der Einnahme</string>
+	<string name="stock_layout_flow_ltr_top">Spaltenweise</string>
+	<string name="stock_layout_flow_rtl_bottom">Reihenweise</string>
+	<string name="stock_layout_drag_hint">Halte eine Bubble gedrückt und ziehe sie auf eine andere, um zu tauschen.</string>
+	<string name="stock_layout_summary_auto">Automatisch</string>
+	<string name="stock_layout_summary_manual">Manuell — %1$d Spalten</string>
+	<string name="stock_layout_column_decrease">Spalten verringern</string>
+	<string name="stock_layout_column_increase">Spalten erhöhen</string>
 </resources>

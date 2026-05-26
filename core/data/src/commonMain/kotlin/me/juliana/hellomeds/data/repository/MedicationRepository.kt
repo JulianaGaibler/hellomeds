@@ -9,6 +9,7 @@ import me.juliana.hellomeds.data.dao.MedicationDao
 import me.juliana.hellomeds.data.dao.ScheduleDao
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.interfaces.ScheduleReconciler
+import me.juliana.hellomeds.data.model.enums.BubbleFlowDirection
 import me.juliana.hellomeds.data.util.TransactionRunner
 
 class MedicationRepository(
@@ -108,5 +109,9 @@ class MedicationRepository(
                 medicationDao.updateDisplayOrder(medication.id, index)
             }
         }
+    }
+
+    suspend fun updateBubbleLayout(medicationId: Int, manualLayout: String?, flow: BubbleFlowDirection) {
+        medicationDao.updateBubbleLayout(medicationId, manualLayout, flow)
     }
 }

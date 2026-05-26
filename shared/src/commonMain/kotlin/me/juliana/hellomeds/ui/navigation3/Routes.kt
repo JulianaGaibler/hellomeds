@@ -47,6 +47,9 @@ data class StockTrackingDetailRoute(val medicationId: Int) : ModalFlowNavKey
 data class StockTrackingSettingsRoute(val medicationId: Int) : ModalFlowNavKey
 
 @Serializable
+data class StockTrackingLayoutRoute(val medicationId: Int) : ModalFlowNavKey
+
+@Serializable
 data class AddStockTrackingFlowRoute(val medicationId: Int) : ModalFlowNavKey
 
 @Serializable

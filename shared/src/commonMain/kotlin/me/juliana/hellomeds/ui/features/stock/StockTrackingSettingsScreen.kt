@@ -32,6 +32,11 @@ import androidx.compose.ui.unit.dp
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
 import me.juliana.hellomeds.data.model.enums.TrackingPrecision
+import me.juliana.hellomeds.shared.stock_layout_setting_title
+import me.juliana.hellomeds.shared.stock_layout_summary_auto
+import me.juliana.hellomeds.shared.stock_layout_summary_manual
+import me.juliana.hellomeds.ui.components.stock.preview.BUBBLE_CONTAINERS
+import me.juliana.hellomeds.ui.components.stock.preview.BubbleLayoutCodec
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_back
 import me.juliana.hellomeds.shared.calculate_24px
@@ -78,6 +83,7 @@ fun StockTrackingSettingsScreen(
     onUpdateDepletionReminderEnabled: (Boolean) -> Unit,
     onDeleteTracking: () -> Unit,
     onAdjustStockLevel: () -> Unit = {},
+    onNavigateToLayoutEditor: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val isEstimated = medication.trackingPrecision == TrackingPrecision.ESTIMATED
@@ -310,6 +316,18 @@ fun StockTrackingSettingsScreen(
                                     supportingText = stringResource(Res.string.stock_settings_depletion_reminder_desc),
                                 )
                             },
+                            // Bubble layout editor — only for containers that use the bubble preview
+                            // and only when packaging quantity is configured (the layout is a function of qty).
+                            SmartListItemConfig(
+                                visible = medication.medicationContainer in BUBBLE_CONTAINERS && packagingEnabled,
+                            ) { shapes, visible ->
+                                LayoutRow(
+                                    medication = medication,
+                                    shapes = shapes,
+                                    visible = visible,
+                                    onClick = onNavigateToLayoutEditor,
+                                )
+                            },
                         ),
                     )
                 }
@@ -335,6 +353,17 @@ fun StockTrackingSettingsScreen(
                                     shapes = shapes,
                                     visible = visible,
                                     inputTransformation = DecimalInputTransformation(),
+                                )
+                            },
+                            SmartListItemConfig(
+                                visible = medication.medicationContainer in BUBBLE_CONTAINERS &&
+                                    medication.packagingQuantity != null,
+                            ) { shapes, visible ->
+                                LayoutRow(
+                                    medication = medication,
+                                    shapes = shapes,
+                                    visible = visible,
+                                    onClick = onNavigateToLayoutEditor,
                                 )
                             },
                         ),
@@ -382,4 +411,28 @@ fun StockTrackingSettingsScreen(
             },
         )
     }
+}
+
+@Composable
+private fun LayoutRow(
+    medication: Medication,
+    shapes: me.juliana.hellomeds.ui.compat.ListItemShapes,
+    visible: Boolean,
+    onClick: () -> Unit,
+) {
+    val manualColumns = medication.bubbleManualLayout
+        ?.let { BubbleLayoutCodec.decode(it) }
+        ?.columns
+    val supporting = if (manualColumns != null) {
+        stringResource(Res.string.stock_layout_summary_manual, manualColumns)
+    } else {
+        stringResource(Res.string.stock_layout_summary_auto)
+    }
+    SmartListItem(
+        headlineContent = { Text(stringResource(Res.string.stock_layout_setting_title)) },
+        supportingContent = { Text(supporting) },
+        shapes = shapes,
+        visible = visible,
+        onClick = onClick,
+    )
 }

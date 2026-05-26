@@ -34,6 +34,7 @@ import me.juliana.hellomeds.ui.features.schedule.ScheduleScreen
 import me.juliana.hellomeds.ui.features.settings.EditLabelScreen
 import me.juliana.hellomeds.ui.features.stock.AddStockTrackingFlowScreen
 import me.juliana.hellomeds.ui.features.stock.AdjustStockLevelBottomSheet
+import me.juliana.hellomeds.ui.features.stock.BubbleLayoutEditorScreen
 import me.juliana.hellomeds.ui.features.stock.StockTrackingDetailScreen
 import me.juliana.hellomeds.ui.features.stock.StockTrackingSettingsScreen
 import me.juliana.hellomeds.ui.util.canCriticalChannelBypassDnd
@@ -444,9 +445,13 @@ fun StockTrackingDetailScreenEntry(
         // Top Up bottom sheet
         if (showTopUpSheet) {
             me.juliana.hellomeds.ui.features.stock.TopUpBottomSheet(
+                medication = med,
+                currentTotal = stockStatus?.totalQuantity ?: 0.0,
+                packagingQuantity = med.packagingQuantity,
+                container = med.medicationContainer,
                 onDismiss = { showTopUpSheet = false },
                 onSubmit = { quantity ->
-                    stockTrackingViewModel.recordRefill(medicationId, quantity.toDouble())
+                    stockTrackingViewModel.recordRefill(medicationId, quantity)
                 },
             )
         }
@@ -463,10 +468,13 @@ fun StockTrackingDetailScreenEntry(
                 )
             } else {
                 me.juliana.hellomeds.ui.features.stock.UpdateStockBottomSheet(
-                    currentTotal = stockStatus?.totalQuantity?.toInt(),
+                    medication = med,
+                    currentTotal = stockStatus?.totalQuantity,
+                    packagingQuantity = med.packagingQuantity,
+                    container = med.medicationContainer,
                     onDismiss = { showUpdateSheet = false },
                     onSubmit = { newTotal ->
-                        stockTrackingViewModel.recordCorrection(medicationId, newTotal.toDouble())
+                        stockTrackingViewModel.recordCorrection(medicationId, newTotal)
                     },
                 )
             }
@@ -508,7 +516,11 @@ fun AddStockTrackingFlowScreenEntry(medicationId: Int, onClose: () -> Unit) {
  * Configure tracking parameters for a medication.
  */
 @Composable
-fun StockTrackingSettingsScreenEntry(medicationId: Int, onNavigateBack: () -> Unit) {
+fun StockTrackingSettingsScreenEntry(
+    medicationId: Int,
+    onNavigateBack: () -> Unit,
+    onNavigateToLayoutEditor: (Int) -> Unit = {},
+) {
     val medicationViewModel: MedicationViewModel = koinViewModel()
     val stockTrackingViewModel: StockTrackingViewModel = koinViewModel()
 
@@ -554,6 +566,7 @@ fun StockTrackingSettingsScreenEntry(medicationId: Int, onNavigateBack: () -> Un
                 stockTrackingViewModel.updateDepletionReminderEnabled(medicationId, enabled)
             },
             onAdjustStockLevel = { showAdjustSheet = true },
+            onNavigateToLayoutEditor = { onNavigateToLayoutEditor(medicationId) },
             onDeleteTracking = {
                 val updated = med.copy(
                     stockTrackingEnabled = false,
@@ -595,5 +608,38 @@ fun StockTrackingSettingsScreenEntry(medicationId: Int, onNavigateBack: () -> Un
                 )
             }
         }
+    }
+}
+
+/**
+ * Entry point for the Bubble Layout Editor sub-screen. Lets users customize the bubble preview's
+ * column count and place spacer slots, or pick auto layout.
+ */
+@Composable
+fun StockTrackingLayoutScreenEntry(medicationId: Int, onNavigateBack: () -> Unit) {
+    val medicationViewModel: MedicationViewModel = koinViewModel()
+    val stockTrackingViewModel: StockTrackingViewModel = koinViewModel()
+
+    val medication by medicationViewModel.getMedicationById(medicationId)
+        .collectAsStateWithLifecycle(initial = null)
+
+    var hasLoaded by remember { mutableStateOf(false) }
+    LaunchedEffect(medication) {
+        if (medication != null) {
+            hasLoaded = true
+        } else if (hasLoaded) {
+            onNavigateBack()
+        }
+    }
+
+    medication?.let { med ->
+        BubbleLayoutEditorScreen(
+            medication = med,
+            onNavigateBack = onNavigateBack,
+            onUpdateLayout = { manualLayout, flow ->
+                stockTrackingViewModel.updateBubbleLayout(medicationId, manualLayout, flow)
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
     }
 }

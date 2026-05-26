@@ -6,6 +6,7 @@ package me.juliana.hellomeds.data.database
 import androidx.room.TypeConverter
 import kotlinx.datetime.LocalDate
 import me.juliana.hellomeds.data.model.SessionType
+import me.juliana.hellomeds.data.model.enums.BubbleFlowDirection
 import me.juliana.hellomeds.data.model.enums.CycleType
 import me.juliana.hellomeds.data.model.enums.FrequencyType
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
@@ -140,5 +141,19 @@ class Converters {
     @TypeConverter
     fun toLocalDate(value: String?): LocalDate? {
         return value?.let { LocalDate.parse(it) }
+    }
+
+    @TypeConverter
+    fun fromBubbleFlowDirection(value: BubbleFlowDirection): String {
+        return value.name
+    }
+
+    @TypeConverter
+    fun toBubbleFlowDirection(value: String): BubbleFlowDirection {
+        return try {
+            BubbleFlowDirection.valueOf(value)
+        } catch (e: IllegalArgumentException) {
+            BubbleFlowDirection.LTR_TOP_BOTTOM
+        }
     }
 }

@@ -930,6 +930,17 @@
     <string name="stock_update_sealed_title">Update Containers</string>
     <string name="stock_update_sealed_label">Sealed containers</string>
 
+    <!-- Stock total summaries (used by the Add Stock Tracking wizard, the Update
+         Stock sheet, and the Top Up sheet).
+         %1$s and %3$s are formatted counts (locale-aware decimal allowed).
+         %2$s and %4$s are pluralized nouns (e.g. "capsules", "blister packs").
+         "single" = one count+noun pair. "compound" = full containers + partial
+         doses (largest unit first). -->
+    <string name="stock_new_total_single">New total will be %1$s %2$s</string>
+    <string name="stock_new_total_compound">New total will be %1$s %2$s and %3$s %4$s</string>
+    <string name="stock_current_total_single">You have %1$s %2$s in total</string>
+    <string name="stock_current_total_compound">You have %1$s %2$s and %3$s %4$s in total</string>
+
     <string name="stock_action_container_depleted">Mark container as depleted</string>
     <string name="stock_container_generic">container</string>
 
@@ -1172,6 +1183,21 @@
     <!-- Overdue -->
     <string name="tracking_overdue_section_title">Overdue</string>
     <string name="tracking_section_missed">Missed</string>
+
+    <!-- Bubble layout customization -->
+    <string name="stock_layout_setting_title">Layout</string>
+    <string name="stock_layout_editor_title">Bubble layout</string>
+    <string name="stock_layout_mode_auto">Automatic</string>
+    <string name="stock_layout_mode_manual">Manual</string>
+    <string name="stock_layout_columns">Columns</string>
+    <string name="stock_layout_flow_direction">Pill order</string>
+    <string name="stock_layout_flow_ltr_top">Column by column</string>
+    <string name="stock_layout_flow_rtl_bottom">Row by row</string>
+    <string name="stock_layout_drag_hint">Long-press a bubble and drag it to swap with another.</string>
+    <string name="stock_layout_summary_auto">Automatic</string>
+    <string name="stock_layout_summary_manual">Manual — %1$d columns</string>
+    <string name="stock_layout_column_decrease">Decrease columns</string>
+    <string name="stock_layout_column_increase">Increase columns</string>
 
     <!-- Reliability banner -->
     <string name="reliability_banner_exact_alarms_message">Reminders may be delayed.</string>

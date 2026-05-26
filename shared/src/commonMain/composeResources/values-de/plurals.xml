@@ -288,6 +288,57 @@
 		<item quantity="other">Behälter</item>
 	</plurals>
 
+	<!-- Container Inline Plurals (mid-sentence use, no embedded count).
+	     In German these stay capitalized (Substantive werden grossgeschrieben). -->
+	<plurals name="container_inline_package">
+		<item quantity="one">Packung</item>
+		<item quantity="other">Packungen</item>
+	</plurals>
+	<plurals name="container_inline_bottle">
+		<item quantity="one">Flasche</item>
+		<item quantity="other">Flaschen</item>
+	</plurals>
+	<plurals name="container_inline_dispenser">
+		<item quantity="one">Spender</item>
+		<item quantity="other">Spender</item>
+	</plurals>
+	<plurals name="container_inline_blister_pack">
+		<item quantity="one">Blisterpackung</item>
+		<item quantity="other">Blisterpackungen</item>
+	</plurals>
+	<plurals name="container_inline_tube">
+		<item quantity="one">Tube</item>
+		<item quantity="other">Tuben</item>
+	</plurals>
+	<plurals name="container_inline_vial">
+		<item quantity="one">Fläschchen</item>
+		<item quantity="other">Fläschchen</item>
+	</plurals>
+	<plurals name="container_inline_inhaler">
+		<item quantity="one">Inhalator</item>
+		<item quantity="other">Inhalatoren</item>
+	</plurals>
+	<plurals name="container_inline_pen">
+		<item quantity="one">Pen</item>
+		<item quantity="other">Pens</item>
+	</plurals>
+	<plurals name="container_inline_ampoule">
+		<item quantity="one">Ampulle</item>
+		<item quantity="other">Ampullen</item>
+	</plurals>
+	<plurals name="container_inline_canister">
+		<item quantity="one">Dose</item>
+		<item quantity="other">Dosen</item>
+	</plurals>
+	<plurals name="container_inline_jar">
+		<item quantity="one">Behälter</item>
+		<item quantity="other">Behälter</item>
+	</plurals>
+	<plurals name="container_inline_generic">
+		<item quantity="one">Behälter</item>
+		<item quantity="other">Behälter</item>
+	</plurals>
+
 	<!-- Stock Display: Days/Weeks/Months Remaining -->
 	<plurals name="stock_days_remaining">
 		<item quantity="one">~%1$d Tag</item>

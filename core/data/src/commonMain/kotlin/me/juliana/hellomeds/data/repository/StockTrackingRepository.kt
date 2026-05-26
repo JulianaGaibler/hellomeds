@@ -17,6 +17,7 @@ import me.juliana.hellomeds.data.interfaces.LowStockChecker
 import me.juliana.hellomeds.data.interfaces.StockContainerAnchor
 import me.juliana.hellomeds.data.model.StockRationale
 import me.juliana.hellomeds.data.model.StockStatus
+import me.juliana.hellomeds.data.model.enums.BubbleFlowDirection
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
 import me.juliana.hellomeds.data.model.enums.StockAdjustmentType
 import me.juliana.hellomeds.data.model.enums.TrackingPrecision
@@ -454,16 +455,34 @@ class StockTrackingRepository(
     suspend fun updateContainerType(medicationId: Int, container: MedicationContainer?) {
         val medication = medicationDao.getById(medicationId).first()
             ?: return
-        val updated = medication.copy(medicationContainer = container)
+        // Container leaving the bubble set makes any stored manual layout meaningless.
+        // BUBBLE_CONTAINERS lives in the UI module so we hardcode the set here to avoid the dep.
+        val isBubble = container == MedicationContainer.BLISTER_PACK ||
+            container == MedicationContainer.PACKAGE ||
+            container == MedicationContainer.BOTTLE
+        val updated = medication.copy(
+            medicationContainer = container,
+            bubbleManualLayout = if (isBubble) medication.bubbleManualLayout else null,
+        )
         medicationDao.update(updated)
     }
 
     suspend fun updatePackagingQuantity(medicationId: Int, newQuantity: Double?) {
         val medication = medicationDao.getById(medicationId).first()
             ?: return
-        val updated = medication.copy(packagingQuantity = newQuantity)
+        // Spacer positions are validated against a specific qty — any qty change invalidates them.
+        // Reset to auto rather than risk a stale-snap-back if the user later restores the old qty.
+        val clearLayout = newQuantity != medication.packagingQuantity
+        val updated = medication.copy(
+            packagingQuantity = newQuantity,
+            bubbleManualLayout = if (clearLayout) null else medication.bubbleManualLayout,
+        )
         medicationDao.update(updated)
         updateCachedStock(medicationId)
+    }
+
+    suspend fun updateBubbleLayout(medicationId: Int, manualLayout: String?, flow: BubbleFlowDirection) {
+        medicationDao.updateBubbleLayout(medicationId, manualLayout, flow)
     }
 
     suspend fun updateDepletionReminderEnabled(medicationId: Int, enabled: Boolean) {

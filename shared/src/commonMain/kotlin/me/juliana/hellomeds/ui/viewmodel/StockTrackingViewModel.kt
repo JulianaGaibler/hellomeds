@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.model.StockStatus
+import me.juliana.hellomeds.data.model.enums.BubbleFlowDirection
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
 import me.juliana.hellomeds.data.repository.StockTrackingRepository
 import me.juliana.hellomeds.ui.components.graph.models.StockLine
@@ -212,6 +213,10 @@ class StockTrackingViewModel(
 
     fun getDailyConsumptionFlow(medicationId: Int): Flow<Double> {
         return repository.getDailyConsumptionFlow(medicationId)
+    }
+
+    fun updateBubbleLayout(medicationId: Int, manualLayout: String?, flow: BubbleFlowDirection) {
+        viewModelScope.launch { repository.updateBubbleLayout(medicationId, manualLayout, flow) }
     }
 }
 

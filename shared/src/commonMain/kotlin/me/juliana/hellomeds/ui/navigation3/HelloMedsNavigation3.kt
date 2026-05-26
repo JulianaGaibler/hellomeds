@@ -59,6 +59,7 @@ import me.juliana.hellomeds.ui.navigation3.entries.EditScheduleScreenEntry
 import me.juliana.hellomeds.ui.navigation3.entries.ImportanceLabelsScreenEntry
 import me.juliana.hellomeds.ui.navigation3.entries.MedicationDetailScreenEntry
 import me.juliana.hellomeds.ui.navigation3.entries.StockTrackingDetailScreenEntry
+import me.juliana.hellomeds.ui.navigation3.entries.StockTrackingLayoutScreenEntry
 import me.juliana.hellomeds.ui.navigation3.entries.StockTrackingSettingsScreenEntry
 import me.juliana.hellomeds.ui.util.IncomingBackupHandler
 import me.juliana.hellomeds.ui.util.PendingImport
@@ -409,6 +410,18 @@ fun HelloMedsNavigation3(
         entry<StockTrackingSettingsRoute> { key ->
             OverlayScreenWrapper {
                 StockTrackingSettingsScreenEntry(
+                    medicationId = key.medicationId,
+                    onNavigateBack = { navigator.closeOverlay() },
+                    onNavigateToLayoutEditor = { medicationId ->
+                        navigator.openOverlay(StockTrackingLayoutRoute(medicationId))
+                    },
+                )
+            }
+        }
+
+        entry<StockTrackingLayoutRoute> { key ->
+            OverlayScreenWrapper {
+                StockTrackingLayoutScreenEntry(
                     medicationId = key.medicationId,
                     onNavigateBack = { navigator.closeOverlay() },
                 )

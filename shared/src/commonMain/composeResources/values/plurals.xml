@@ -288,6 +288,59 @@
         <item quantity="other">Jars</item>
     </plurals>
 
+    <!-- Container Inline Plurals (mid-sentence use, no embedded count).
+         Lowercase in en; capitalized in de (German nouns are always capitalized).
+         Use these when the noun appears inside a flowing sentence such as
+         "New total will be 3 blister packs and 5 capsules". -->
+    <plurals name="container_inline_package">
+        <item quantity="one">package</item>
+        <item quantity="other">packages</item>
+    </plurals>
+    <plurals name="container_inline_bottle">
+        <item quantity="one">bottle</item>
+        <item quantity="other">bottles</item>
+    </plurals>
+    <plurals name="container_inline_dispenser">
+        <item quantity="one">dispenser</item>
+        <item quantity="other">dispensers</item>
+    </plurals>
+    <plurals name="container_inline_blister_pack">
+        <item quantity="one">blister pack</item>
+        <item quantity="other">blister packs</item>
+    </plurals>
+    <plurals name="container_inline_tube">
+        <item quantity="one">tube</item>
+        <item quantity="other">tubes</item>
+    </plurals>
+    <plurals name="container_inline_vial">
+        <item quantity="one">vial</item>
+        <item quantity="other">vials</item>
+    </plurals>
+    <plurals name="container_inline_inhaler">
+        <item quantity="one">inhaler</item>
+        <item quantity="other">inhalers</item>
+    </plurals>
+    <plurals name="container_inline_pen">
+        <item quantity="one">pen</item>
+        <item quantity="other">pens</item>
+    </plurals>
+    <plurals name="container_inline_ampoule">
+        <item quantity="one">ampoule</item>
+        <item quantity="other">ampoules</item>
+    </plurals>
+    <plurals name="container_inline_canister">
+        <item quantity="one">canister</item>
+        <item quantity="other">canisters</item>
+    </plurals>
+    <plurals name="container_inline_jar">
+        <item quantity="one">jar</item>
+        <item quantity="other">jars</item>
+    </plurals>
+    <plurals name="container_inline_generic">
+        <item quantity="one">container</item>
+        <item quantity="other">containers</item>
+    </plurals>
+
     <!-- Stock Display: Days/Weeks/Months Remaining -->
     <plurals name="stock_days_remaining">
         <item quantity="one">~%1$d day</item>
