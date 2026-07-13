@@ -20,10 +20,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.accessibility_collapsed
 import me.juliana.hellomeds.shared.accessibility_expanded
@@ -71,10 +73,12 @@ actual fun SplitMenuButton(
             onClick = { onExpandedChange(!expanded) },
             shape = trailingShape,
             colors = iconColors,
-            modifier = Modifier.semantics {
-                stateDescription = if (expanded) expandedLabel else collapsedLabel
-                contentDescription = menuLabel
-            },
+            modifier = Modifier
+                .testTag(ScreenshotTestTags.OVERFLOW_MENU_BUTTON)
+                .semantics {
+                    stateDescription = if (expanded) expandedLabel else collapsedLabel
+                    contentDescription = menuLabel
+                },
         ) {
             val rotation by animateFloatAsState(
                 targetValue = if (expanded) 180f else 0f,

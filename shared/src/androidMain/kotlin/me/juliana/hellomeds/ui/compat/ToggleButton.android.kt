@@ -3,9 +3,13 @@
 
 package me.juliana.hellomeds.ui.compat
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.ToggleButton as M3ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults as M3ToggleButtonDefaults
 
 /**
  * On Android, delegates to the real M3 Expressive [ToggleButton].
@@ -18,43 +22,17 @@ actual fun ToggleButton(
     enabled: Boolean,
     shapes: ButtonShapes?,
     colors: ToggleButtonColors?,
+    contentPadding: PaddingValues?,
     content: @Composable RowScope.() -> Unit,
 ) {
-    if (shapes != null && colors != null) {
-        androidx.compose.material3.ToggleButton(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            modifier = modifier,
-            enabled = enabled,
-            shapes = shapes,
-            colors = colors,
-            content = content,
-        )
-    } else if (shapes != null) {
-        androidx.compose.material3.ToggleButton(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            modifier = modifier,
-            enabled = enabled,
-            shapes = shapes,
-            content = content,
-        )
-    } else if (colors != null) {
-        androidx.compose.material3.ToggleButton(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            modifier = modifier,
-            enabled = enabled,
-            colors = colors,
-            content = content,
-        )
-    } else {
-        androidx.compose.material3.ToggleButton(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            modifier = modifier,
-            enabled = enabled,
-            content = content,
-        )
-    }
+    M3ToggleButton(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier,
+        enabled = enabled,
+        shapes = shapes ?: M3ToggleButtonDefaults.shapes(),
+        colors = colors ?: M3ToggleButtonDefaults.toggleButtonColors(),
+        contentPadding = contentPadding ?: ButtonDefaults.ContentPadding,
+        content = content,
+    )
 }

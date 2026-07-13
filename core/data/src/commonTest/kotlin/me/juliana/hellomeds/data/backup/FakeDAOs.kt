@@ -55,6 +55,8 @@ class FakeImportanceLabelDao : ImportanceLabelDao {
 
     override fun getAll(): Flow<List<ImportanceLabel>> = flow { emit(labels.toList()) }
 
+    override suspend fun getAllSuspend(): List<ImportanceLabel> = labels.toList()
+
     override fun getById(id: Int): Flow<ImportanceLabel?> = flow {
         emit(labels.find { it.id == id })
     }
@@ -162,6 +164,20 @@ class FakeMedicationDao : MedicationDao {
     }
 
     override suspend fun getByIds(ids: List<Int>) = medications.filter { it.id in ids }
+
+    override suspend fun updateBubbleLayout(
+        medicationId: Int,
+        manualLayout: String?,
+        flow: me.juliana.hellomeds.data.model.enums.BubbleFlowDirection,
+    ) {
+        val idx = medications.indexOfFirst { it.id == medicationId }
+        if (idx >= 0) {
+            medications[idx] = medications[idx].copy(
+                bubbleManualLayout = manualLayout,
+                bubbleFlowDirection = flow,
+            )
+        }
+    }
 
     override fun hasActiveMedicationsWithCriticalLabel() = flow { emit(false) }
 

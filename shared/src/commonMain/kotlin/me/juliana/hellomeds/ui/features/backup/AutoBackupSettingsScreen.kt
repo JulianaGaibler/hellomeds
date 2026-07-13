@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,7 +31,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -53,14 +54,24 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import me.juliana.hellomeds.designsystem.component.AppSnackbarHost
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_cancel
 import me.juliana.hellomeds.shared.action_save
 import me.juliana.hellomeds.shared.auto_backup_change_passphrase
 import me.juliana.hellomeds.shared.auto_backup_confirm_passphrase
 import me.juliana.hellomeds.shared.auto_backup_days_ago
-import me.juliana.hellomeds.shared.auto_backup_destination_icloud
-import me.juliana.hellomeds.shared.auto_backup_destination_unavailable
+import me.juliana.hellomeds.shared.auto_backup_banner_action_choose_folder
+import me.juliana.hellomeds.shared.auto_backup_banner_action_open_settings
+import me.juliana.hellomeds.shared.auto_backup_banner_destination_not_set_body
+import me.juliana.hellomeds.shared.auto_backup_banner_destination_not_set_title
+import me.juliana.hellomeds.shared.auto_backup_banner_icloud_unavailable_body
+import me.juliana.hellomeds.shared.auto_backup_banner_icloud_unavailable_title
+import me.juliana.hellomeds.shared.auto_backup_banner_permission_revoked_body
+import me.juliana.hellomeds.shared.auto_backup_banner_permission_revoked_title
+import me.juliana.hellomeds.shared.auto_backup_mode_custom_folder
+import me.juliana.hellomeds.shared.auto_backup_mode_icloud
+import me.juliana.hellomeds.shared.auto_backup_mode_label
 import me.juliana.hellomeds.shared.auto_backup_disabled_banner
 import me.juliana.hellomeds.shared.auto_backup_enable
 import me.juliana.hellomeds.shared.auto_backup_enable_description
@@ -91,10 +102,14 @@ import me.juliana.hellomeds.shared.auto_backup_status_failed
 import me.juliana.hellomeds.shared.auto_backup_title
 import me.juliana.hellomeds.shared.auto_backup_trigger
 import me.juliana.hellomeds.shared.content_description_back
+import me.juliana.hellomeds.data.backup.BackupDestinationMode
+import me.juliana.hellomeds.data.backup.DestinationAvailability
+import me.juliana.hellomeds.ui.compat.ListItemShapes
 import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.components.common.AppScaffold
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.SmartListInfoCard
+import me.juliana.hellomeds.ui.components.list.SmartListDropdownItem
 import me.juliana.hellomeds.ui.components.list.SmartListItem
 import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
 import me.juliana.hellomeds.ui.components.list.SmartListSwitchItem
@@ -202,7 +217,7 @@ fun AutoBackupSettingsScreen(
                 ),
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { AppSnackbarHost(snackbarHostState) },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
     ) { paddingValues ->
         LazyColumn(
@@ -233,21 +248,32 @@ fun AutoBackupSettingsScreen(
             }
 
             item {
+                // Pin the last non-Available state so the warning banner's content
+                // stays meaningful while it animates out after the user resolves it.
+                val isAvailable = uiState.destinationAvailability ==
+                    DestinationAvailability.Available
+                var lastFailure by remember {
+                    mutableStateOf(
+                        if (!isAvailable) {
+                            uiState.destinationAvailability
+                        } else {
+                            DestinationAvailability.NotSet
+                        },
+                    )
+                }
+                if (!isAvailable) lastFailure = uiState.destinationAvailability
+
                 AutoSmartList(
                     items = listOf(
-                        SmartListItemConfig(visible = uiState.isEnabled) { shapes, visible ->
+                        SmartListItemConfig(
+                            visible = uiState.isEnabled && isAvailable,
+                        ) { shapes, visible ->
                             SmartListInfoCard(
                                 headlineContent = {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Filled.CheckCircle,
-                                            contentDescription = null,
-                                        )
-                                        Text(stringResource(Res.string.auto_backup_enabled_banner))
-                                    }
+                                    BannerHeadline(
+                                        icon = Icons.Filled.CheckCircle,
+                                        text = stringResource(Res.string.auto_backup_enabled_banner),
+                                    )
                                 },
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -255,19 +281,27 @@ fun AutoBackupSettingsScreen(
                                 visible = visible,
                             )
                         },
+                        SmartListItemConfig(
+                            visible = uiState.isEnabled && !isAvailable,
+                        ) { shapes, visible ->
+                            WarningBanner(
+                                failure = lastFailure,
+                                shapes = shapes,
+                                visible = visible,
+                                onOpenSettings = { viewModel.openSettingsForICloud() },
+                                onSwitchToCustomFolder = {
+                                    viewModel.setMode(BackupDestinationMode.CUSTOM_FOLDER)
+                                },
+                                onPickFolder = { onPickFolder?.invoke(suggestedInitialUri) },
+                            )
+                        },
                         SmartListItemConfig(visible = !uiState.isEnabled) { shapes, visible ->
                             SmartListInfoCard(
                                 headlineContent = {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.ErrorOutline,
-                                            contentDescription = null,
-                                        )
-                                        Text(stringResource(Res.string.auto_backup_disabled_banner))
-                                    }
+                                    BannerHeadline(
+                                        icon = Icons.Outlined.ErrorOutline,
+                                        text = stringResource(Res.string.auto_backup_disabled_banner),
+                                    )
                                 },
                                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -366,45 +400,70 @@ fun AutoBackupSettingsScreen(
                             },
                         )
 
-                        // Location (Android only)
-                        if (PlatformCapabilities.supportsAutoBackupFolderPicker()) {
+                        if (PlatformCapabilities.supportsBackupDestinationModeChoice()) {
                             add(
                                 SmartListItemConfig(visible = true) { shapes, visible ->
-                                    val locationOk = uiState.destinationUri != null &&
-                                        uiState.isDestinationAvailable
-                                    SmartListItem(
-                                        headlineContent = {
-                                            Text(stringResource(Res.string.auto_backup_location_label))
-                                        },
-                                        supportingContent = {
-                                            val text = if (uiState.destinationUri != null) {
-                                                val decoded = percentDecode(uiState.destinationUri.orEmpty())
-                                                decoded
-                                                    .substringAfterLast("/tree/")
-                                                    .substringAfter(":")
-                                                    .ifEmpty { decoded.substringAfterLast("/") }
-                                            } else {
-                                                stringResource(Res.string.auto_backup_location_not_set)
-                                            }
-                                            Text(text = text, maxLines = 1)
-                                        },
-                                        trailingContent = if (locationOk) {
-                                            {
-                                                Icon(
-                                                    imageVector = Icons.Filled.Check,
-                                                    contentDescription = null,
-                                                )
-                                            }
-                                        } else {
-                                            null
+                                    val iCloudLabel = stringResource(Res.string.auto_backup_mode_icloud)
+                                    val folderLabel = stringResource(Res.string.auto_backup_mode_custom_folder)
+                                    val options = listOf(iCloudLabel, folderLabel)
+                                    val selected = when (uiState.mode) {
+                                        BackupDestinationMode.ICLOUD -> iCloudLabel
+                                        BackupDestinationMode.CUSTOM_FOLDER -> folderLabel
+                                    }
+                                    SmartListDropdownItem(
+                                        label = stringResource(Res.string.auto_backup_mode_label),
+                                        selectedValue = selected,
+                                        options = options,
+                                        onValueChange = { picked ->
+                                            viewModel.setMode(
+                                                if (picked == iCloudLabel) {
+                                                    BackupDestinationMode.ICLOUD
+                                                } else {
+                                                    BackupDestinationMode.CUSTOM_FOLDER
+                                                },
+                                            )
                                         },
                                         shapes = shapes,
                                         visible = visible,
-                                        onClick = { onPickFolder?.invoke(suggestedInitialUri) },
                                     )
                                 },
                             )
                         }
+
+                        val showLocationRow = PlatformCapabilities.supportsAutoBackupFolderPicker() &&
+                            (
+                                !PlatformCapabilities.supportsBackupDestinationModeChoice() ||
+                                    uiState.mode == BackupDestinationMode.CUSTOM_FOLDER
+                                )
+                        add(
+                            SmartListItemConfig(visible = showLocationRow) { shapes, visible ->
+                                val locationOk = uiState.destinationUri != null &&
+                                    uiState.destinationAvailability == DestinationAvailability.Available
+                                SmartListItem(
+                                    headlineContent = {
+                                        Text(stringResource(Res.string.auto_backup_location_label))
+                                    },
+                                    supportingContent = {
+                                        val text = uiState.destinationDisplayName
+                                            ?: stringResource(Res.string.auto_backup_location_not_set)
+                                        Text(text = text, maxLines = 1)
+                                    },
+                                    trailingContent = if (locationOk) {
+                                        {
+                                            Icon(
+                                                imageVector = Icons.Filled.Check,
+                                                contentDescription = null,
+                                            )
+                                        }
+                                    } else {
+                                        null
+                                    },
+                                    shapes = shapes,
+                                    visible = visible,
+                                    onClick = { onPickFolder?.invoke(suggestedInitialUri) },
+                                )
+                            },
+                        )
 
                         // Retention
                         add(
@@ -429,34 +488,6 @@ fun AutoBackupSettingsScreen(
                         )
                     },
                 )
-            }
-
-            if (PlatformCapabilities.supportsAutoBackupFolderPicker() &&
-                uiState.destinationUri != null &&
-                !uiState.isDestinationAvailable
-            ) {
-                item {
-                    Text(
-                        text = stringResource(Res.string.auto_backup_destination_unavailable),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier
-                            .settingsContentPadding()
-                            .padding(top = 12.dp),
-                    )
-                }
-            }
-
-            if (!PlatformCapabilities.supportsAutoBackupFolderPicker()) {
-                item {
-                    Text(
-                        text = stringResource(Res.string.auto_backup_destination_icloud),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier
-                            .settingsContentPadding()
-                            .padding(top = 12.dp),
-                    )
-                }
             }
 
             item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -591,21 +622,84 @@ private fun PassphraseDialog(
     )
 }
 
-private fun percentDecode(encoded: String): String {
-    val sb = StringBuilder()
-    var i = 0
-    while (i < encoded.length) {
-        if (encoded[i] == '%' && i + 2 < encoded.length) {
-            val hex = encoded.substring(i + 1, i + 3)
-            val code = hex.toIntOrNull(16)
-            if (code != null) {
-                sb.append(code.toChar())
-                i += 3
-                continue
-            }
-        }
-        sb.append(encoded[i])
-        i++
+@Composable
+private fun BannerHeadline(icon: ImageVector, text: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(imageVector = icon, contentDescription = null)
+        Text(text)
     }
-    return sb.toString()
+}
+
+@Composable
+private fun WarningBanner(
+    failure: DestinationAvailability,
+    shapes: ListItemShapes,
+    visible: Boolean,
+    onOpenSettings: () -> Unit,
+    onSwitchToCustomFolder: () -> Unit,
+    onPickFolder: () -> Unit,
+) {
+    val title: String
+    val body: String
+    val primaryAction: () -> Unit
+    val primaryLabel: String
+    val secondaryAction: (() -> Unit)?
+    val secondaryLabel: String?
+    when (failure) {
+        DestinationAvailability.ICloudUnavailable -> {
+            title = stringResource(Res.string.auto_backup_banner_icloud_unavailable_title)
+            body = stringResource(Res.string.auto_backup_banner_icloud_unavailable_body)
+            primaryAction = onOpenSettings
+            primaryLabel = stringResource(Res.string.auto_backup_banner_action_open_settings)
+            secondaryAction = onSwitchToCustomFolder
+            secondaryLabel = stringResource(Res.string.auto_backup_banner_action_choose_folder)
+        }
+        DestinationAvailability.NotSet -> {
+            title = stringResource(Res.string.auto_backup_banner_destination_not_set_title)
+            body = stringResource(Res.string.auto_backup_banner_destination_not_set_body)
+            primaryAction = onPickFolder
+            primaryLabel = stringResource(Res.string.auto_backup_banner_action_choose_folder)
+            secondaryAction = null
+            secondaryLabel = null
+        }
+        DestinationAvailability.PermissionRevoked -> {
+            title = stringResource(Res.string.auto_backup_banner_permission_revoked_title)
+            body = stringResource(Res.string.auto_backup_banner_permission_revoked_body)
+            primaryAction = onPickFolder
+            primaryLabel = stringResource(Res.string.auto_backup_banner_action_choose_folder)
+            secondaryAction = null
+            secondaryLabel = null
+        }
+        // Unreachable in practice — the caller only passes the pinned last-failure state.
+        DestinationAvailability.Available -> {
+            title = ""
+            body = ""
+            primaryAction = {}
+            primaryLabel = ""
+            secondaryAction = null
+            secondaryLabel = null
+        }
+    }
+
+    SmartListInfoCard(
+        headlineContent = { BannerHeadline(icon = Icons.Outlined.Warning, text = title) },
+        supportingContent = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(body)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = primaryAction) { Text(primaryLabel) }
+                    if (secondaryAction != null && secondaryLabel != null) {
+                        TextButton(onClick = secondaryAction) { Text(secondaryLabel) }
+                    }
+                }
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.errorContainer,
+        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+        shapes = shapes,
+        visible = visible,
+    )
 }

@@ -20,9 +20,12 @@ actual object PlatformCapabilities {
 
     actual fun showMlDetectionMethodPicker(): Boolean = true
     actual fun supportsLockScreenVisibilityControl(): Boolean = true
+    actual fun supportsNonDismissableNotifications(): Boolean = true
     actual fun supportsNotificationChannels(): Boolean = true
     actual fun supportsBatteryOptimization(): Boolean = true
     actual fun supportsAutoBackupFolderPicker(): Boolean = true
+    actual fun supportsBackupDestinationModeChoice(): Boolean = false
+    actual suspend fun openSystemSettingsForICloud(): Boolean = false
     actual fun supportsFullScreenIntentPermission(): Boolean =
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
 

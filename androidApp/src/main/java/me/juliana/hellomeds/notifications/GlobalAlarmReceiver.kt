@@ -84,6 +84,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
         val missedDoseProcessor: MissedDoseProcessor = get()
 
         val lockScreenVisibility = notifPrefs.lockScreenVisibility.first()
+        val nonDismissable = notifPrefs.nonDismissableReminders.first()
 
         AppLogger.d(TAG, "Watermark processing at now=$now")
 
@@ -99,6 +100,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
                 medicationDao,
                 missedDoseProcessor,
                 lockScreenVisibility,
+                nonDismissable,
             )
         }
 
@@ -137,6 +139,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
                 medicationDao,
                 missedDoseProcessor,
                 lockScreenVisibility,
+                nonDismissable,
             )
         }
 
@@ -159,6 +162,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
         medicationDao: MedicationDao,
         missedDoseProcessor: MissedDoseProcessor,
         lockScreenVisibility: LockScreenVisibility,
+        nonDismissable: Boolean,
     ) {
         for (session in sessions) {
             when (session.sessionType) {
@@ -170,6 +174,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
                     medicationDao,
                     missedDoseProcessor,
                     lockScreenVisibility,
+                    nonDismissable,
                 )
 
                 SessionType.INDIVIDUAL -> handleIndividualFollowUp(
@@ -180,6 +185,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
                     medicationDao,
                     missedDoseProcessor,
                     lockScreenVisibility,
+                    nonDismissable,
                 )
             }
         }
@@ -197,6 +203,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
         medicationDao: MedicationDao,
         missedDoseProcessor: MissedDoseProcessor,
         lockScreenVisibility: LockScreenVisibility,
+        nonDismissable: Boolean,
     ) {
         AppLogger.d(
             TAG,
@@ -247,6 +254,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
             scheduledTime, lockScreenVisibility, isFollowUp = true,
             groupKey = missedDoseProcessor.groupKeyForTimeSlot(scheduledTime),
             followUpNumber = updatedSession.followUpsFired,
+            nonDismissable = nonDismissable,
         )
 
         AppLogger.i(
@@ -272,6 +280,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
         medicationDao: MedicationDao,
         missedDoseProcessor: MissedDoseProcessor,
         lockScreenVisibility: LockScreenVisibility,
+        nonDismissable: Boolean,
     ) {
         AppLogger.d(
             TAG,
@@ -334,6 +343,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
             scheduledTime, lockScreenVisibility, isFollowUp = true,
             groupKey = groupKey,
             followUpNumber = updatedSession.followUpsFired,
+            nonDismissable = nonDismissable,
         )
 
         // Re-post group summary (idempotent) to trigger Heads-Up alert and handle DnD escalation.
@@ -353,6 +363,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
                 lockScreenVisibility,
                 isFollowUp = true,
                 isFollowUpAlert = true,
+                nonDismissable = nonDismissable,
             )
         }
 
@@ -372,6 +383,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
         medicationDao: MedicationDao,
         missedDoseProcessor: MissedDoseProcessor,
         lockScreenVisibility: LockScreenVisibility,
+        nonDismissable: Boolean,
     ) {
         // Deduplicate: if multiple siblings are snoozed together, handle the parent group once
         val handled = mutableSetOf<String>()
@@ -389,6 +401,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
                 medicationDao,
                 missedDoseProcessor,
                 lockScreenVisibility,
+                nonDismissable,
             )
         }
     }
@@ -401,6 +414,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
         medicationDao: MedicationDao,
         missedDoseProcessor: MissedDoseProcessor,
         lockScreenVisibility: LockScreenVisibility,
+        nonDismissable: Boolean,
     ) {
         AppLogger.d(TAG, "Snooze fired for session: key=${session.timeSlotKey}, type=${session.sessionType}")
 
@@ -445,6 +459,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
                     session.channelId, session.notificationId,
                     scheduledTime, lockScreenVisibility, isFollowUp = false, isSnoozed = true,
                     groupKey = missedDoseProcessor.groupKeyForTimeSlot(scheduledTime),
+                    nonDismissable = nonDismissable,
                 )
                 AppLogger.i(TAG, "Snoozed combined notification shown: ${medications.size} meds")
             }
@@ -484,6 +499,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
                         sibling.channelId, sibling.notificationId,
                         scheduledTime, lockScreenVisibility, isFollowUp = true, isSnoozed = true,
                         groupKey = groupKey,
+                        nonDismissable = nonDismissable,
                     )
                     shownEvents.add(event)
                     shownMeds.add(medication)
@@ -513,6 +529,7 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
                         isFollowUp = true,
                         isSnoozed = true,
                         isFollowUpAlert = true,
+                        nonDismissable = nonDismissable,
                     )
                 }
 

@@ -28,7 +28,6 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -52,6 +51,7 @@ import me.juliana.hellomeds.data.preferences.AppearancePreferences
 import me.juliana.hellomeds.data.preferences.AutoBackupPreferences
 import me.juliana.hellomeds.data.preferences.CameraPreferences
 import me.juliana.hellomeds.data.preferences.NotificationPreferences
+import me.juliana.hellomeds.designsystem.component.AppSnackbarHost
 import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_back
@@ -64,6 +64,8 @@ import me.juliana.hellomeds.shared.debug_screen_title
 import me.juliana.hellomeds.shared.importance_labels_section_description
 import me.juliana.hellomeds.shared.importance_labels_section_title
 import me.juliana.hellomeds.shared.screen_settings
+import me.juliana.hellomeds.shared.settings_about_reliability
+import me.juliana.hellomeds.shared.settings_about_reliability_description
 import me.juliana.hellomeds.shared.settings_about_source_code
 import me.juliana.hellomeds.shared.settings_about_source_code_url
 import me.juliana.hellomeds.shared.settings_about_title
@@ -113,6 +115,7 @@ import me.juliana.hellomeds.shared.support_settings_description
 import me.juliana.hellomeds.shared.support_title
 import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.compat.platformContext
+import me.juliana.hellomeds.ui.components.ReliabilityDisclaimerDialog
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.SmartListInfoCard
 import me.juliana.hellomeds.ui.components.list.SmartListItem
@@ -195,7 +198,7 @@ fun SettingsScreen(
                 ),
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { AppSnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -607,9 +610,19 @@ fun SettingsScreen(
                 val websiteUrl = stringResource(Res.string.settings_about_website_url)
                 val sourceCodeUrl = stringResource(Res.string.settings_about_source_code_url)
                 val privacyPolicyUrl = stringResource(Res.string.settings_privacy_policy_url)
+                var showReliabilityDialog by remember { mutableStateOf(false) }
 
                 AutoSmartList(
                     items = listOf(
+                        SmartListItemConfig(visible = true) { shapes, visible ->
+                            SmartListNavigationItem(
+                                label = stringResource(Res.string.settings_about_reliability),
+                                onClick = { showReliabilityDialog = true },
+                                shapes = shapes,
+                                visible = visible,
+                                supportingText = stringResource(Res.string.settings_about_reliability_description),
+                            )
+                        },
                         SmartListItemConfig(visible = true) { shapes, visible ->
                             SmartListNavigationItem(
                                 label = stringResource(Res.string.support_title),
@@ -654,6 +667,10 @@ fun SettingsScreen(
                         },
                     ),
                 )
+
+                if (showReliabilityDialog) {
+                    ReliabilityDisclaimerDialog(onDismiss = { showReliabilityDialog = false })
+                }
             }
 
             item {

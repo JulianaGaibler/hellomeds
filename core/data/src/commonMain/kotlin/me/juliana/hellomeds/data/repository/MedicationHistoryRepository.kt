@@ -92,18 +92,20 @@ class MedicationHistoryRepository(
                 id
             }
 
-            // Record or update stock consumption
+            // Record or update stock consumption. takenTime — not "now" — must drive the
+            // ledger timestamp so backdated logs stay on the correct calendar day in the graph.
             try {
                 if (existingId != null) {
                     // Update path: adjust existing stock record if present
                     val existingAdj = stockTrackingRepository.getAdjustmentByHistoryId(historyId)
                     if (existingAdj != null) {
-                        stockTrackingRepository.updateAdjustment(existingAdj.id, -actualDose)
+                        stockTrackingRepository.updateAdjustment(existingAdj.id, -actualDose, takenTime)
                     } else {
                         stockTrackingRepository.recordDoseConsumption(
                             medicationId = event.medicationId,
                             historyId = historyId,
                             doseQuantity = actualDose,
+                            takenTime = takenTime,
                         )
                     }
                 } else {
@@ -112,6 +114,7 @@ class MedicationHistoryRepository(
                         medicationId = event.medicationId,
                         historyId = historyId,
                         doseQuantity = actualDose,
+                        takenTime = takenTime,
                     )
                 }
             } catch (e: Exception) {
@@ -194,16 +197,18 @@ class MedicationHistoryRepository(
             )
             historyDao.update(updated)
 
-            // Update stock adjustment
+            // Update stock adjustment. Keep ledger timestamp in sync with the edited
+            // takenTime so the stock graph re-buckets to the correct calendar day.
             try {
                 val existingAdj = stockTrackingRepository.getAdjustmentByHistoryId(historyId)
                 if (existingAdj != null) {
-                    stockTrackingRepository.updateAdjustment(existingAdj.id, -actualDose)
+                    stockTrackingRepository.updateAdjustment(existingAdj.id, -actualDose, takenTime)
                 } else {
                     stockTrackingRepository.recordDoseConsumption(
                         medicationId = existing.medicationId,
                         historyId = historyId,
                         doseQuantity = actualDose,
+                        takenTime = takenTime,
                     )
                 }
             } catch (e: Exception) {
@@ -417,6 +422,7 @@ class MedicationHistoryRepository(
                     medicationId = medicationId,
                     historyId = id.toInt(),
                     doseQuantity = dose,
+                    takenTime = takenTime,
                 )
             } catch (e: Exception) {
                 AppLogger.e(TAG, "Failed to record stock adjustment for manual dose", e)

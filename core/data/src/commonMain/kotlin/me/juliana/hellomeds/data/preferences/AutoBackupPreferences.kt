@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import me.juliana.hellomeds.data.backup.BackupDestinationMode
 
 class AutoBackupPreferences(private val dataStore: DataStore<Preferences>) {
 
@@ -23,7 +24,9 @@ class AutoBackupPreferences(private val dataStore: DataStore<Preferences>) {
         private val LAST_BACKUP_ERROR_MESSAGE = stringPreferencesKey("last_backup_error_message")
         private val LAST_BACKUP_MEDICATION_COUNT = intPreferencesKey("last_backup_medication_count")
         private val CONSECUTIVE_FAILURES = intPreferencesKey("consecutive_failures")
+        private val BACKUP_DESTINATION_MODE = stringPreferencesKey("backup_destination_mode")
         private val BACKUP_DESTINATION_URI = stringPreferencesKey("backup_destination_uri")
+        private val BACKUP_DESTINATION_NAME = stringPreferencesKey("backup_destination_name")
         private val PASSPHRASE_HINT = stringPreferencesKey("passphrase_hint")
         private val ONBOARDING_COMPLETED_TIMESTAMP =
             longPreferencesKey("onboarding_completed_timestamp")
@@ -42,7 +45,14 @@ class AutoBackupPreferences(private val dataStore: DataStore<Preferences>) {
     val lastBackupMedicationCount: Flow<Int> =
         dataStore.data.map { it[LAST_BACKUP_MEDICATION_COUNT] ?: 0 }
     val consecutiveFailures: Flow<Int> = dataStore.data.map { it[CONSECUTIVE_FAILURES] ?: 0 }
+    val backupDestinationMode: Flow<BackupDestinationMode> = dataStore.data.map {
+        when (it[BACKUP_DESTINATION_MODE]) {
+            BackupDestinationMode.CUSTOM_FOLDER.name -> BackupDestinationMode.CUSTOM_FOLDER
+            else -> BackupDestinationMode.ICLOUD
+        }
+    }
     val backupDestinationUri: Flow<String?> = dataStore.data.map { it[BACKUP_DESTINATION_URI] }
+    val backupDestinationName: Flow<String?> = dataStore.data.map { it[BACKUP_DESTINATION_NAME] }
     val onboardingCompletedTimestamp: Flow<Long> =
         dataStore.data.map { it[ONBOARDING_COMPLETED_TIMESTAMP] ?: 0L }
     val backupNudgeDismissed: Flow<Boolean> =
@@ -88,12 +98,29 @@ class AutoBackupPreferences(private val dataStore: DataStore<Preferences>) {
         dataStore.edit { it[CONSECUTIVE_FAILURES] = count }
     }
 
+    suspend fun setBackupDestinationMode(mode: BackupDestinationMode) {
+        dataStore.edit { it[BACKUP_DESTINATION_MODE] = mode.name }
+    }
+
+    /** Clearing the URI also clears the cached display name; pair with [setBackupDestination] to set both. */
     suspend fun setBackupDestinationUri(uri: String?) {
         dataStore.edit {
             if (uri != null) {
                 it[BACKUP_DESTINATION_URI] = uri
             } else {
                 it.remove(BACKUP_DESTINATION_URI)
+                it.remove(BACKUP_DESTINATION_NAME)
+            }
+        }
+    }
+
+    suspend fun setBackupDestination(uri: String, displayName: String?) {
+        dataStore.edit {
+            it[BACKUP_DESTINATION_URI] = uri
+            if (displayName != null) {
+                it[BACKUP_DESTINATION_NAME] = displayName
+            } else {
+                it.remove(BACKUP_DESTINATION_NAME)
             }
         }
     }

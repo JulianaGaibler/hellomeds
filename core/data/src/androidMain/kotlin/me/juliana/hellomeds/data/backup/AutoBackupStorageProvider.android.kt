@@ -16,22 +16,36 @@ actual class AutoBackupStorageProvider(
     private val preferences: AutoBackupPreferences,
 ) {
 
-    actual suspend fun writeBackup(fileName: String, data: ByteArray): Boolean = withContext(Dispatchers.IO) {
+    actual suspend fun writeBackup(fileName: String, data: ByteArray): WriteBackupResult = withContext(Dispatchers.IO) {
+        val savedUri = preferences.backupDestinationUri.first()
+            ?: return@withContext WriteBackupResult.DestinationNotSet
+        val hasPermission = context.contentResolver.persistedUriPermissions.any {
+            it.uri.toString() == savedUri && it.isWritePermission
+        }
+        if (!hasPermission) {
+            preferences.setBackupDestinationUri(null)
+            return@withContext WriteBackupResult.PermissionRevoked
+        }
         try {
-            val uri = getValidatedUri() ?: return@withContext false
-            val treeDoc = DocumentFile.fromTreeUri(context, uri) ?: return@withContext false
+            val treeDoc = DocumentFile.fromTreeUri(context, Uri.parse(savedUri))
+                ?: return@withContext WriteBackupResult.PermissionRevoked.also {
+                    preferences.setBackupDestinationUri(null)
+                }
             val file = treeDoc.createFile("application/octet-stream", fileName)
-                ?: return@withContext false
+                ?: return@withContext WriteBackupResult.WriteFailed(
+                    "Could not create file in backup folder",
+                )
             context.contentResolver.openOutputStream(file.uri)?.use { stream ->
                 stream.write(data)
-            }
-            true
+            } ?: return@withContext WriteBackupResult.WriteFailed(
+                "Could not open output stream",
+            )
+            WriteBackupResult.Success
         } catch (e: SecurityException) {
-            // Permission revoked — reset URI
             preferences.setBackupDestinationUri(null)
-            false
+            WriteBackupResult.PermissionRevoked
         } catch (e: Exception) {
-            false
+            WriteBackupResult.WriteFailed(e.message ?: "Unknown write error")
         }
     }
 
@@ -59,8 +73,17 @@ actual class AutoBackupStorageProvider(
         }
     }
 
-    actual suspend fun isDestinationAvailable(): Boolean {
-        return getValidatedUri() != null
+    actual suspend fun destinationAvailability(): DestinationAvailability = withContext(Dispatchers.IO) {
+        val savedUri = preferences.backupDestinationUri.first()
+            ?: return@withContext DestinationAvailability.NotSet
+        val hasPermission = context.contentResolver.persistedUriPermissions.any {
+            it.uri.toString() == savedUri && it.isWritePermission
+        }
+        if (!hasPermission) {
+            preferences.setBackupDestinationUri(null)
+            return@withContext DestinationAvailability.PermissionRevoked
+        }
+        DestinationAvailability.Available
     }
 
     private suspend fun getValidatedUri(): Uri? {

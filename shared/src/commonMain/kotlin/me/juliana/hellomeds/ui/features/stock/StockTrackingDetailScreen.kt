@@ -40,12 +40,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import me.juliana.hellomeds.data.database.entities.Medication
+import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.data.model.StockDataPoint
 import me.juliana.hellomeds.data.model.StockEvent
 import me.juliana.hellomeds.data.model.StockStatus
@@ -110,6 +112,7 @@ import me.juliana.hellomeds.ui.components.graph.StockLevelGraph
 import me.juliana.hellomeds.ui.components.graph.models.GraphConfig
 import me.juliana.hellomeds.ui.components.graph.models.StockLine
 import me.juliana.hellomeds.ui.components.graph.models.ZoomLevel
+import me.juliana.hellomeds.ui.components.graph.util.label
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.SmartListItem
 import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
@@ -156,10 +159,11 @@ fun StockTrackingDetailScreen(
             TopAppBar(
                 title = {
                     Text(
-                        stringResource(
+                        text = stringResource(
                             Res.string.stock_detail_title_dynamic,
                             medication.displayName ?: medication.name,
                         ),
+                        modifier = Modifier.testTag(ScreenshotTestTags.STOCK_DETAIL_SCREEN),
                     )
                 },
                 navigationIcon = {
@@ -237,6 +241,7 @@ fun StockTrackingDetailScreen(
                     currentStock = previewStock,
                     modifier = Modifier
                         .wrapContentWidth(Alignment.CenterHorizontally)
+                        .padding(horizontal = 16.dp)
                         .heightIn(max = 256.dp)
                         .padding(vertical = 8.dp),
                 )
@@ -578,7 +583,7 @@ private fun ZoomLevelSelector(
                     .weight(1f)
                     .defaultMinSize(minHeight = 32.dp),
             ) {
-                Text(level.label, style = MaterialTheme.typography.labelMedium)
+                Text(level.label(), style = MaterialTheme.typography.labelMedium)
             }
         }
     }

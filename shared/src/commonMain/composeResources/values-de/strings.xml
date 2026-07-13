@@ -527,8 +527,19 @@
 	<string name="auto_backup_confirm_passphrase">Passwort bestätigen</string>
 	<string name="auto_backup_passphrase_hint">Hinweis (optional)</string>
 	<string name="auto_backup_remember_warning">Passwort notieren. Ohne Passwort können Sicherungen nicht wiederhergestellt werden.</string>
-	<string name="auto_backup_destination_unavailable">Speicherort ist nicht mehr erreichbar. Bitte neuen Ordner auswählen.</string>
-	<string name="auto_backup_destination_icloud">Sicherungen werden in iCloud Drive gespeichert und automatisch zwischen Geräten synchronisiert.</string>
+	<string name="auto_backup_mode_label">Sicherungsziel</string>
+	<string name="auto_backup_mode_icloud">iCloud Drive</string>
+	<string name="auto_backup_mode_icloud_description">Empfohlen — synchronisiert zwischen deinen Apple-Geräten</string>
+	<string name="auto_backup_mode_custom_folder">Ordner auswählen</string>
+	<string name="auto_backup_mode_custom_folder_description">In Dateien speichern — z. B. Google Drive, Dropbox oder Auf meinem iPhone</string>
+	<string name="auto_backup_banner_icloud_unavailable_title">iCloud Drive ist nicht verfügbar</string>
+	<string name="auto_backup_banner_icloud_unavailable_body">Melde dich bei iCloud an und aktiviere iCloud Drive in den Systemeinstellungen — oder wähle einen Ordner.</string>
+	<string name="auto_backup_banner_destination_not_set_title">Sicherungsordner auswählen</string>
+	<string name="auto_backup_banner_destination_not_set_body">Lege unter Sicherungsort fest, wo Sicherungen abgelegt werden.</string>
+	<string name="auto_backup_banner_permission_revoked_title">Ordnerzugriff entzogen</string>
+	<string name="auto_backup_banner_permission_revoked_body">Der Zugriff auf den Sicherungsordner wurde entzogen. Bitte unten einen neuen Ordner auswählen.</string>
+	<string name="auto_backup_banner_action_open_settings">Einstellungen öffnen</string>
+	<string name="auto_backup_banner_action_choose_folder">Ordner auswählen</string>
 	<string name="auto_backup_retention_title">Aktuelle Sicherungen behalten</string>
 	<string name="auto_backup_trigger">Jetzt sichern</string>
 	<string name="auto_backup_settings_title">Einstellungen</string>
@@ -654,6 +665,8 @@
 	<string name="settings_notification_channel_critical_description">Alarmton konfigurieren und Nicht stören-Umgehung für kritische Medikamente prüfen</string>
 	<string name="settings_notification_grouping">Getrennte Benachrichtigungen</string>
 	<string name="settings_notification_grouping_description">Wenn aktiviert, erscheinen Erinnerungen, die zur gleichen Zeit fällig sind, als einzelne Benachrichtigungen statt zusammengefasst.</string>
+	<string name="settings_notification_non_dismissable">Dauerhafte Erinnerungen</string>
+	<string name="settings_notification_non_dismissable_description">Heftet Erinnerungen an den Sperrbildschirm und schützt sie vor versehentlichem Wegwischen. Sie können nicht über "Alle löschen" entfernt werden.</string>
 
 	<string name="settings_notification_privacy">Benachrichtigungsdatenschutz</string>
 	<string name="settings_notification_privacy_show_names">Medikamentennamen anzeigen</string>
@@ -779,6 +792,13 @@
 
 	<!-- About -->
 	<string name="settings_about_title">Info</string>
+	<string name="settings_about_reliability">Zur Zuverlässigkeit</string>
+	<string name="settings_about_reliability_description">Was HelloMeds garantieren kann und was nicht</string>
+	<string name="reliability_disclaimer_title">Zur Zuverlässigkeit</string>
+	<string name="reliability_disclaimer_paragraph1">HelloMeds hilft dir, an deine Medikamente zu denken. Weder HelloMeds noch dein Telefon ist ein Medizinprodukt.</string>
+	<string name="reliability_disclaimer_paragraph2">Wir arbeiten daran, die App zuverlässig zu halten und Fehler schnell zu beheben. Trotzdem kann bei Erinnerungen einmal etwas schiefgehen: Akkus gehen leer, Benachrichtigungen werden stummgeschaltet, oder die App selbst hat Fehler, die wir noch nicht entdeckt haben. Wir können nicht garantieren, dass jede Erinnerung pünktlich ankommt.</string>
+	<string name="reliability_disclaimer_paragraph3">Die Verantwortung dafür, an deine Medikamente zu denken, liegt letztlich bei dir. Verlasse dich bei allem, was dir in deinem Alltag wichtig ist, bitte nicht allein auf HelloMeds.</string>
+	<string name="reliability_disclaimer_dismiss">Verstanden</string>
 	<string name="settings_about_website">Website</string>
 	<string name="settings_about_source_code">Quellcode</string>
 	<string name="settings_privacy_policy">Datenschutzrichtlinie</string>
@@ -822,6 +842,13 @@
 	<string name="stock_detail_no_tracking">Keine Vorratsverfolgung eingeschaltet</string>
 	<string name="stock_detail_description">Vorrat überwachen, um Warnungen bei niedrigem Bestand und Nutzungsinformationen zu erhalten.</string>
 	<string name="stock_detail_add_button">Vorratsverfolgung hinzufügen</string>
+
+	<!-- Graph zoom level labels -->
+	<string name="zoom_level_day">Tag</string>
+	<string name="zoom_level_week">Woche</string>
+	<string name="zoom_level_month">Monat</string>
+	<string name="zoom_level_quarter">Quartal</string>
+	<string name="zoom_level_year">Jahr</string>
 
 	<!-- Delete Tracking Dialog -->
 	<string name="dialog_delete_title">Vorratsverfolgung löschen</string>
@@ -1027,9 +1054,9 @@
 	<string name="permission_warning_alarmkit_message">Einige Medikamente verwenden Alarme. Alarmberechtigung aktivieren, damit sie den Bildschirm aktivieren und den Fokusmodus umgehen können.</string>
 	<string name="permission_warning_critical_alerts_title">Kritische Warnungen deaktiviert</string>
 	<string name="permission_warning_critical_alerts_message">Einige Medikamente verwenden kritische Erinnerungen. Kritische Warnungen aktivieren, damit sie auch bei Stummschaltung oder Nicht stören einen Ton abspielen.</string>
-	<string name="permission_warning_collapsed_title">%d Berechtigungen erfordern Aufmerksamkeit</string>
+	<string name="permission_warning_collapsed_title">%1$d Berechtigungen erfordern Aufmerksamkeit</string>
 	<string name="warning_backup_failed_title">Automatische Sicherung fehlgeschlagen</string>
-	<string name="warning_backup_failed_message">Automatische Sicherungen sind %d Mal hintereinander fehlgeschlagen. Bitte Sicherungseinstellungen pruefen.</string>
+	<string name="warning_backup_failed_message">Automatische Sicherungen sind %1$d Mal hintereinander fehlgeschlagen. Bitte Sicherungseinstellungen pruefen.</string>
 
 	<!-- FSI Onboarding -->
 	<string name="onboarding_fsi_title">Bildschirmaktivierung</string>
@@ -1137,14 +1164,14 @@
 
 	<!-- Bubble layout customization -->
 	<string name="stock_layout_setting_title">Anordnung</string>
-	<string name="stock_layout_editor_title">Bubble-Anordnung</string>
+	<string name="stock_layout_editor_title">Blister-Anordnung</string>
 	<string name="stock_layout_mode_auto">Automatisch</string>
 	<string name="stock_layout_mode_manual">Manuell</string>
 	<string name="stock_layout_columns">Spalten</string>
 	<string name="stock_layout_flow_direction">Reihenfolge der Einnahme</string>
 	<string name="stock_layout_flow_ltr_top">Spaltenweise</string>
 	<string name="stock_layout_flow_rtl_bottom">Reihenweise</string>
-	<string name="stock_layout_drag_hint">Halte eine Bubble gedrückt und ziehe sie auf eine andere, um zu tauschen.</string>
+	<string name="stock_layout_drag_hint">Ziehe ein Blister-Element auf eine andere Position, um die Anordnung zu ändern.</string>
 	<string name="stock_layout_summary_auto">Automatisch</string>
 	<string name="stock_layout_summary_manual">Manuell — %1$d Spalten</string>
 	<string name="stock_layout_column_decrease">Spalten verringern</string>

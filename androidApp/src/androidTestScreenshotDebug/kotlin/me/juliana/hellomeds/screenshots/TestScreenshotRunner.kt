@@ -4,7 +4,6 @@
 package me.juliana.hellomeds.screenshots
 
 import android.app.Application
-import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
@@ -14,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import me.juliana.hellomeds.data.backup.BackupDataDateShifter
 import me.juliana.hellomeds.data.backup.BackupImportService
 import me.juliana.hellomeds.data.dao.ImportanceLabelDao
 import me.juliana.hellomeds.data.dao.MedicationHistoryDao
@@ -102,9 +102,11 @@ class TestScreenshotRunner : AndroidJUnitRunner() {
         val historyDao = koin.get<MedicationHistoryDao>()
         val projector = koin.get<ScheduleProjector>()
 
-        val json = readDemoJson()
-        val parsed = service.parseBackup(json).getOrThrow()
-        val shifted = BackupDataDateShifter.shift(parsed)
+        val shifted = runBlocking(Dispatchers.IO) {
+            val json = ScreenshotDemoData.loadJson(Locale.getDefault().toLanguageTag())
+            val parsed = service.parseBackup(json).getOrThrow()
+            BackupDataDateShifter.shift(parsed)
+        }
 
         runBlocking(Dispatchers.IO) {
             onboarding.setOnboardingCompleted(true)
@@ -180,19 +182,6 @@ class TestScreenshotRunner : AndroidJUnitRunner() {
             }
         }
         Log.i(TAG, "Inserted $inserted past-event TAKEN history rows")
-    }
-
-    /**
-     * Reads the locale-specific demo JSON from the *test* APK's assets
-     * (androidTestScreenshotDebug/assets/), falling back to English.
-     */
-    private fun readDemoJson(): String {
-        val testContext: Context = InstrumentationRegistry.getInstrumentation().context
-        val lang = Locale.getDefault().language.lowercase(Locale.ROOT)
-        val candidate = "example.$lang.json"
-        val available = testContext.assets.list("")?.toSet().orEmpty()
-        val name = if (candidate in available) candidate else "example.en.json"
-        return testContext.assets.open(name).bufferedReader().use { it.readText() }
     }
 
     private companion object {

@@ -5,6 +5,7 @@ package me.juliana.hellomeds.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,13 +14,18 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import me.juliana.hellomeds.data.backup.AutoBackupResult
 import me.juliana.hellomeds.data.backup.AutoBackupService
 import me.juliana.hellomeds.data.backup.AutoBackupStorageProvider
+import me.juliana.hellomeds.data.backup.BackupDestinationMode
 import me.juliana.hellomeds.data.backup.BackupEncryption
+import me.juliana.hellomeds.data.backup.DestinationAvailability
+import me.juliana.hellomeds.data.backup.WriteBackupResult
 import me.juliana.hellomeds.data.crypto.PassphraseManager
 import me.juliana.hellomeds.data.preferences.AutoBackupPreferences
 import me.juliana.hellomeds.ui.util.PlatformCapabilities
@@ -29,6 +35,7 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class AutoBackupViewModel(
     private val autoBackupService: AutoBackupService,
     private val storageProvider: AutoBackupStorageProvider,
@@ -59,6 +66,20 @@ class AutoBackupViewModel(
     val backupMessage: StateFlow<String?> = _backupMessage
     val events: SharedFlow<AutoBackupEvent> = _events.asSharedFlow()
 
+    // Separate from `uiState` because `destinationAvailability()` is suspending and may
+    // touch disk (iOS bookmark resolve, SAF permission check) — must not run in `combine`.
+    private val availability: StateFlow<DestinationAvailability> = combine(
+        preferences.backupDestinationMode,
+        preferences.backupDestinationUri,
+    ) { mode, uri -> mode to uri }
+        .distinctUntilChanged()
+        .mapLatest { storageProvider.destinationAvailability() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = DestinationAvailability.NotSet,
+        )
+
     val uiState: StateFlow<AutoBackupUiState> = combine(
         preferences.autoBackupEnabled,
         preferences.lastBackupTimestamp,
@@ -67,9 +88,12 @@ class AutoBackupViewModel(
         preferences.lastBackupMedicationCount,
         preferences.consecutiveFailures,
         preferences.backupRetentionCount,
+        preferences.backupDestinationMode,
         preferences.backupDestinationUri,
+        preferences.backupDestinationName,
         preferences.passphraseHint,
         _passphraseChanged,
+        availability,
     ) { values ->
         @Suppress("UNCHECKED_CAST")
         AutoBackupUiState(
@@ -80,10 +104,12 @@ class AutoBackupViewModel(
             lastBackupMedicationCount = values[4] as Int,
             consecutiveFailures = values[5] as Int,
             retentionCount = values[6] as Int,
-            destinationUri = values[7] as? String,
+            mode = values[7] as BackupDestinationMode,
+            destinationUri = values[8] as? String,
+            destinationDisplayName = values[9] as? String,
             hasPassphrase = passphraseManager.hasPassphrase(),
-            isDestinationAvailable = storageProvider.isDestinationAvailable(),
-            passphraseHint = values[8] as? String,
+            destinationAvailability = values[12] as DestinationAvailability,
+            passphraseHint = values[10] as? String,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -95,13 +121,9 @@ class AutoBackupViewModel(
         viewModelScope.launch { preferences.setAutoBackupEnabled(enabled) }
     }
 
-    /**
-     * Called when the user taps the enable switch. Walks the user through any missing
-     * prerequisite (passphrase, then destination on Android) before actually enabling.
-     * Reads from the real sources rather than `uiState.value` so it stays correct even
-     * if the combine-derived state hasn't recomputed yet (e.g. immediately after a
-     * preference write inside the same coroutine).
-     */
+    // Walks the user through missing prerequisites (passphrase, destination) before
+    // enabling. Reads from preferences directly because `uiState.value` may still hold
+    // pre-write values when this runs inside the same coroutine as a preference edit.
     fun onEnableToggled(value: Boolean) {
         if (!value) {
             pendingEnable = false
@@ -110,8 +132,7 @@ class AutoBackupViewModel(
         }
         viewModelScope.launch {
             val passphraseOk = passphraseManager.hasPassphrase()
-            val locationOk = !PlatformCapabilities.supportsAutoBackupFolderPicker() ||
-                preferences.backupDestinationUri.first() != null
+            val locationOk = isLocationConfigured()
             when {
                 !passphraseOk -> {
                     pendingEnable = true
@@ -132,14 +153,22 @@ class AutoBackupViewModel(
     private suspend fun completePendingEnableIfReady() {
         if (!pendingEnable) return
         val passphraseOk = passphraseManager.hasPassphrase()
-        val locationOk = !PlatformCapabilities.supportsAutoBackupFolderPicker() ||
-            preferences.backupDestinationUri.first() != null
+        val locationOk = isLocationConfigured()
         if (passphraseOk && locationOk) {
             pendingEnable = false
             preferences.setAutoBackupEnabled(true)
         } else if (passphraseOk && !locationOk) {
-            // Passphrase just got set; fire the next prerequisite.
             _events.tryEmit(AutoBackupEvent.RequestPickFolder)
+        }
+    }
+
+    // Checks configuration only — live availability (e.g. iCloud sign-in status) is
+    // surfaced at write time so enabling never blocks on a network round-trip.
+    private suspend fun isLocationConfigured(): Boolean {
+        if (!PlatformCapabilities.supportsAutoBackupFolderPicker()) return true
+        return when (preferences.backupDestinationMode.first()) {
+            BackupDestinationMode.ICLOUD -> true
+            BackupDestinationMode.CUSTOM_FOLDER -> preferences.backupDestinationUri.first() != null
         }
     }
 
@@ -189,20 +218,30 @@ class AutoBackupViewModel(
         viewModelScope.launch { preferences.setBackupRetentionCount(count) }
     }
 
-    fun setDestinationUri(uri: String?) {
+    fun setMode(mode: BackupDestinationMode) {
         viewModelScope.launch {
-            preferences.setBackupDestinationUri(uri)
-            if (uri != null) {
-                completePendingEnableIfReady()
+            preferences.setBackupDestinationMode(mode)
+            if (mode == BackupDestinationMode.CUSTOM_FOLDER &&
+                preferences.backupDestinationUri.first() == null
+            ) {
+                _events.tryEmit(AutoBackupEvent.RequestPickFolder)
             }
         }
     }
 
-    /**
-     * Called when the user opens the folder picker and dismisses it without choosing.
-     * Must NOT touch [preferences.setBackupDestinationUri] — a previously stored destination
-     * should remain intact. Only clears the pending-enable flag so the chain (if any) aborts.
-     */
+    fun setDestination(uri: String?, displayName: String?) {
+        viewModelScope.launch {
+            if (uri != null) {
+                preferences.setBackupDestination(uri, displayName)
+                completePendingEnableIfReady()
+            } else {
+                preferences.setBackupDestinationUri(null)
+            }
+        }
+    }
+
+    // Must NOT touch the stored destination — the user may have cancelled out of a
+    // re-pick from the Location row, in which case the previous folder should remain.
     fun onFolderPickerCancelled() {
         pendingEnable = false
     }
@@ -214,21 +253,10 @@ class AutoBackupViewModel(
 
             val appVersion = PlatformCapabilities.appVersionString()
             when (val result = autoBackupService.generateAutoBackup(appVersion)) {
-                is AutoBackupResult.Success -> {
-                    val written = storageProvider.writeBackup(result.fileName, result.data)
-                    if (written) {
-                        preferences.recordSuccess(
-                            timestamp = Clock.System.now().toEpochMilliseconds(),
-                            medicationCount = result.medicationCount,
-                        )
-                        autoBackupService.cleanupOldBackups(storageProvider)
-                        _backupMessage.value = "Backup complete (${result.medicationCount} medications)"
-                    } else {
-                        preferences.recordFailure("FAILED_STORAGE", "Failed to write backup file")
-                        _backupMessage.value = "Failed to write backup file"
-                    }
-                }
-
+                is AutoBackupResult.Success -> handleWriteResult(
+                    storageProvider.writeBackup(result.fileName, result.data),
+                    result.medicationCount,
+                )
                 is AutoBackupResult.Failure -> {
                     preferences.recordFailure(result.reason.name, result.message)
                     _backupMessage.value = result.message
@@ -236,6 +264,56 @@ class AutoBackupViewModel(
             }
 
             _isBackingUp.value = false
+        }
+    }
+
+    private suspend fun handleWriteResult(result: WriteBackupResult, medicationCount: Int) {
+        when (result) {
+            is WriteBackupResult.Success -> {
+                preferences.recordSuccess(
+                    timestamp = Clock.System.now().toEpochMilliseconds(),
+                    medicationCount = medicationCount,
+                )
+                autoBackupService.cleanupOldBackups(storageProvider)
+                _backupMessage.value = "Backup complete ($medicationCount medications)"
+            }
+            is WriteBackupResult.DestinationNotSet -> {
+                preferences.recordFailure(
+                    "FAILED_NO_DESTINATION",
+                    "Backup folder not set",
+                )
+                _backupMessage.value = "Backup folder not set. Tap Location to pick one."
+            }
+            is WriteBackupResult.PermissionRevoked -> {
+                preferences.recordFailure(
+                    "FAILED_PERMISSION_REVOKED",
+                    "Backup folder permission was revoked",
+                )
+                _backupMessage.value =
+                    "Permission to that folder was revoked. Please pick it again."
+            }
+            is WriteBackupResult.ICloudUnavailable -> {
+                preferences.recordFailure(
+                    "FAILED_ICLOUD_UNAVAILABLE",
+                    "iCloud Drive unavailable",
+                )
+                _backupMessage.value =
+                    "iCloud Drive isn't available. Sign in and enable iCloud Drive, or switch to a folder."
+            }
+            is WriteBackupResult.WriteFailed -> {
+                preferences.recordFailure("FAILED_STORAGE", result.message)
+                _backupMessage.value = "Failed to write backup file"
+            }
+        }
+    }
+
+    fun openSettingsForICloud() {
+        viewModelScope.launch {
+            val opened = PlatformCapabilities.openSystemSettingsForICloud()
+            if (!opened) {
+                _backupMessage.value =
+                    "Open Settings → Apple Account → iCloud → iCloud Drive."
+            }
         }
     }
 
@@ -280,7 +358,9 @@ data class AutoBackupUiState(
     val lastBackupErrorMessage: String? = null,
     val lastBackupMedicationCount: Int = 0,
     val consecutiveFailures: Int = 0,
+    val mode: BackupDestinationMode = BackupDestinationMode.ICLOUD,
     val destinationUri: String? = null,
-    val isDestinationAvailable: Boolean = false,
+    val destinationDisplayName: String? = null,
+    val destinationAvailability: DestinationAvailability = DestinationAvailability.NotSet,
     val passphraseHint: String? = null,
 )

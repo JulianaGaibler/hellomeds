@@ -871,6 +871,156 @@ class StockPredictionEngineTest {
             "Expected roughly 10 data points (only dose days), got ${futurePoints.size}",
         )
     }
+
+    // ================================================================
+    // Regression: at most one future data point per calendar day.
+    //
+    // Prior bug: on container-switch days the inner-step loop emitted a
+    // ContainerSwitch point at day-noon AND the outer loop emitted a regular
+    // point at the same day-noon. Two points at identical timestamps rendered
+    // as stacked markers on the overview graph — the user saw "2 events on
+    // Monday" when only one dose was scheduled. Cyclic 21/7 meds surfaced it
+    // more often because deductions concentrate on active days, so container
+    // boundaries landed on unpredictable calendar days.
+    // ================================================================
+
+    @Test
+    fun predict_containerSwitchDay_emitsSinglePoint() {
+        // 60 doses, 30/container -> exactly one switch on day 30.
+        val medication = createMedication(
+            trackingPrecision = TrackingPrecision.EXACT,
+            packagingQuantity = 30.0,
+        )
+        val schedules = listOf(
+            createSchedule(dose = 1.0, frequencyType = FrequencyType.INTERVAL, frequencyValue = 1),
+        )
+
+        val prediction = engine.predict(
+            medication = medication,
+            totalDoses = 60.0,
+            schedules = schedules,
+        )
+
+        val switchPoints = prediction.centerPoints.filter { it.event is StockEvent.ContainerSwitch }
+        assertEquals(1, switchPoints.size, "Expected exactly one container-switch event")
+
+        val switchTs = switchPoints.single().timestamp
+        val pointsOnSwitchDay = prediction.centerPoints.filter { it.timestamp == switchTs }
+        assertEquals(
+            1,
+            pointsOnSwitchDay.size,
+            "Container-switch day must have exactly one data point (regression: was 2 — a ContainerSwitch " +
+                "point and a duplicate regular point at the same timestamp).",
+        )
+    }
+
+    @Test
+    fun predict_futurePoints_haveUniqueTimestamps() {
+        // Multiple container transitions plus regular consumption days —
+        // every future point must land on its own calendar day.
+        val medication = createMedication(
+            trackingPrecision = TrackingPrecision.EXACT,
+            packagingQuantity = 10.0,
+        )
+        val schedules = listOf(
+            createSchedule(dose = 1.0, frequencyType = FrequencyType.INTERVAL, frequencyValue = 1),
+            createSchedule(id = 2, dose = 1.0, frequencyType = FrequencyType.INTERVAL, frequencyValue = 1),
+        )
+
+        val prediction = engine.predict(
+            medication = medication,
+            totalDoses = 116.0,
+            schedules = schedules,
+        )
+
+        val futurePoints = prediction.centerPoints.filter { it.isFuture }
+        val distinctTimestamps = futurePoints.map { it.timestamp }.distinct()
+        assertEquals(
+            futurePoints.size,
+            distinctTimestamps.size,
+            "Every future data point must have a unique timestamp — duplicates cause stacked markers. " +
+                "futurePoints=${futurePoints.size}, distinct=${distinctTimestamps.size}",
+        )
+    }
+
+    @Test
+    fun predict_cyclic21_7_noPlacebos_futurePoints_haveUniqueTimestamps() {
+        // Reproduces the user-reported scenario: 21/7 cyclic med, multiple containers.
+        // Deductions only happen on active days, so container boundaries land on
+        // whatever active day the running total hits zero — exactly the case that
+        // used to double-emit.
+        val medication = createMedication(
+            trackingPrecision = TrackingPrecision.EXACT,
+            packagingQuantity = 21.0,
+            cycleType = CycleType.CYCLIC,
+            cycleDaysActive = 21,
+            cycleDaysBreak = 7,
+            cycleHasPlacebos = false,
+            cycleStartDate = LocalDate(2025, 1, 1),
+        )
+        val schedules = listOf(
+            createSchedule(dose = 1.0, frequencyType = FrequencyType.INTERVAL, frequencyValue = 1),
+        )
+
+        // 3 full 21-day active periods -> guaranteed to cross at least 2 container boundaries.
+        val prediction = engine.predict(
+            medication = medication,
+            totalDoses = 63.0,
+            schedules = schedules,
+        )
+
+        val futurePoints = prediction.centerPoints.filter { it.isFuture }
+        val distinctTimestamps = futurePoints.map { it.timestamp }.distinct()
+        assertEquals(
+            futurePoints.size,
+            distinctTimestamps.size,
+            "Cyclic 21/7 prediction points must have unique timestamps per day. " +
+                "futurePoints=${futurePoints.size}, distinct=${distinctTimestamps.size}",
+        )
+
+        val switchCount = prediction.centerPoints.count { it.event is StockEvent.ContainerSwitch }
+        assertTrue(
+            switchCount >= 2,
+            "Expected the 63-dose / 21-per-container scenario to produce >=2 container switches to " +
+                "exercise the regression path, got $switchCount",
+        )
+    }
+
+    @Test
+    fun predict_containerSwitchDay_pointCarriesSwitchEvent() {
+        // The consolidated point on a switch day must expose the ContainerSwitch event
+        // so drawContainerTransitions can still render its dashed vertical marker.
+        val medication = createMedication(
+            trackingPrecision = TrackingPrecision.EXACT,
+            packagingQuantity = 5.0,
+        )
+        val schedules = listOf(
+            createSchedule(dose = 1.0, frequencyType = FrequencyType.INTERVAL, frequencyValue = 1),
+        )
+
+        val prediction = engine.predict(
+            medication = medication,
+            totalDoses = 15.0,
+            schedules = schedules,
+        )
+
+        val switchPoints = prediction.centerPoints.filter { it.event is StockEvent.ContainerSwitch }
+        assertEquals(2, switchPoints.size, "15 doses / 5-per-container should produce 2 switch events")
+
+        // Each switch day should have exactly one point overall — and that point IS the switch point.
+        switchPoints.forEach { switchPoint ->
+            val allOnDay = prediction.centerPoints.filter { it.timestamp == switchPoint.timestamp }
+            assertEquals(
+                1,
+                allOnDay.size,
+                "Switch day at ts=${switchPoint.timestamp} has ${allOnDay.size} points; must be 1.",
+            )
+            assertTrue(
+                allOnDay.single().event is StockEvent.ContainerSwitch,
+                "The single point on a switch day must carry the ContainerSwitch event.",
+            )
+        }
+    }
 }
 
 /** Test helper for pinning `Clock` to a fixed instant. */

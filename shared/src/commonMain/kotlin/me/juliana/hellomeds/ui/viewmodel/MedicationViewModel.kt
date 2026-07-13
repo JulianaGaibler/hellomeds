@@ -45,6 +45,9 @@ import me.juliana.hellomeds.ui.theme.MedicationColor
 data class MedicationDisplayItem(
     val id: Int,
     val name: String,
+    // Raw `medications.name`. `name` above may be the localized `displayName`;
+    // screenshot tests need this locale-stable handle to key `testTag` against.
+    val nameRaw: String,
     val typeAndStrength: String,
     val scheduleSummary: String,
     val foregroundShape: MedicationForegroundShape,
@@ -278,6 +281,7 @@ class MedicationViewModel(
         return MedicationDisplayItem(
             id = id,
             name = MedicationValidation.getEffectiveDisplayName(this),
+            nameRaw = name,
             typeAndStrength = displayFormatter.typeAndStrength(this),
             scheduleSummary = scheduleSummary,
             foregroundShape = parseEnum(foregroundShape, MedicationForegroundShape.CAPSULE_PILL),

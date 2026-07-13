@@ -50,6 +50,8 @@ import me.juliana.hellomeds.shared.settings_notification_discreet_toggle
 import me.juliana.hellomeds.shared.settings_notification_discreet_toggle_description
 import me.juliana.hellomeds.shared.settings_notification_grouping
 import me.juliana.hellomeds.shared.settings_notification_grouping_description
+import me.juliana.hellomeds.shared.settings_notification_non_dismissable
+import me.juliana.hellomeds.shared.settings_notification_non_dismissable_description
 import me.juliana.hellomeds.shared.settings_notification_open_settings
 import me.juliana.hellomeds.shared.settings_notification_privacy
 import me.juliana.hellomeds.shared.settings_notification_privacy_discreet
@@ -93,6 +95,8 @@ fun NotificationSettingsScreen(onNavigateBack: () -> Unit) {
         LockScreenVisibility.SHOW_WITH_NAMES,
     )
     val snoozeInterval by prefs.snoozeIntervalMinutes.collectAsStateWithLifecycle(10)
+    val nonDismissableReminders by prefs.nonDismissableReminders.collectAsStateWithLifecycle(false)
+    val showNonDismissableToggle = PlatformCapabilities.supportsNonDismissableNotifications()
 
     val permissionState = LocalPermissionWarnings.current
     var dismissedWarnings by remember { mutableStateOf(emptySet<PermissionWarning>()) }
@@ -144,6 +148,7 @@ fun NotificationSettingsScreen(onNavigateBack: () -> Unit) {
             }
             item {
                 SmartList {
+                    val behaviorItemCount = if (showNonDismissableToggle) 2 else 1
                     SmartListSwitchItem(
                         label = stringResource(Res.string.settings_notification_grouping),
                         checked = groupingMode == NotificationGroupingMode.GROUPED,
@@ -155,9 +160,25 @@ fun NotificationSettingsScreen(onNavigateBack: () -> Unit) {
                                 PlatformCapabilities.triggerNotificationReconciliation(context)
                             }
                         },
-                        shapes = smartListSegmentedShapes(index = 0, count = 1),
+                        shapes = smartListSegmentedShapes(index = 0, count = behaviorItemCount),
                         supportingText = stringResource(Res.string.settings_notification_grouping_description),
                     )
+                    if (showNonDismissableToggle) {
+                        SmartListSwitchItem(
+                            label = stringResource(Res.string.settings_notification_non_dismissable),
+                            checked = nonDismissableReminders,
+                            onCheckedChange = { enabled ->
+                                scope.launch {
+                                    prefs.setNonDismissableReminders(enabled)
+                                    PlatformCapabilities.triggerNotificationReconciliation(context)
+                                }
+                            },
+                            shapes = smartListSegmentedShapes(index = 1, count = behaviorItemCount),
+                            supportingText = stringResource(
+                                Res.string.settings_notification_non_dismissable_description,
+                            ),
+                        )
+                    }
                 }
             }
 

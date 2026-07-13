@@ -57,6 +57,7 @@ import me.juliana.hellomeds.ui.components.common.TopAppBarWithMenu
 import me.juliana.hellomeds.ui.components.graph.StockLevelGraph
 import me.juliana.hellomeds.ui.components.graph.models.GraphConfig
 import me.juliana.hellomeds.ui.components.graph.models.ZoomLevel
+import me.juliana.hellomeds.ui.components.graph.util.label
 import me.juliana.hellomeds.ui.components.list.LazySmartListItem
 import me.juliana.hellomeds.ui.components.list.smartListSegmentedShapes
 import me.juliana.hellomeds.ui.components.medication.MedicationShapeIcon
@@ -159,7 +160,8 @@ fun StockScreen(
                 LazyColumn(
                     modifier = modifier
                         .fillMaxSize()
-                        .padding(paddingValues),
+                        .padding(paddingValues)
+                        .testTag(ScreenshotTestTags.STOCK_LIST_SCROLL),
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                     contentPadding = PaddingValues(vertical = 16.dp),
                 ) {
@@ -258,7 +260,7 @@ fun StockScreen(
                             ),
                             onClick = { onNavigateToStockDetail(medication.id) },
                             modifier = Modifier
-                                .testTag(ScreenshotTestTags.stockListItem(medication.id))
+                                .testTag(ScreenshotTestTags.stockListItem(medication.name))
                                 .padding(horizontal = 16.dp)
                                 .animateItem(),
                         )
@@ -296,7 +298,7 @@ private fun OverviewZoomLevelSelector(
                 },
                 modifier = Modifier.weight(1f),
             ) {
-                Text(level.label)
+                Text(level.label())
             }
         }
     }

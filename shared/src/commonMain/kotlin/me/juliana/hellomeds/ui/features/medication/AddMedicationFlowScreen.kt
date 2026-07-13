@@ -111,7 +111,7 @@ fun AddMedicationFlowScreen(
             strengthUnit = if (state.strengthValue.isNotBlank()) state.strengthUnit else null,
             foregroundShape = state.foregroundShape.name,
             backgroundShape = state.backgroundShape.name,
-            shapeColor = state.color1?.let { it::class.simpleName },
+            shapeColor = state.color1?.name,
             cycleType = if (state.cycleEnabled) CycleType.CYCLIC else CycleType.NONE,
             cycleDaysActive = if (state.cycleEnabled) state.cycleDaysActive else null,
             cycleDaysBreak = if (state.cycleEnabled) state.cycleDaysBreak else null,

@@ -7,13 +7,24 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		274BBC4537D97AA85C4974E4 /* AccessibilityAuditTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D6821451A551CC2D705C7B3 /* AccessibilityAuditTests.swift */; };
+		4069E294C059AFCF62B4103F /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B25FC68439A93CCEE7FBECB /* SnapshotHelper.swift */; };
+		779C2CC00DE70AA0FF9F0B7A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9E5BE244AD57D1B14BF09CE /* Foundation.framework */; };
 		BEA654F32F73681800706E42 /* SQLCipher in Frameworks */ = {isa = PBXBuildFile; productRef = BEA654F22F73681800706E42 /* SQLCipher */; };
 		BED20BF12F76EA6900D5A0D3 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BED20BF02F76EA6900D5A0D3 /* WidgetKit.framework */; };
 		BED20BF32F76EA6900D5A0D3 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BED20BF22F76EA6900D5A0D3 /* SwiftUI.framework */; };
 		BED20C022F76EA6A00D5A0D3 /* AlarmLiveActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BED20BEE2F76EA6900D5A0D3 /* AlarmLiveActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		DC5FFC16CDD0D582399A272F /* ScreenshotUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62EF4AD200537C8AB3C2BD13 /* ScreenshotUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		14238F2A4C5447BAE352DB71 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BE4FFB602F706576002051C8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BE4FFB672F706576002051C8;
+			remoteInfo = HelloMeds;
+		};
 		BED20C002F76EA6A00D5A0D3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BE4FFB602F706576002051C8 /* Project object */;
@@ -38,10 +49,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3D6821451A551CC2D705C7B3 /* AccessibilityAuditTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccessibilityAuditTests.swift; sourceTree = "<group>"; };
+		5B25FC68439A93CCEE7FBECB /* SnapshotHelper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SnapshotHelper.swift; sourceTree = "<group>"; };
+		62EF4AD200537C8AB3C2BD13 /* ScreenshotUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScreenshotUITests.swift; sourceTree = "<group>"; };
+		B2F08F433A5931E465B72C54 /* HelloMedsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HelloMedsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE4FFB682F706576002051C8 /* HelloMeds.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HelloMeds.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BED20BEE2F76EA6900D5A0D3 /* AlarmLiveActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AlarmLiveActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BED20BF02F76EA6900D5A0D3 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		BED20BF22F76EA6900D5A0D3 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		C9E5BE244AD57D1B14BF09CE /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		CC0000013000000000000001 /* Version.generated.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Version.generated.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -87,6 +103,14 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		061772CD3D406B2379891EB5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				779C2CC00DE70AA0FF9F0B7A /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BE4FFB652F706576002051C8 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -107,6 +131,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		01BAD9A0A8CCA20B51C9780C /* HelloMedsUITests */ = {
+			isa = PBXGroup;
+			children = (
+				62EF4AD200537C8AB3C2BD13 /* ScreenshotUITests.swift */,
+				5B25FC68439A93CCEE7FBECB /* SnapshotHelper.swift */,
+				3D6821451A551CC2D705C7B3 /* AccessibilityAuditTests.swift */,
+			);
+			path = HelloMedsUITests;
+			sourceTree = "<group>";
+		};
 		BE4FFB5F2F706576002051C8 = {
 			isa = PBXGroup;
 			children = (
@@ -116,6 +150,7 @@
 				BED20BF42F76EA6900D5A0D3 /* AlarmLiveActivity */,
 				BED20BEF2F76EA6900D5A0D3 /* Frameworks */,
 				BE4FFB692F706576002051C8 /* Products */,
+				01BAD9A0A8CCA20B51C9780C /* HelloMedsUITests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -124,6 +159,7 @@
 			children = (
 				BE4FFB682F706576002051C8 /* HelloMeds.app */,
 				BED20BEE2F76EA6900D5A0D3 /* AlarmLiveActivityExtension.appex */,
+				B2F08F433A5931E465B72C54 /* HelloMedsUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -133,13 +169,40 @@
 			children = (
 				BED20BF02F76EA6900D5A0D3 /* WidgetKit.framework */,
 				BED20BF22F76EA6900D5A0D3 /* SwiftUI.framework */,
+				D1127B391D9A5E8ABA4C158C /* iOS */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D1127B391D9A5E8ABA4C158C /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				C9E5BE244AD57D1B14BF09CE /* Foundation.framework */,
+			);
+			name = iOS;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		6342447CC16C2CAB6D532FF1 /* HelloMedsUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9C57774B187DFACDCF8D4060 /* Build configuration list for PBXNativeTarget "HelloMedsUITests" */;
+			buildPhases = (
+				B5A49542122CC53D9F5DEB14 /* Sources */,
+				061772CD3D406B2379891EB5 /* Frameworks */,
+				3CC81495A67368A8B386AFD7 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				322ED9D521EA36B5255CB778 /* PBXTargetDependency */,
+			);
+			name = HelloMedsUITests;
+			productName = HelloMedsUITests;
+			productReference = B2F08F433A5931E465B72C54 /* HelloMedsUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		BE4FFB672F706576002051C8 /* HelloMeds */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = BE4FFB732F706578002051C8 /* Build configuration list for PBXNativeTarget "HelloMeds" */;
@@ -184,8 +247,6 @@
 				BED20C0E2F76EE2300D5A0D3 /* Shared */,
 			);
 			name = AlarmLiveActivityExtension;
-			packageProductDependencies = (
-			);
 			productName = AlarmLiveActivityExtension;
 			productReference = BED20BEE2F76EA6900D5A0D3 /* AlarmLiveActivityExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -200,6 +261,10 @@
 				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2630;
 				TargetAttributes = {
+					6342447CC16C2CAB6D532FF1 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = BE4FFB672F706576002051C8;
+					};
 					BE4FFB672F706576002051C8 = {
 						CreatedOnToolsVersion = 26.3;
 					};
@@ -228,11 +293,19 @@
 			targets = (
 				BE4FFB672F706576002051C8 /* HelloMeds */,
 				BED20BED2F76EA6900D5A0D3 /* AlarmLiveActivityExtension */,
+				6342447CC16C2CAB6D532FF1 /* HelloMedsUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		3CC81495A67368A8B386AFD7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BE4FFB662F706576002051C8 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -271,6 +344,16 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		B5A49542122CC53D9F5DEB14 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC5FFC16CDD0D582399A272F /* ScreenshotUITests.swift in Sources */,
+				4069E294C059AFCF62B4103F /* SnapshotHelper.swift in Sources */,
+				274BBC4537D97AA85C4974E4 /* AccessibilityAuditTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BE4FFB642F706576002051C8 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -288,6 +371,12 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		322ED9D521EA36B5255CB778 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = HelloMeds;
+			target = BE4FFB672F706576002051C8 /* HelloMeds */;
+			targetProxy = 14238F2A4C5447BAE352DB71 /* PBXContainerItemProxy */;
+		};
 		BED20C012F76EA6A00D5A0D3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = BED20BED2F76EA6900D5A0D3 /* AlarmLiveActivityExtension */;
@@ -296,6 +385,41 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		6A3D3D4FBEFDB1C06C03FB3C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.juliana.HelloMeds.UITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = HelloMeds;
+			};
+			name = Debug;
+		};
+		B37005AC7F972A960CEB464D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.juliana.HelloMeds.UITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = HelloMeds;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		BE4FFB712F706578002051C8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -424,6 +548,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = HelloMeds/HelloMeds.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = M7SPK894Z9;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -431,7 +556,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HelloMeds/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = HelloMeds;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "HelloMeds uses the camera to scan medication labels and automatically detect medication names, types, and dosage information.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -441,6 +568,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 0.1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = me.juliana.HelloMeds;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -462,6 +590,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = HelloMeds/HelloMeds.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = M7SPK894Z9;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -469,7 +598,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HelloMeds/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = HelloMeds;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "HelloMeds uses the camera to scan medication labels and automatically detect medication names, types, and dosage information.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -479,6 +610,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 0.1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = me.juliana.HelloMeds;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -554,6 +686,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		9C57774B187DFACDCF8D4060 /* Build configuration list for PBXNativeTarget "HelloMedsUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B37005AC7F972A960CEB464D /* Release */,
+				6A3D3D4FBEFDB1C06C03FB3C /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		BE4FFB632F706576002051C8 /* Build configuration list for PBXProject "HelloMeds" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

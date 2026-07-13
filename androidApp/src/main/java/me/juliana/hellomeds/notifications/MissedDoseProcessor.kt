@@ -60,6 +60,7 @@ class MissedDoseProcessor(
 
         AppLogger.d(TAG, "Watermark window [$watermarkStart..$now]: ${catchUpEvents.size} pending events")
         val lockScreenVisibility = notifPrefs.lockScreenVisibility.first()
+        val nonDismissable = notifPrefs.nonDismissableReminders.first()
 
         // Group by scheduledTime — different time slots may have pending events
         val eventsByTimeSlot = catchUpEvents.groupBy { it.scheduledTime }
@@ -91,7 +92,7 @@ class MissedDoseProcessor(
                     "${stillPending.size} still pending after re-check",
             )
             if (stillPending.isNotEmpty()) {
-                handleNewEvents(now, stillPending, lockScreenVisibility)
+                handleNewEvents(now, stillPending, lockScreenVisibility, nonDismissable)
             }
         }
     }
@@ -102,6 +103,7 @@ class MissedDoseProcessor(
         now: Long,
         pendingEvents: List<ProjectedEvent>,
         lockScreenVisibility: LockScreenVisibility,
+        nonDismissable: Boolean,
     ) {
         if (pendingEvents.isEmpty()) return
 
@@ -119,12 +121,14 @@ class MissedDoseProcessor(
                 now,
                 pendingEvents,
                 lockScreenVisibility,
+                nonDismissable,
             )
 
             NotificationGroupingMode.GROUPED -> handleNewEventsGrouped(
                 now,
                 pendingEvents,
                 lockScreenVisibility,
+                nonDismissable,
             )
         }
     }
@@ -133,6 +137,7 @@ class MissedDoseProcessor(
         now: Long,
         pendingEvents: List<ProjectedEvent>,
         lockScreenVisibility: LockScreenVisibility,
+        nonDismissable: Boolean,
     ) {
         val medications = pendingEvents.mapNotNull { event ->
             medicationDao.getByIdSync(event.medicationId)
@@ -187,6 +192,7 @@ class MissedDoseProcessor(
             lockScreenVisibility,
             isFollowUp = false,
             groupKey = groupKeyForTimeSlot(scheduledTime),
+            nonDismissable = nonDismissable,
         )
 
         if (maxFollowUps > 0) {
@@ -221,6 +227,7 @@ class MissedDoseProcessor(
         now: Long,
         pendingEvents: List<ProjectedEvent>,
         lockScreenVisibility: LockScreenVisibility,
+        nonDismissable: Boolean,
     ) {
         val scheduledTime = pendingEvents.first().scheduledTime
         val groupKey = groupKeyForTimeSlot(scheduledTime)
@@ -236,6 +243,7 @@ class MissedDoseProcessor(
                 scheduledTime,
                 lockScreenVisibility,
                 isFollowUp = false,
+                nonDismissable = nonDismissable,
             )
         }
 
@@ -263,6 +271,7 @@ class MissedDoseProcessor(
                 lockScreenVisibility,
                 isFollowUp = false,
                 groupKey = groupKey,
+                nonDismissable = nonDismissable,
             )
 
             // Create individual session if follow-ups are configured
@@ -360,6 +369,7 @@ class MissedDoseProcessor(
         isSnoozed: Boolean = false,
         groupKey: String? = null,
         followUpNumber: Int = 0,
+        nonDismissable: Boolean = false,
     ) {
         try {
             AppLogger.d(
@@ -381,6 +391,7 @@ class MissedDoseProcessor(
                 isSnoozed = isSnoozed,
                 groupKey = groupKey,
                 followUpNumber = followUpNumber,
+                nonDismissable = nonDismissable,
             )
 
             val notifMgr = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -431,6 +442,7 @@ class MissedDoseProcessor(
         isFollowUp: Boolean,
         isSnoozed: Boolean = false,
         isFollowUpAlert: Boolean = false,
+        nonDismissable: Boolean = false,
     ) {
         try {
             val groupKey = groupKeyForTimeSlot(scheduledTime)
@@ -447,6 +459,7 @@ class MissedDoseProcessor(
                 isFollowUp = isFollowUp,
                 isSnoozed = isSnoozed,
                 isFollowUpAlert = isFollowUpAlert,
+                nonDismissable = nonDismissable,
             )
 
             val notifMgr = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

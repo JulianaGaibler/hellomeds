@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+devices([
+  "iPhone 17",
+  "iPad Pro 11-inch (M5)",
+])
+
+languages([
+  "en-US",
+  "de-DE",
+])
+
+project "iosApp/HelloMeds.xcodeproj"
+scheme "HelloMeds"
+test_target_name "HelloMedsUITests"
+only_testing ["HelloMedsUITests/ScreenshotUITests"]
+output_directory "fastlane/metadata/ios/screenshots"
+
+override_status_bar true
+clear_previous_screenshots true
+clean true
+# Wipe the simulator's app container between device/language runs so the DB
+# doesn't carry rows over from a previous run.
+erase_simulator true
+disable_slide_to_type true
+stop_after_first_error true
+concurrent_simulators false

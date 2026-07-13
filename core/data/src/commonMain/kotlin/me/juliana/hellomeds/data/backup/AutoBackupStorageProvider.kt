@@ -3,32 +3,48 @@
 
 package me.juliana.hellomeds.data.backup
 
-/**
- * Platform-specific storage for automatic backups.
- *
- * Android: Writes to a user-selected SAF folder (Google Drive, local, etc.)
- * iOS: Writes to iCloud Drive ubiquity container (or local fallback)
- */
 expect class AutoBackupStorageProvider {
-    /**
-     * Writes backup data to the configured destination.
-     * Returns true on success.
-     */
-    suspend fun writeBackup(fileName: String, data: ByteArray): Boolean
+    suspend fun writeBackup(fileName: String, data: ByteArray): WriteBackupResult
 
-    /**
-     * Lists existing auto-backup filenames, sorted newest-first.
-     * Only returns files matching the hellomeds-auto-* pattern.
-     */
+    /** Sorted newest-first; only files matching the hellomeds-auto-* pattern. */
     suspend fun listBackups(): List<String>
 
-    /**
-     * Deletes a backup file by name.
-     */
     suspend fun deleteBackup(fileName: String): Boolean
 
-    /**
-     * Whether the storage destination is configured and accessible.
-     */
-    suspend fun isDestinationAvailable(): Boolean
+    suspend fun destinationAvailability(): DestinationAvailability
 }
+
+/**
+ * Android always behaves as [CUSTOM_FOLDER]; the preference is iOS-driven but lives in
+ * shared code so the ViewModel can read it uniformly.
+ */
+enum class BackupDestinationMode {
+    ICLOUD,
+    CUSTOM_FOLDER,
+}
+
+sealed interface WriteBackupResult {
+    data object Success : WriteBackupResult
+    data object DestinationNotSet : WriteBackupResult
+    data object PermissionRevoked : WriteBackupResult
+
+    /**
+     * Covers any reason the iCloud container can't be reached: no Apple ID signed in,
+     * iCloud Drive toggled off, or entitlement issues. Apple's API does not reliably
+     * distinguish these cases — `FileManager.ubiquityIdentityToken` returns nil for all
+     * of them — so the UI surfaces a single message covering both fixes.
+     */
+    data object ICloudUnavailable : WriteBackupResult
+
+    data class WriteFailed(val message: String) : WriteBackupResult
+}
+
+sealed interface DestinationAvailability {
+    data object Available : DestinationAvailability
+    data object NotSet : DestinationAvailability
+    data object PermissionRevoked : DestinationAvailability
+    data object ICloudUnavailable : DestinationAvailability
+}
+
+val DestinationAvailability.isAvailable: Boolean
+    get() = this is DestinationAvailability.Available

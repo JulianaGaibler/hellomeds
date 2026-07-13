@@ -170,8 +170,8 @@ class IOSScheduleReconciler(
         val dueSnoozes = sessionManager.getDueSnoozes(now)
         for (snooze in dueSnoozes) {
             sessionManager.clearSnooze(snooze.timeSlotKey)
-            AppLogger.d(TAG, "Auto-cleared expired snooze for slot ${snooze.timeSlotKey}")
         }
+        val expiredSnoozesCleared = dueSnoozes.size
 
         // Collect still-active snoozed sessions (snoozeUntilTime > now).
         // Their AlarmKit alarms must survive the wipe to preserve Dynamic Island countdown.
@@ -200,18 +200,12 @@ class IOSScheduleReconciler(
         val pendingEvents = events.filter { it.isPending }
 
         if (pendingEvents.isEmpty()) {
-            AppLogger.d(TAG, "No pending events in next 7 days")
+            AppLogger.i(TAG, "Reconciled: no pending events in next 7 days")
             return@withLock
         }
 
         // Step 3: Group events by time slot (within 1 minute tolerance)
         val timeSlots = groupByTimeSlot(pendingEvents)
-
-        AppLogger.i(
-            TAG,
-            "Scheduling ${timeSlots.size} notification groups " +
-                "(${pendingEvents.size} total events)",
-        )
 
         // Step 3a: Detect budget exhaustion. iOS hard-caps at 64 pending local
         // notifications. We schedule up to MAX_EVENT_NOTIFICATIONS (= 55) event
@@ -241,15 +235,8 @@ class IOSScheduleReconciler(
                 cont.resume(settings?.criticalAlertSetting == UNNotificationSettingEnabled)
             }
         }
-        if (!canUseCritical) {
-            AppLogger.d(TAG, "Critical alerts not authorized, falling back to timeSensitive")
-        }
-
         // Check AlarmKit availability once per reconcile cycle
         val alarmKitReady = isAlarmKitAvailable() && isAlarmKitAuthorized()
-        if (alarmKitReady) {
-            AppLogger.d(TAG, "AlarmKit available and authorized — alarm-importance slots will use AlarmKit")
-        }
 
         // Step 4: Schedule notifications + follow-ups, respecting budget.
         // Initial notifications are scheduled for the full 7-day window.
@@ -259,6 +246,7 @@ class IOSScheduleReconciler(
         var scheduledCount = 0
         var followUpCount = 0
         var alarmKitCount = 0
+        var skippedSnoozedCount = 0
 
         for ((slotTime, slotEvents) in timeSlots) {
             if (scheduledCount >= MAX_EVENT_NOTIFICATIONS) {
@@ -273,7 +261,7 @@ class IOSScheduleReconciler(
             // Skip snoozed slots — the snooze notification is already pending
             val existingSession = sessionManager.getSession(slotTime.toString())
             if (existingSession != null && existingSession.isSnoozed) {
-                AppLogger.d(TAG, "Skipping snoozed slot $slotTime")
+                skippedSnoozedCount++
                 continue
             }
 
@@ -290,7 +278,6 @@ class IOSScheduleReconciler(
                 // scheduleGroupNotification's FollowUpConfig still carries
                 // hasAlarm=true so the unfired tail of follow-up notifications
                 // retains interruption level 4 (alarm).
-                AppLogger.d(TAG, "Slot ${formatSlotTime(slotTime)}: using AlarmKit, hasAlarmMed=true")
                 val followUpConfig = scheduleAlarmKitAlarmForSlot(slotTime, slotEvents, discreet)
                 alarmKitCount++
 
@@ -321,12 +308,6 @@ class IOSScheduleReconciler(
                 }
             } else {
                 // Standard path: schedule as UNNotification
-                AppLogger.d(
-                    TAG,
-                    "Slot ${formatSlotTime(
-                        slotTime,
-                    )}: using UNNotification, ${slotEvents.size} meds. Budget remaining: ${MAX_EVENT_NOTIFICATIONS - scheduledCount}",
-                )
                 val followUpConfig = scheduleGroupNotification(
                     center,
                     slotTime,
@@ -341,10 +322,6 @@ class IOSScheduleReconciler(
                     val maxToSchedule = minOf(
                         followUpConfig.maxFollowUps,
                         MAX_EVENT_NOTIFICATIONS - scheduledCount,
-                    )
-                    AppLogger.d(
-                        TAG,
-                        "Slot ${formatSlotTime(slotTime)}: scheduling $maxToSchedule follow-ups (within 24h window)",
                     )
                     for (i in 1..maxToSchedule) {
                         val followUpTime = slotTime + (i * followUpConfig.intervalMs)
@@ -364,13 +341,6 @@ class IOSScheduleReconciler(
 
                         if (scheduledCount >= MAX_EVENT_NOTIFICATIONS) break
                     }
-                } else if (followUpConfig != null) {
-                    AppLogger.d(
-                        TAG,
-                        "Slot ${formatSlotTime(
-                            slotTime,
-                        )}: skipping ${followUpConfig.maxFollowUps} follow-ups (outside 24h window)",
-                    )
                 }
             }
         }
@@ -413,10 +383,17 @@ class IOSScheduleReconciler(
             restoredSnoozeCount++
         }
 
+        val extras = buildList {
+            if (skippedSnoozedCount > 0) add("skipped=$skippedSnoozedCount snoozed")
+            if (expiredSnoozesCleared > 0) add("cleared=$expiredSnoozesCleared expired")
+            if (!canUseCritical) add("noCriticalEntitlement")
+            if (alarmKitReady) add("alarmKit")
+        }
+        val extrasStr = if (extras.isEmpty()) "" else " [${extras.joinToString(", ")}]"
         AppLogger.i(
             TAG,
-            "Reconciled: $scheduledCount notifications ($followUpCount follow-ups) + " +
-                "$alarmKitCount AlarmKit alarms + $restoredSnoozeCount restored snooze notifications",
+            "Reconciled ${timeSlots.size} slots: $scheduledCount notifs ($followUpCount follow-ups) + " +
+                "$alarmKitCount AlarmKit + $restoredSnoozeCount restored snoozes$extrasStr",
         )
 
         // Budget verification — log if event scheduling consumed >90% of its allocation.
@@ -760,11 +737,6 @@ class IOSScheduleReconciler(
             center.addNotificationRequest(request) { error ->
                 if (error != null) {
                     AppLogger.e(TAG, "Failed to schedule notification: ${error.localizedDescription}")
-                } else {
-                    AppLogger.d(
-                        TAG,
-                        "Scheduled notification $identifier for ${medicationNames.joinToString()}",
-                    )
                 }
                 cont.resume(Unit)
             }
@@ -911,8 +883,6 @@ class IOSScheduleReconciler(
             center.addNotificationRequest(request) { error ->
                 if (error != null) {
                     AppLogger.e(TAG, "Failed to schedule follow-up #$followUpNumber: ${error.localizedDescription}")
-                } else {
-                    AppLogger.d(TAG, "Scheduled follow-up $identifier")
                 }
                 cont.resume(Unit)
             }
@@ -978,7 +948,6 @@ class IOSScheduleReconciler(
                     ?: emptyList()
                 if (ids.isNotEmpty()) {
                     center.removePendingNotificationRequestsWithIdentifiers(ids)
-                    AppLogger.d(TAG, "Removed ${ids.size} pending snooze notifications")
                 }
                 cont.resume(Unit)
             }
@@ -1027,8 +996,6 @@ class IOSScheduleReconciler(
         center.addNotificationRequest(request) { error ->
             if (error != null) {
                 AppLogger.e(TAG, "Failed to restore snooze notification: ${error.localizedDescription}")
-            } else {
-                AppLogger.d(TAG, "Restored snooze $identifier (${intervalSeconds.toLong()}s remaining)")
             }
         }
     }
@@ -1055,7 +1022,6 @@ class IOSScheduleReconciler(
                     ?: emptyList()
                 if (ids.isNotEmpty()) {
                     center.removePendingNotificationRequestsWithIdentifiers(ids)
-                    AppLogger.d(TAG, "Removed ${ids.size} pending medication notifications")
                 }
                 cont.resume(Unit)
             }
@@ -1071,7 +1037,6 @@ class IOSScheduleReconciler(
                     ?: emptyList()
                 if (ids.isNotEmpty()) {
                     center.removeDeliveredNotificationsWithIdentifiers(ids)
-                    AppLogger.d(TAG, "Removed ${ids.size} delivered medication notifications")
                 }
                 cont.resume(Unit)
             }

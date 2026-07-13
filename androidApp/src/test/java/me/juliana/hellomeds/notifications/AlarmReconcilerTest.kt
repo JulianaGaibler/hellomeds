@@ -92,6 +92,7 @@ class AlarmReconcilerTest {
         every {
             notificationPrefs.lockScreenVisibility
         } returns flowOf(me.juliana.hellomeds.data.model.enums.LockScreenVisibility.SHOW_WITH_NAMES)
+        every { notificationPrefs.nonDismissableReminders } returns flowOf(false)
 
         reconciler = AlarmReconciler(
             context,

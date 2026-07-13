@@ -3,7 +3,13 @@
 
 package me.juliana.hellomeds.ui.features.onboarding.steps
 
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.back_hand_48px
 import me.juliana.hellomeds.shared.onboarding_quickstart_step1_body
@@ -13,6 +19,8 @@ import me.juliana.hellomeds.shared.onboarding_quickstart_step2_title
 import me.juliana.hellomeds.shared.onboarding_quickstart_step3_body
 import me.juliana.hellomeds.shared.onboarding_quickstart_step3_title
 import me.juliana.hellomeds.shared.onboarding_quickstart_title
+import me.juliana.hellomeds.shared.settings_about_reliability
+import me.juliana.hellomeds.ui.components.ReliabilityDisclaimerDialog
 import me.juliana.hellomeds.ui.features.onboarding.components.StepsOnboardingScreen
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -36,11 +44,22 @@ fun QuickStartScreen(onContinue: () -> Unit, onBack: () -> Unit) {
             stringResource(Res.string.onboarding_quickstart_step3_body),
     )
 
+    var showReliabilityDialog by remember { mutableStateOf(false) }
+
     StepsOnboardingScreen(
         icon = painterResource(Res.drawable.back_hand_48px),
         title = stringResource(Res.string.onboarding_quickstart_title),
         steps = steps,
         onContinueClick = onContinue,
         onBackClick = onBack,
+        footerContent = {
+            TextButton(onClick = { showReliabilityDialog = true }) {
+                Text(stringResource(Res.string.settings_about_reliability))
+            }
+        },
     )
+
+    if (showReliabilityDialog) {
+        ReliabilityDisclaimerDialog(onDismiss = { showReliabilityDialog = false })
+    }
 }

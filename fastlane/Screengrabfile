@@ -16,7 +16,9 @@ locales(['en-US', 'de-DE'])
 clear_previous_screenshots(true)
 
 # Output dir is form-factor aware so `./hm screenshots all` keeps phone/tablet
-# captures separate.
+# captures separate. These are raw captures for design work (e.g. Figma);
+# final curated store/F-Droid screenshots are placed manually under
+# fastlane/metadata/android/<locale>/images/{phone,tenInch}Screenshots/.
 output_directory("fastlane/metadata/android/screenshots/#{ENV['HM_FORM_FACTOR'] || 'phone'}")
 
 test_instrumentation_runner('me.juliana.hellomeds.screenshots.TestScreenshotRunner')

@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
  */
 @Immutable
 sealed class MedicationColor(
+    val name: String,
     val foregroundLight: Color,
     val backgroundLight: Color,
     val foregroundDark: Color,
@@ -36,6 +37,7 @@ sealed class MedicationColor(
     }
 
     data object Rose : MedicationColor(
+        name = "ROSE",
         foregroundLight = Color(0xFF8F4A56),
         backgroundLight = Color(0xFFFDA6B3),
         foregroundDark = Color(0xFFFFB2BD),
@@ -43,6 +45,7 @@ sealed class MedicationColor(
     )
 
     data object Pink : MedicationColor(
+        name = "PINK",
         foregroundLight = Color(0xFF8A4B68),
         backgroundLight = Color(0xFFFEB0D1),
         foregroundDark = Color(0xFFFEB0D1),
@@ -50,6 +53,7 @@ sealed class MedicationColor(
     )
 
     data object Red : MedicationColor(
+        name = "RED",
         foregroundLight = Color(0xFF914B43),
         backgroundLight = Color(0xFFFDA499),
         foregroundDark = Color(0xFFFFA79B),
@@ -57,6 +61,7 @@ sealed class MedicationColor(
     )
 
     data object Orange : MedicationColor(
+        name = "ORANGE",
         foregroundLight = Color(0xFF8D4F28),
         backgroundLight = Color(0xFFFFAE7F),
         foregroundDark = Color(0xFFFFB68C),
@@ -64,6 +69,7 @@ sealed class MedicationColor(
     )
 
     data object Yellow : MedicationColor(
+        name = "YELLOW",
         foregroundLight = Color(0xFF795A0C),
         backgroundLight = Color(0xFFFFD57D),
         foregroundDark = Color(0xFFE9C16C),
@@ -71,6 +77,7 @@ sealed class MedicationColor(
     )
 
     data object Chartreuse : MedicationColor(
+        name = "CHARTREUSE",
         foregroundLight = Color(0xFF5C641E),
         backgroundLight = Color(0xFFDDE692),
         foregroundDark = Color(0xFFC3CD7C),
@@ -78,6 +85,7 @@ sealed class MedicationColor(
     )
 
     data object Green : MedicationColor(
+        name = "GREEN",
         foregroundLight = Color(0xFF376A3E),
         backgroundLight = Color(0xFFB7F1B9),
         foregroundDark = Color(0xFF9CD49F),
@@ -85,6 +93,7 @@ sealed class MedicationColor(
     )
 
     data object Teal : MedicationColor(
+        name = "TEAL",
         foregroundLight = Color(0xFF006B60),
         backgroundLight = Color(0xFF9EF2E3),
         foregroundDark = Color(0xFF82D5C7),
@@ -92,6 +101,7 @@ sealed class MedicationColor(
     )
 
     data object Cyan : MedicationColor(
+        name = "CYAN",
         foregroundLight = Color(0xFF01687D),
         backgroundLight = Color(0xFF9AE5FD),
         foregroundDark = Color(0xFF86D1EA),
@@ -99,6 +109,7 @@ sealed class MedicationColor(
     )
 
     data object Blue : MedicationColor(
+        name = "BLUE",
         foregroundLight = Color(0xFF485E92),
         backgroundLight = Color(0xFFADC3FE),
         foregroundDark = Color(0xFFB0C6FF),
@@ -106,6 +117,7 @@ sealed class MedicationColor(
     )
 
     data object Indigo : MedicationColor(
+        name = "INDIGO",
         foregroundLight = Color(0xFF5B5992),
         backgroundLight = Color(0xFFC1BDFE),
         foregroundDark = Color(0xFFC5C0FF),
@@ -113,6 +125,7 @@ sealed class MedicationColor(
     )
 
     data object Purple : MedicationColor(
+        name = "PURPLE",
         foregroundLight = Color(0xFF6B548D),
         backgroundLight = Color(0xFFD9BDFE),
         foregroundDark = Color(0xFFD6BBFB),
@@ -120,6 +133,7 @@ sealed class MedicationColor(
     )
 
     data object Monochrome : MedicationColor(
+        name = "MONOCHROME",
         foregroundLight = Color(0xFF586071),
         backgroundLight = Color(0xFFBFC5D2),
         foregroundDark = Color(0xFFC0C7D8),

@@ -68,6 +68,7 @@ class NotificationActionHandlerConcurrencyTest {
             val sessionManager = mockk<NotificationSessionManager>()
             val notifPrefs = mockk<NotificationPreferences> {
                 every { lockScreenVisibility } returns flowOf(LockScreenVisibility.SHOW_WITH_NAMES)
+                every { nonDismissableReminders } returns flowOf(false)
             }
             val medicationDao = mockk<MedicationDao>(relaxed = true)
             val notifBuilder = mockk<NotificationBuilder>(relaxed = true)

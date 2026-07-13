@@ -427,7 +427,7 @@ private fun MedicationDetailBottomSheetPreview() {
                 strengthUnit = MedicationStrengthUnit.MG,
                 foregroundShape = MedicationForegroundShape.CAPSULE_PILL.name,
                 backgroundShape = MedicationBackgroundShape.EIGHT_LEAF_CLOVER.name,
-                shapeColor = MedicationColor.Purple::class.simpleName,
+                shapeColor = MedicationColor.Purple.name,
                 notes = "Take with food",
             ),
             importanceLabel = ImportanceLabel(

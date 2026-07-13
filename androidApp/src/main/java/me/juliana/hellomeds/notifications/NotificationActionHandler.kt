@@ -145,6 +145,7 @@ class NotificationActionHandler(
     ) {
         val notifMgr = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val lockScreenVisibility = notifPrefs.lockScreenVisibility.first()
+        val nonDismissable = notifPrefs.nonDismissableReminders.first()
 
         // Find the session for the acted-upon schedule
         val actedScheduleId = actionScheduleIds.first()
@@ -179,6 +180,7 @@ class NotificationActionHandler(
                 scheduledTime,
                 notifMgr,
                 lockScreenVisibility,
+                nonDismissable,
             )
 
             SessionType.INDIVIDUAL -> handlePostActionIndividual(
@@ -199,6 +201,7 @@ class NotificationActionHandler(
         scheduledTime: Long,
         notifMgr: NotificationManager,
         lockScreenVisibility: LockScreenVisibility,
+        nonDismissable: Boolean,
     ) {
         val remainingEvents = projector.getPendingEventsAtTime(scheduledTime)
             .filter { it.scheduleId in session.scheduleIds }
@@ -229,6 +232,7 @@ class NotificationActionHandler(
             isFollowUp = false,
             isSnoozed = false,
             groupKey = "hellomeds_$scheduledTime",
+            nonDismissable = nonDismissable,
         )
         notifMgr.notify(session.notificationId, notification)
         Log.d(TAG, "Updated combined notification: ${medications.size} meds remaining")

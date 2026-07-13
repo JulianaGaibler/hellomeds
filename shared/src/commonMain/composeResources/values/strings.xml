@@ -535,8 +535,19 @@
     <string name="auto_backup_confirm_passphrase">Confirm passphrase</string>
     <string name="auto_backup_passphrase_hint">Hint (optional)</string>
     <string name="auto_backup_remember_warning">Write this passphrase down! Without it, your backups cannot be restored.</string>
-    <string name="auto_backup_destination_unavailable">Storage location no longer accessible. Please select a new folder.</string>
-    <string name="auto_backup_destination_icloud">Backups are stored in iCloud Drive and sync automatically across your devices.</string>
+    <string name="auto_backup_mode_label">Backup destination</string>
+    <string name="auto_backup_mode_icloud">iCloud Drive</string>
+    <string name="auto_backup_mode_icloud_description">Recommended — syncs across your Apple devices</string>
+    <string name="auto_backup_mode_custom_folder">Choose a folder</string>
+    <string name="auto_backup_mode_custom_folder_description">Save to Files — including Google Drive, Dropbox, or On My iPhone</string>
+    <string name="auto_backup_banner_icloud_unavailable_title">iCloud Drive isn't available</string>
+    <string name="auto_backup_banner_icloud_unavailable_body">Sign in to iCloud and turn on iCloud Drive in the Settings app, or choose a folder instead.</string>
+    <string name="auto_backup_banner_destination_not_set_title">Pick a backup folder</string>
+    <string name="auto_backup_banner_destination_not_set_body">Choose where backups are saved using the Backup Location setting below.</string>
+    <string name="auto_backup_banner_permission_revoked_title">Folder permission revoked</string>
+    <string name="auto_backup_banner_permission_revoked_body">Access to your backup folder was revoked. Pick a new folder below.</string>
+    <string name="auto_backup_banner_action_open_settings">Open Settings</string>
+    <string name="auto_backup_banner_action_choose_folder">Choose a folder</string>
     <string name="auto_backup_retention_title">Keep recent backups</string>
     <string name="auto_backup_trigger">Back up now</string>
     <string name="auto_backup_settings_title">Settings</string>
@@ -664,6 +675,8 @@
     <string name="settings_notification_channel_critical_description">Configure alarm sound and verify Do Not Disturb bypass for critical medications</string>
     <string name="settings_notification_grouping">Separate notifications</string>
     <string name="settings_notification_grouping_description">When on, reminders scheduled for the same time appear as individual notifications instead of being grouped into one.</string>
+    <string name="settings_notification_non_dismissable">Persistent reminders</string>
+    <string name="settings_notification_non_dismissable_description">Pins reminders to your lock screen and protects them from accidental dismissal. They can't be cleared by "Clear All".</string>
 
     <string name="settings_notification_privacy">Notification privacy</string>
     <string name="settings_notification_privacy_show_names">Show medication names</string>
@@ -791,6 +804,13 @@
 
     <!-- About -->
     <string name="settings_about_title">About</string>
+    <string name="settings_about_reliability">About reliability</string>
+    <string name="settings_about_reliability_description">What HelloMeds can and can't guarantee</string>
+    <string name="reliability_disclaimer_title">About reliability</string>
+    <string name="reliability_disclaimer_paragraph1">HelloMeds is here to help you remember your medication. Neither HelloMeds nor your phone is a medical device.</string>
+    <string name="reliability_disclaimer_paragraph2">We work hard to keep the app reliable and fix bugs quickly. Even so, reminders can sometimes go wrong: phones run out of battery, notifications get silenced, and the app itself can have bugs we haven't caught yet. We can't guarantee that every reminder will arrive on time, every time.</string>
+    <string name="reliability_disclaimer_paragraph3">Remembering your medication is, ultimately, your responsibility. For anything important to your routine, please don't rely on HelloMeds as your only reminder.</string>
+    <string name="reliability_disclaimer_dismiss">Got it</string>
     <string name="settings_about_website">Website</string>
     <string name="settings_about_website_url" translatable="false">https://juliana.me/projects/hellomeds</string>
     <string name="settings_about_source_code">Source code</string>
@@ -859,6 +879,13 @@
     <string name="stock_detail_no_tracking">No stock tracking enabled</string>
     <string name="stock_detail_description">Track your medication inventory to get low stock alerts and usage insights.</string>
     <string name="stock_detail_add_button">Add Stock Tracking</string>
+
+    <!-- Graph zoom level labels -->
+    <string name="zoom_level_day">Day</string>
+    <string name="zoom_level_week">Week</string>
+    <string name="zoom_level_month">Month</string>
+    <string name="zoom_level_quarter">Quarter</string>
+    <string name="zoom_level_year">Year</string>
 
     <!-- Delete Tracking Dialog -->
     <string name="dialog_delete_title">Delete Stock Tracking</string>
@@ -1075,9 +1102,9 @@
     <string name="permission_warning_alarmkit_message">Some of your medications use alarm-level reminders. Enable alarm permission so they can wake your screen and bypass Focus mode.</string>
     <string name="permission_warning_critical_alerts_title">Critical alerts disabled</string>
     <string name="permission_warning_critical_alerts_message">Some of your medications use critical reminders. Enable critical alerts so they can play a sound even on silent or Do Not Disturb.</string>
-    <string name="permission_warning_collapsed_title">%d permissions need attention</string>
+    <string name="permission_warning_collapsed_title">%1$d permissions need attention</string>
     <string name="warning_backup_failed_title">Auto-backup failing</string>
-    <string name="warning_backup_failed_message">Automatic backups have failed %d times in a row. Check your backup settings.</string>
+    <string name="warning_backup_failed_message">Automatic backups have failed %1$d times in a row. Check your backup settings.</string>
 
     <!-- FSI Onboarding -->
     <string name="onboarding_fsi_title">Screen wake</string>
@@ -1186,14 +1213,14 @@
 
     <!-- Bubble layout customization -->
     <string name="stock_layout_setting_title">Layout</string>
-    <string name="stock_layout_editor_title">Bubble layout</string>
+    <string name="stock_layout_editor_title">Blister layout</string>
     <string name="stock_layout_mode_auto">Automatic</string>
     <string name="stock_layout_mode_manual">Manual</string>
     <string name="stock_layout_columns">Columns</string>
     <string name="stock_layout_flow_direction">Pill order</string>
     <string name="stock_layout_flow_ltr_top">Column by column</string>
     <string name="stock_layout_flow_rtl_bottom">Row by row</string>
-    <string name="stock_layout_drag_hint">Long-press a bubble and drag it to swap with another.</string>
+    <string name="stock_layout_drag_hint">Drag and move a blister element to swap with another.</string>
     <string name="stock_layout_summary_auto">Automatic</string>
     <string name="stock_layout_summary_manual">Manual — %1$d columns</string>
     <string name="stock_layout_column_decrease">Decrease columns</string>

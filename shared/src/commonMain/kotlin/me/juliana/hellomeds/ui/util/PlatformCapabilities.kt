@@ -23,6 +23,14 @@ expect object PlatformCapabilities {
     /** Whether the platform supports per-app lock screen visibility control. */
     fun supportsLockScreenVisibilityControl(): Boolean
 
+    /**
+     * Whether the platform supports pinning reminder notifications so they
+     * survive "Clear All" / lock-screen swipes. Android: true (via
+     * `setOngoing(true)`). iOS: false — system notifications are always
+     * user-dismissable.
+     */
+    fun supportsNonDismissableNotifications(): Boolean
+
     /** Whether the platform has notification channels (Android). */
     fun supportsNotificationChannels(): Boolean
 
@@ -32,8 +40,13 @@ expect object PlatformCapabilities {
     /** App version string for display (e.g. "1.0.0 (1)"). */
     fun appVersionString(): String
 
-    /** Whether auto-backup needs a user-selected folder (Android SAF). iOS uses iCloud. */
     fun supportsAutoBackupFolderPicker(): Boolean
+
+    /** Android has no cloud default, so the choice is meaningful only on iOS. */
+    fun supportsBackupDestinationModeChoice(): Boolean
+
+    /** Returns false when no Settings page could be opened — callers should fall back to text instructions. */
+    suspend fun openSystemSettingsForICloud(): Boolean
 
     /** Whether Full Screen Intent permission management is relevant (Android 14+). */
     fun supportsFullScreenIntentPermission(): Boolean

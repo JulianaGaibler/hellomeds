@@ -257,9 +257,9 @@ fun HelloMedsNavigation3(
         entry<AutoBackupSettingsRoute> {
             OverlayScreenWrapper {
                 val viewModel: AutoBackupViewModel = koinViewModel()
-                val pickFolder = rememberFolderPicker { uri ->
+                val pickFolder = rememberFolderPicker { uri, displayName ->
                     if (uri != null) {
-                        viewModel.setDestinationUri(uri)
+                        viewModel.setDestination(uri, displayName)
                     } else {
                         viewModel.onFolderPickerCancelled()
                     }

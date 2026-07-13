@@ -16,8 +16,12 @@ struct HelloMedsApp: App {
                 }
                 .overlay {
                     if ScreenPrivacyManager.shared.shouldShowOverlay {
-                        Color(UIColor.systemBackground)
-                            .ignoresSafeArea()
+                        // Mirrors Info.plist's UILaunchScreen so backgrounding matches launch.
+                        ZStack {
+                            Color("LaunchBackground")
+                                .ignoresSafeArea()
+                            Image("LaunchIcon")
+                        }
                     }
                 }
                 .onChange(of: scenePhase) { _, newPhase in

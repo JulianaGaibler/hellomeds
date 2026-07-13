@@ -16,6 +16,10 @@ captures/
 *.apk
 output-metadata.json
 
+# Release artifacts output directory (google flavor) — APKs, baseline profiles,
+# metadata. NOT the same as androidApp/src/google/ (flavor source, tracked).
+/androidApp/google/
+
 # IntelliJ
 misc.xml
 deploymentTargetDropDown.xml
@@ -24,6 +28,8 @@ render.experimental.xml
 # Keystore files
 *.jks
 *.keystore
+keystore.properties
+*.keystore.b64
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json
@@ -46,11 +52,14 @@ google-services.json
 # Generated iOS version config
 iosApp/Version.generated.xcconfig
 
+# Local xcodebuild shim (per-machine workaround for simulator OS pinning)
+/.hm_xcodebuild_shim/
+
 # Test output artifacts
 test-results.xml
 failures.xml
 
-# Fastlane (Screengrab)
+# Fastlane runtime output (transient — fastlane writes here on every run)
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/

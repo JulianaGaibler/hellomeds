@@ -63,8 +63,17 @@ class StockTrackingRepository(
      * Record dose consumption.
      * EXACT: simple ledger entry.
      * ESTIMATED: no-op (doses don't touch stock, prediction handles it).
+     *
+     * [takenTime] is when the dose was actually taken (not necessarily now). The stock
+     * graph groups adjustments by their local calendar day, so backdated logs must carry
+     * the real takenTime — otherwise a Monday dose logged on Tuesday shows up on Tuesday.
      */
-    suspend fun recordDoseConsumption(medicationId: Int, historyId: Int, doseQuantity: Double) {
+    suspend fun recordDoseConsumption(
+        medicationId: Int,
+        historyId: Int,
+        doseQuantity: Double,
+        takenTime: Long = clock.now().toEpochMilliseconds(),
+    ) {
         try {
             val medication = medicationDao.getById(medicationId).first()
             if (medication?.stockTrackingEnabled != true) return
@@ -78,6 +87,7 @@ class StockTrackingRepository(
                         medicationId = medicationId,
                         historyId = historyId,
                         quantityChange = -doseQuantity,
+                        timestamp = takenTime,
                         adjustmentType = StockAdjustmentType.INTAKE.value,
                     ),
                 )
@@ -369,13 +379,19 @@ class StockTrackingRepository(
     }
 
     /**
-     * Update an existing stock adjustment's quantity.
+     * Update an existing stock adjustment's quantity and (optionally) its timestamp.
+     *
+     * Pass [takenTime] when the underlying history record's takenTime changed — the ledger
+     * timestamp must track it so the stock graph groups the adjustment on the correct day.
      */
-    suspend fun updateAdjustment(adjustmentId: Int, newQuantityChange: Double) {
+    suspend fun updateAdjustment(adjustmentId: Int, newQuantityChange: Double, takenTime: Long? = null) {
         transactionRunner.run {
             val adj = stockAdjustmentDao.getById(adjustmentId) ?: return@run
 
-            val updated = adj.copy(quantityChange = newQuantityChange)
+            val updated = adj.copy(
+                quantityChange = newQuantityChange,
+                timestamp = takenTime ?: adj.timestamp,
+            )
             stockAdjustmentDao.update(updated)
 
             updateCachedStock(adj.medicationId)

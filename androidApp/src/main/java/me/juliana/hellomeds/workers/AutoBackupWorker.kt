@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.first
 import me.juliana.hellomeds.data.backup.AutoBackupResult
 import me.juliana.hellomeds.data.backup.AutoBackupService
 import me.juliana.hellomeds.data.backup.AutoBackupStorageProvider
+import me.juliana.hellomeds.data.backup.WriteBackupResult
+import me.juliana.hellomeds.data.backup.isAvailable
 import me.juliana.hellomeds.data.preferences.AutoBackupPreferences
 import me.juliana.hellomeds.data.util.AppLogger
 import me.juliana.hellomeds.ui.util.PlatformCapabilities
@@ -45,7 +47,7 @@ class AutoBackupWorker(
         val storageProvider: AutoBackupStorageProvider = get()
 
         // Check destination before generating backup
-        if (!storageProvider.isDestinationAvailable()) {
+        if (!storageProvider.destinationAvailability().isAvailable) {
             AppLogger.w(TAG, "Backup destination unavailable")
             preferences.recordFailure(
                 "FAILED_DESTINATION_UNAVAILABLE",
@@ -58,21 +60,46 @@ class AutoBackupWorker(
             val appVersion = PlatformCapabilities.appVersionString()
             when (val result = service.generateAutoBackup(appVersion)) {
                 is AutoBackupResult.Success -> {
-                    val written = storageProvider.writeBackup(result.fileName, result.data)
-                    if (written) {
-                        preferences.recordSuccess(
-                            timestamp = Clock.System.now().toEpochMilliseconds(),
-                            medicationCount = result.medicationCount,
-                        )
-                        service.cleanupOldBackups(storageProvider)
-                        AppLogger.i(
-                            TAG,
-                            "Auto-backup complete: ${result.fileName} (${result.medicationCount} medications)",
-                        )
-                        Result.success()
-                    } else {
-                        preferences.recordFailure("FAILED_STORAGE", "Failed to write backup file")
-                        Result.retry()
+                    when (val written = storageProvider.writeBackup(result.fileName, result.data)) {
+                        is WriteBackupResult.Success -> {
+                            preferences.recordSuccess(
+                                timestamp = Clock.System.now().toEpochMilliseconds(),
+                                medicationCount = result.medicationCount,
+                            )
+                            service.cleanupOldBackups(storageProvider)
+                            AppLogger.i(
+                                TAG,
+                                "Auto-backup complete: ${result.fileName} (${result.medicationCount} medications)",
+                            )
+                            Result.success()
+                        }
+                        // No-retry cases: the user has to take action before this can succeed.
+                        is WriteBackupResult.DestinationNotSet -> {
+                            preferences.recordFailure(
+                                "FAILED_NO_DESTINATION",
+                                "Backup folder not set",
+                            )
+                            Result.success()
+                        }
+                        is WriteBackupResult.PermissionRevoked -> {
+                            preferences.recordFailure(
+                                "FAILED_PERMISSION_REVOKED",
+                                "Backup folder permission revoked",
+                            )
+                            Result.success()
+                        }
+                        is WriteBackupResult.WriteFailed -> {
+                            preferences.recordFailure("FAILED_STORAGE", written.message)
+                            Result.retry()
+                        }
+                        // Cannot occur on Android; kept for `when` exhaustiveness.
+                        is WriteBackupResult.ICloudUnavailable -> {
+                            preferences.recordFailure(
+                                "FAILED_STORAGE",
+                                "Unexpected iCloud result on Android",
+                            )
+                            Result.success()
+                        }
                     }
                 }
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 HelloMeds Contributors
 
-package me.juliana.hellomeds.screenshots
+package me.juliana.hellomeds.data.backup
 
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -20,13 +20,9 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
 /**
- * Rebases every datetime/date field in a [BackupData] so the curated "today"
- * lines up with the device's actual today.
- *
- * The curated demo data is anchored on [DEMO_ANCHOR_DATE]. When this shifter
- * runs on a device whose clock reads `now`, every timestamp is offset by
- * `now - anchorAt10am`. ISO-date fields (start dates etc.) are offset in whole
- * days; ISO-instant fields keep sub-second precision.
+ * Rebases timestamps in [BackupData] so the curated "today" lines up with the
+ * device's actual now — otherwise screenshots show a Tracking screen full of
+ * stale dates relative to whenever the JSON was last regenerated.
  */
 object BackupDataDateShifter {
     val DEMO_ANCHOR_DATE: LocalDate = LocalDate(2026, 4, 20)

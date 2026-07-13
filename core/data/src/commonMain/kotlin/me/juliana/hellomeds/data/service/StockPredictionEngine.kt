@@ -331,24 +331,20 @@ class StockPredictionEngine(
 
             // Only deduct stock on days when medication is actually consumed
             if (consumesToday) {
+                var containerSwitchedToday = false
                 for (step in 0 until stepsPerDay) {
                     remainingInCurrent -= deductionPerStep
                     totalRemaining -= deductionPerStep
 
-                    // Container transition: current depleted, switch to next
+                    // Container transition: current depleted, switch to next.
+                    // We record that a switch happened today and attach the event to the
+                    // single day-end data point below — emitting a separate point here
+                    // would double-stack markers at the same timestamp.
                     if (remainingInCurrent <= 0 && containerQueue.isNotEmpty()) {
                         val next = containerQueue.removeFirst()
                         remainingInCurrent += next.remaining
                         currentBucket = next
-
-                        points.add(
-                            StockDataPoint(
-                                timestamp = time,
-                                value = totalRemaining.coerceAtLeast(0.0),
-                                isFuture = true,
-                                event = StockEvent.ContainerSwitch(container),
-                            ),
-                        )
+                        containerSwitchedToday = true
                         continue // continue inner loop
                     }
 
@@ -358,17 +354,23 @@ class StockPredictionEngine(
                     }
                 }
 
-                // Emit a chart point only on consumption days
+                // Exactly one chart point per consumption day. The event is prioritized:
+                // container-switch > predicted-empty > none. `drawContainerTransitions`
+                // still finds this point via its `event is ContainerSwitch` filter.
+                val dayEvent: StockEvent? = when {
+                    containerSwitchedToday -> StockEvent.ContainerSwitch(container)
+                    markEmpty && totalRemaining <= 0 -> StockEvent.Adjustment(
+                        "PREDICTED_EMPTY",
+                        "Predicted to run out",
+                    )
+                    else -> null
+                }
                 points.add(
                     StockDataPoint(
                         timestamp = time,
-                        value = totalRemaining,
+                        value = totalRemaining.coerceAtLeast(0.0),
                         isFuture = true,
-                        event = if (markEmpty && totalRemaining <= 0) {
-                            StockEvent.Adjustment("PREDICTED_EMPTY", "Predicted to run out")
-                        } else {
-                            null
-                        },
+                        event = dayEvent,
                     ),
                 )
             }

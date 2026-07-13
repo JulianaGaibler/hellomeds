@@ -4,6 +4,7 @@
 package me.juliana.hellomeds.ui.compat
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -26,8 +27,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -92,33 +95,39 @@ actual fun ExpandableFabMenu(
             }
         }
 
-        if (visible) {
-            FloatingActionButton(
-                onClick = { onExpandedChange(!expanded) },
-                modifier = Modifier
-                    .then(
-                        if (toggleTestTag != null) Modifier.testTag(toggleTestTag) else Modifier,
-                    )
-                    .semantics {
-                        stateDescription = if (expanded) expandedLabel else collapsedLabel
-                        contentDescription = toggleMenuLabel
-                    },
-                containerColor = if (expanded) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    FloatingActionButtonDefaults.containerColor
-                },
-                contentColor = if (expanded) {
-                    MaterialTheme.colorScheme.onPrimary
-                } else {
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                },
-            ) {
-                Icon(
-                    imageVector = if (expanded) Icons.Filled.Close else Icons.Filled.Add,
-                    contentDescription = toggleMenuLabel,
+        val fabVisible = visible || expanded
+        val slideProgress by animateFloatAsState(
+            targetValue = if (fabVisible) 0f else 1f,
+            label = "fabSlide",
+        )
+        FloatingActionButton(
+            onClick = { if (fabVisible) onExpandedChange(!expanded) },
+            modifier = Modifier
+                .graphicsLayer {
+                    translationY = slideProgress * (size.height + 32.dp.toPx())
+                }
+                .then(
+                    if (toggleTestTag != null) Modifier.testTag(toggleTestTag) else Modifier,
                 )
-            }
+                .semantics {
+                    stateDescription = if (expanded) expandedLabel else collapsedLabel
+                    contentDescription = toggleMenuLabel
+                },
+            containerColor = if (expanded) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                FloatingActionButtonDefaults.containerColor
+            },
+            contentColor = if (expanded) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            },
+        ) {
+            Icon(
+                imageVector = if (expanded) Icons.Filled.Close else Icons.Filled.Add,
+                contentDescription = toggleMenuLabel,
+            )
         }
     }
 }

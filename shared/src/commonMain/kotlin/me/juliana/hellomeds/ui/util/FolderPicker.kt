@@ -6,18 +6,12 @@ package me.juliana.hellomeds.ui.util
 import androidx.compose.runtime.Composable
 
 /**
- * Platform-specific folder picker for auto-backup destination.
- * Android: SAF ACTION_OPEN_DOCUMENT_TREE with persistent URI permission. The returned launcher
- * accepts an optional initial URI hint (a `content://` tree URI) that the SAF picker MAY honor
- * to position the user near a suggested folder. Some OEM file pickers ignore it.
- * iOS: no-op (iCloud Drive is used automatically).
+ * The `uri` returned is an opaque token whose format is platform-specific: a SAF tree URI
+ * on Android, a base64-encoded security-scoped bookmark on iOS. `displayName` is captured
+ * at pick time so the UI can render a label without re-resolving the bookmark.
  */
 @Composable
-expect fun rememberFolderPicker(onResult: (uri: String?) -> Unit): (initialUri: String?) -> Unit
+expect fun rememberFolderPicker(onResult: (uri: String?, displayName: String?) -> Unit): (initialUri: String?) -> Unit
 
-/**
- * Suggested initial directory hint for the auto-backup folder picker on Android. Points at
- * `primary:Documents/HelloMeds/backups`. The picker treats it as a hint — most stock pickers
- * honor it; some OEMs ignore it and open at the device root.
- */
+/** A hint the SAF picker MAY honor; most stock pickers do, some OEMs ignore it. iOS returns null. */
 expect fun suggestedAutoBackupInitialUri(): String?

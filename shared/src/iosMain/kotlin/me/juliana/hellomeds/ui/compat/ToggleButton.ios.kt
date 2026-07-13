@@ -5,6 +5,7 @@ package me.juliana.hellomeds.ui.compat
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,6 +32,7 @@ actual fun ToggleButton(
     enabled: Boolean,
     shapes: ButtonShapes?,
     colors: ToggleButtonColors?,
+    contentPadding: PaddingValues?,
     content: @Composable RowScope.() -> Unit,
 ) {
     val uncheckedShape = shapes?.shape ?: MaterialTheme.shapes.extraLarge
@@ -75,6 +77,7 @@ actual fun ToggleButton(
             containerColor = animatedContainerColor,
             contentColor = animatedContentColor,
         ),
+        contentPadding = contentPadding ?: ButtonDefaults.ContentPadding,
         content = content,
     )
 }

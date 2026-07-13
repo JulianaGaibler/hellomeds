@@ -101,25 +101,30 @@ fun EditMedicationScreen(
     onSave: (Medication) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var name by remember(medication) { mutableStateOf(medication.name) }
-    var type by remember(medication) { mutableStateOf(medication.type) }
-    var hasStrength by remember(medication) { mutableStateOf(medication.strengthValue != null) }
-    var strengthValue by remember(medication) {
+    // Key edit state by medication.id (stable), NOT the medication object. Room's Flow re-emits
+    // a new Medication instance on any row change — including background writes like stock cache
+    // updates, low-stock/depletion alert flags, and alarm reconciliation touches — which would
+    // otherwise clobber in-flight edits (most visibly: a freshly picked color reverting on save).
+    val medicationId = medication.id
+    var name by remember(medicationId) { mutableStateOf(medication.name) }
+    var type by remember(medicationId) { mutableStateOf(medication.type) }
+    var hasStrength by remember(medicationId) { mutableStateOf(medication.strengthValue != null) }
+    var strengthValue by remember(medicationId) {
         mutableStateOf(medication.strengthValue?.let { formatDecimalPlain(it) } ?: "")
     }
-    var strengthUnit by remember(medication) {
+    var strengthUnit by remember(medicationId) {
         mutableStateOf(medication.strengthUnit ?: MedicationStrengthUnit.MG)
     }
 
     val nameError = MedicationValidation.validateMedicationName(name)
     val strengthError = MedicationValidation.validateStrengthValue(strengthValue, hasStrength)
 
-    var displayName by remember(medication) {
+    var displayName by remember(medicationId) {
         mutableStateOf(medication.displayName ?: "")
     }
 
     // Parse current shapes and colors from medication
-    var foregroundShape by remember(medication) {
+    var foregroundShape by remember(medicationId) {
         mutableStateOf(
             MedicationForegroundShape.fromNameOrDefault(
                 medication.foregroundShape,
@@ -128,13 +133,13 @@ fun EditMedicationScreen(
         )
     }
 
-    var backgroundShape by remember(medication) {
+    var backgroundShape by remember(medicationId) {
         mutableStateOf(
             MedicationBackgroundShape.fromNameOrDefault(medication.backgroundShape),
         )
     }
 
-    var color1 by remember(medication) {
+    var color1 by remember(medicationId) {
         mutableStateOf(
             medication.shapeColor?.let {
                 MedicationColor.fromName(it)
@@ -143,16 +148,16 @@ fun EditMedicationScreen(
     }
 
     // Timezone mode state
-    var timeZoneMode by remember(medication) { mutableStateOf(medication.timeZoneMode) }
-    var anchorTimeZone by remember(medication) { mutableStateOf(medication.anchorTimeZone) }
+    var timeZoneMode by remember(medicationId) { mutableStateOf(medication.timeZoneMode) }
+    var anchorTimeZone by remember(medicationId) { mutableStateOf(medication.anchorTimeZone) }
     var showTimeZonePicker by remember { mutableStateOf(false) }
 
     // Cycle state
     val isCyclic = medication.cycleType == CycleType.CYCLIC
-    var cycleEnabled by remember(medication) { mutableStateOf(isCyclic) }
-    var cycleDaysActive by remember(medication) { mutableIntStateOf(medication.cycleDaysActive ?: 21) }
-    var cycleDaysBreak by remember(medication) { mutableIntStateOf(medication.cycleDaysBreak ?: 7) }
-    var cycleHasPlacebos by remember(medication) { mutableStateOf(medication.cycleHasPlacebos) }
+    var cycleEnabled by remember(medicationId) { mutableStateOf(isCyclic) }
+    var cycleDaysActive by remember(medicationId) { mutableIntStateOf(medication.cycleDaysActive ?: 21) }
+    var cycleDaysBreak by remember(medicationId) { mutableIntStateOf(medication.cycleDaysBreak ?: 7) }
+    var cycleHasPlacebos by remember(medicationId) { mutableStateOf(medication.cycleHasPlacebos) }
 
     val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val initialDay = if (isCyclic) {
@@ -160,7 +165,7 @@ fun EditMedicationScreen(
     } else {
         1
     }
-    var cycleDayInCycle by remember(medication) { mutableIntStateOf(initialDay) }
+    var cycleDayInCycle by remember(medicationId) { mutableIntStateOf(initialDay) }
     val cycleLength = cycleDaysActive + cycleDaysBreak
 
     fun buildUpdatedMedication(): Medication {
@@ -178,7 +183,7 @@ fun EditMedicationScreen(
             displayName = displayName.trim().ifBlank { null },
             foregroundShape = foregroundShape.name,
             backgroundShape = backgroundShape.name,
-            shapeColor = color1?.let { it::class.simpleName },
+            shapeColor = color1?.name,
             cycleType = if (cycleEnabled) CycleType.CYCLIC else CycleType.NONE,
             cycleDaysActive = if (cycleEnabled) cycleDaysActive else null,
             cycleDaysBreak = if (cycleEnabled) cycleDaysBreak else null,

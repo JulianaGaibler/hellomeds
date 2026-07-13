@@ -56,6 +56,7 @@ class MissedDoseProcessorTest {
             val notifPrefs = mockk<NotificationPreferences> {
                 every { lockScreenVisibility } returns flowOf(LockScreenVisibility.SHOW_WITH_NAMES)
                 every { groupingMode } returns flowOf(NotificationGroupingMode.COMBINED)
+                every { nonDismissableReminders } returns flowOf(false)
             }
             val historyDao = mockk<MedicationHistoryDao>()
 

@@ -74,6 +74,7 @@ class GlobalAlarmReceiverOverlapTest {
             val sessionManager = mockk<NotificationSessionManager>(relaxed = true)
             val notifPrefs = mockk<NotificationPreferences> {
                 every { lockScreenVisibility } returns flowOf(LockScreenVisibility.SHOW_WITH_NAMES)
+                every { nonDismissableReminders } returns flowOf(false)
             }
             val medicationDao = mockk<MedicationDao>(relaxed = true)
             val importanceLabelDao = mockk<ImportanceLabelDao>(relaxed = true)

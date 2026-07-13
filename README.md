@@ -32,3 +32,22 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture, build instructions, and
 ## License
 
 This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+
+## Releasing
+
+Releases are produced automatically by `.github/workflows/release.yml`. On every push to `main`, the workflow reads `APP_VERSION_NAME` from `version.properties`; if no GitHub release with the matching `v<name>` tag exists yet, it builds the signed Google-flavor AAB and F-Droid-flavor APK, then publishes them as a tagged release with the changelog as its body.
+
+**One-time setup**
+
+1. Generate an upload keystore: `keytool -genkey -v -keystore upload.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias hellomeds-upload`
+2. Base64-encode it: `base64 -i upload.keystore -o upload.keystore.b64`
+3. Add four GitHub repository secrets: `HM_KEYSTORE_BASE64` (paste the `.b64` contents), `HM_KEYSTORE_PASSWORD`, `HM_KEY_ALIAS` (`hellomeds-upload`), `HM_KEY_PASSWORD`.
+4. In Play Console, enroll in Play App Signing and upload `upload.keystore` as the upload certificate (Google holds the actual signing key).
+5. For local signed builds, create `keystore.properties` at the repo root with `storeFile=`, `storePassword=`, `keyAlias=`, `keyPassword=` (gitignored).
+
+**Per release**
+
+1. Bump `APP_VERSION_NAME` and `APP_VERSION_CODE` in `version.properties`.
+2. Run `./hm prepare-release` — moves `unreleased.notes` in `changelog.yaml` into a new versioned entry and writes the F-Droid `fastlane/metadata/android/<locale>/changelogs/<versionCode>.txt` files.
+3. Commit the version bump, `changelog.yaml`, and the new changelog files together; merge to `main`.
+4. When the workflow finishes, download the AAB from the GitHub release and upload it to Play Console manually. The attached F-Droid APK is for sideloaders and as a reference artifact for future reproducible-build verification.

@@ -1,0 +1,17 @@
+unreleased:
+  notes: []
+releases:
+- version: 0.1.6
+  versionCode: 15
+  date: '2026-07-13'
+  notes:
+  - Fixed picking a color when creating or editing a medication
+  - Fixed stock tracking graph grouping events from multiple days onto a single day
+- version: 0.1.4
+  versionCode: 12
+  date: '2026-05-28'
+  notes:
+  - Improved UI for stock screen
+  - Fixed bug with SwipeableListItem caching its swipe state
+  - Removed verbose logging
+  - Added closed beta sign-up link to README

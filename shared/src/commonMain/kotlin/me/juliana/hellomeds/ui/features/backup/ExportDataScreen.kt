@@ -26,7 +26,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import me.juliana.hellomeds.data.backup.HMBACKUP_MIME_TYPE
+import me.juliana.hellomeds.designsystem.component.AppSnackbarHost
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_back
 import me.juliana.hellomeds.shared.backup_action_save_to_files
@@ -168,7 +168,7 @@ fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
                 ),
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { AppSnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier

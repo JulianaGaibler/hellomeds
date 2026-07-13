@@ -24,12 +24,12 @@ data class GraphConfig(
 /**
  * Zoom levels determining how many days are visible at once.
  */
-enum class ZoomLevel(val daysVisible: Int, val label: String) {
-    DAY(1, "Day"),
-    WEEK(7, "Week"),
-    MONTH(30, "Month"),
-    QUARTER(90, "Quarter"),
-    YEAR(365, "Year"),
+enum class ZoomLevel(val daysVisible: Int) {
+    DAY(1),
+    WEEK(7),
+    MONTH(30),
+    QUARTER(90),
+    YEAR(365),
     ;
 
     val millisVisible: Long

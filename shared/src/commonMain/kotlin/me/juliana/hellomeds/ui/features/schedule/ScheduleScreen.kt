@@ -165,17 +165,22 @@ fun ScheduleScreen(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.End,
                                         ) {
-                                            TextButton(onClick = {
-                                                onDismissReminderTypeHint()
-                                                onEditReminderType()
-                                            }) {
+                                            TextButton(
+                                                onClick = {
+                                                    onDismissReminderTypeHint()
+                                                    onEditReminderType()
+                                                },
+                                                colors = ButtonDefaults.textButtonColors(
+                                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                ),
+                                            ) {
                                                 Text(stringResource(Res.string.schedule_reminder_hint_action_edit))
                                             }
                                             Button(
                                                 onClick = onDismissReminderTypeHint,
                                                 colors = ButtonDefaults.buttonColors(
-                                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                    containerColor = MaterialTheme.colorScheme.secondary,
+                                                    contentColor = MaterialTheme.colorScheme.onSecondary,
                                                 ),
                                             ) {
                                                 Text(stringResource(Res.string.schedule_reminder_hint_action_dismiss))

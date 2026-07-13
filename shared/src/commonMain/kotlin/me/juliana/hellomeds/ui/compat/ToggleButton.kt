@@ -3,6 +3,7 @@
 
 package me.juliana.hellomeds.ui.compat
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -24,5 +25,6 @@ expect fun ToggleButton(
     enabled: Boolean = true,
     shapes: ButtonShapes? = null,
     colors: ToggleButtonColors? = null,
+    contentPadding: PaddingValues? = null,
     content: @Composable RowScope.() -> Unit,
 )

@@ -146,6 +146,7 @@ fun StepsOnboardingScreen(
     steps: List<Pair<String, String>>, // Pair<Title, Body>
     onContinueClick: () -> Unit,
     onBackClick: (() -> Unit)? = null,
+    footerContent: (@Composable () -> Unit)? = null,
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -226,6 +227,8 @@ fun StepsOnboardingScreen(
                 }
                 Spacer(modifier = Modifier.height(32.dp))
             }
+
+            footerContent?.invoke()
         }
     }
 }

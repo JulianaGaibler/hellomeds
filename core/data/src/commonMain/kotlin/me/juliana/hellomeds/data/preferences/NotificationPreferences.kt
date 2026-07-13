@@ -20,6 +20,7 @@ class NotificationPreferences(private val dataStore: DataStore<Preferences>) {
     companion object {
         private val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
         private val USE_EXACT_ALARMS = booleanPreferencesKey("use_exact_alarms")
+        private val NON_DISMISSABLE_REMINDERS = booleanPreferencesKey("non_dismissable_reminders")
         private val SNOOZE_INTERVAL_MINUTES = intPreferencesKey("snooze_interval_minutes")
         private val LOCK_SCREEN_VISIBILITY = stringPreferencesKey("lock_screen_visibility")
         private val GROUPING_MODE = stringPreferencesKey("grouping_mode")
@@ -38,6 +39,10 @@ class NotificationPreferences(private val dataStore: DataStore<Preferences>) {
 
     val useExactAlarms: Flow<Boolean> = dataStore.data.map { preferences ->
         preferences[USE_EXACT_ALARMS] ?: true
+    }
+
+    val nonDismissableReminders: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[NON_DISMISSABLE_REMINDERS] ?: false
     }
 
     val snoozeIntervalMinutes: Flow<Int> = dataStore.data.map { preferences ->
@@ -78,6 +83,12 @@ class NotificationPreferences(private val dataStore: DataStore<Preferences>) {
     suspend fun setUseExactAlarms(useExact: Boolean) {
         dataStore.edit { preferences ->
             preferences[USE_EXACT_ALARMS] = useExact
+        }
+    }
+
+    suspend fun setNonDismissableReminders(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[NON_DISMISSABLE_REMINDERS] = enabled
         }
     }
 

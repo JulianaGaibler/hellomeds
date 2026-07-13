@@ -44,16 +44,16 @@ class ScreenshotTest {
     private val medicationDao by lazy { GlobalContext.get().get<MedicationDao>() }
     private val scheduleDao by lazy { GlobalContext.get().get<ScheduleDao>() }
 
-    private val singleScheduleMedId: Int by lazy {
+    private val singleScheduleMedName: String by lazy {
         runBlocking {
             val meds = medicationDao.getActive().first().sortedBy { it.displayOrder }
             meds.first { med ->
                 scheduleDao.getByMedicationId(med.id).first().size == 1
-            }.id
+            }.name
         }
     }
 
-    private val stockMedId: Int by lazy {
+    private val stockMedName: String by lazy {
         runBlocking {
             val active = medicationDao.getActive().first().sortedBy { it.displayOrder }
             // Prefer the allergy tablet (Cetirizin/Cetirizine), then any
@@ -68,28 +68,28 @@ class ScreenshotTest {
             val anyBlister = active.firstOrNull {
                 it.stockTrackingEnabled && it.medicationContainer?.name == "BLISTER_PACK"
             }
-            (allergyTablet ?: anyBlister ?: active.first { it.stockTrackingEnabled }).id
+            (allergyTablet ?: anyBlister ?: active.first { it.stockTrackingEnabled }).name
         }
     }
 
-    private val cyclicMedId: Int by lazy {
+    private val cyclicMedName: String by lazy {
         runBlocking {
             medicationDao.getActive().first()
                 .sortedBy { it.displayOrder }
                 .first { it.cycleType == CycleType.CYCLIC }
-                .id
+                .name
         }
     }
 
     // Topmost stock-tracked medication — used as a settle signal for the
     // stock list. Items further down the LazyColumn aren't in the semantics
     // tree until they scroll into view.
-    private val firstStockMedId: Int by lazy {
+    private val firstStockMedName: String by lazy {
         runBlocking {
             medicationDao.getActive().first()
                 .sortedBy { it.displayOrder }
                 .first { it.stockTrackingEnabled }
-                .id
+                .name
         }
     }
 
@@ -119,7 +119,7 @@ class ScreenshotTest {
         // On wide tablets (≥1024dp) the adaptive layout renders all three panes
         // simultaneously — there's no nav tab — so tapping is optional.
         tapIfPresent(ScreenshotTestTags.navTab("MEDICATION"))
-        tapFirstByTag(ScreenshotTestTags.medicationGridItem(singleScheduleMedId))
+        tapFirstByTag(ScreenshotTestTags.medicationGridItem(singleScheduleMedName))
         tapFirstByTag(ScreenshotTestTags.MEDICATION_ACTION_SCHEDULE)
         // The schedule action opens a list of existing schedules first; tap
         // the "Add Schedule" card to open the actual bottom sheet.
@@ -151,7 +151,7 @@ class ScreenshotTest {
         // single-column LazyColumn where it lives below the fold. The nav-tab
         // tap is a no-op on wide tablets where all panes are already visible.
         tapIfPresent(ScreenshotTestTags.navTab("MEDICATION"))
-        tapFirstByTag(ScreenshotTestTags.medicationGridItem(stockMedId))
+        tapFirstByTag(ScreenshotTestTags.medicationGridItem(stockMedName))
         tapFirstByTag(ScreenshotTestTags.MEDICATION_ACTION_STOCK)
 
         Screengrab.screenshot("04_stock_detail")
@@ -168,7 +168,7 @@ class ScreenshotTest {
         // medication list is fed by a Flow that emits after Koin builds the
         // DAO.
         composeRule.waitUntil(10_000L) {
-            composeRule.onAllNodesWithTag(ScreenshotTestTags.medicationGridItem(stockMedId))
+            composeRule.onAllNodesWithTag(ScreenshotTestTags.medicationGridItem(stockMedName))
                 .fetchSemanticsNodes().isNotEmpty()
         }
         composeRule.waitForIdle()
@@ -194,7 +194,7 @@ class ScreenshotTest {
         composeRule.waitForIdle()
 
         tapIfPresent(ScreenshotTestTags.navTab("MEDICATION"))
-        tapFirstByTag(ScreenshotTestTags.medicationGridItem(cyclicMedId))
+        tapFirstByTag(ScreenshotTestTags.medicationGridItem(cyclicMedName))
         composeRule.waitForIdle()
 
         Screengrab.screenshot("07_medication_detail_cyclic")
@@ -208,7 +208,7 @@ class ScreenshotTest {
         // The list rows render once the stock-status flow emits; settle on
         // the topmost stock row, which is always above the fold.
         composeRule.waitUntil(10_000L) {
-            composeRule.onAllNodesWithTag(ScreenshotTestTags.stockListItem(firstStockMedId))
+            composeRule.onAllNodesWithTag(ScreenshotTestTags.stockListItem(firstStockMedName))
                 .fetchSemanticsNodes().isNotEmpty()
         }
         composeRule.waitForIdle()

@@ -25,6 +25,9 @@ interface ImportanceLabelDao {
     @Query("SELECT * FROM importance_labels ORDER BY id ASC")
     fun getAll(): Flow<List<ImportanceLabel>>
 
+    @Query("SELECT * FROM importance_labels ORDER BY id ASC")
+    suspend fun getAllSuspend(): List<ImportanceLabel>
+
     @Query("SELECT * FROM importance_labels WHERE id = :id")
     fun getById(id: Int): Flow<ImportanceLabel?>
 

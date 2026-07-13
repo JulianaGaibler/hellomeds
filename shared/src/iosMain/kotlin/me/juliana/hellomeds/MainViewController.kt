@@ -32,6 +32,7 @@ import me.juliana.hellomeds.notifications.isAlarmKitAvailable
 import me.juliana.hellomeds.notifications.registerNotificationCategory
 import me.juliana.hellomeds.notifications.startAlarmSound
 import me.juliana.hellomeds.notifications.stopAlarmSound
+import me.juliana.hellomeds.screenshots.IosScreenshotMode
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.depletion_notification_action_mark_depleted
 import me.juliana.hellomeds.shared.notification_action_skipped
@@ -101,6 +102,8 @@ fun MainViewController(): UIViewController {
         // Register and schedule background tasks (BGTaskScheduler).
         // Registration must happen before the app finishes launching.
         setupBackgroundTasks()
+
+        IosScreenshotMode.seedIfRequested()
     }
 
     // Accessibility tree syncs lazily on demand since CMP 1.8.0 — no manual config needed.

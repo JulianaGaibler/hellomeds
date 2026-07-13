@@ -6,8 +6,8 @@
   "importanceLabels": [],
   "medications": [
     {
-      "name": "Arnika Gel",
-      "displayName": null,
+      "name": "Arnica Gel",
+      "displayName": "Arnika Gel",
       "type": "GEL",
       "shape": "",
       "notes": "Auf saubere, trockene Haut auftragen",
@@ -19,7 +19,7 @@
       "strengthValue": 23.0,
       "strengthUnit": "MG",
       "importanceLabel": "Kritische Folgeerinnerungen",
-      "displayOrder": 0,
+      "displayOrder": 3,
       "cycleType": "NONE",
       "cycleDaysActive": null,
       "cycleDaysBreak": null,
@@ -80,8 +80,8 @@
       ]
     },
     {
-      "name": "Eisen",
-      "displayName": null,
+      "name": "Iron",
+      "displayName": "Eisen",
       "type": "CAPSULE",
       "shape": "",
       "notes": "Mit Vitamin C einnehmen, nicht mit Milchprodukten",
@@ -309,7 +309,7 @@
     },
     {
       "name": "Magnesium",
-      "displayName": "Magnesium",
+      "displayName": "Schlaf & Krämpfe",
       "type": "TABLET",
       "shape": "",
       "notes": null,
@@ -321,7 +321,7 @@
       "strengthValue": 300.0,
       "strengthUnit": "MG",
       "importanceLabel": "Kritische Folgeerinnerungen",
-      "displayOrder": 3,
+      "displayOrder": 0,
       "cycleType": "CYCLIC",
       "cycleDaysActive": 5,
       "cycleDaysBreak": 23,
@@ -391,7 +391,7 @@
       ]
     },
     {
-      "name": "Cetirizin",
+      "name": "Cetirizine",
       "displayName": "Allergie-Tablette",
       "type": "TABLET",
       "shape": "",

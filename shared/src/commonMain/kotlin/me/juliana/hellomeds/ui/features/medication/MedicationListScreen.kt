@@ -245,7 +245,8 @@ fun MedicationListScreen(
                     state = lazyGridState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues),
+                        .padding(paddingValues)
+                        .testTag(ScreenshotTestTags.MEDICATION_LIST_SCROLL),
                     contentPadding = PaddingValues(
                         start = 16.dp,
                         end = 16.dp,
@@ -288,7 +289,7 @@ fun MedicationListScreen(
                                 color1 = medication.color1,
                                 onClick = { onMedicationClick(medication.id) },
                                 modifier = Modifier
-                                    .testTag(ScreenshotTestTags.medicationGridItem(medication.id))
+                                    .testTag(ScreenshotTestTags.medicationGridItem(medication.nameRaw))
                                     .longPressDraggableHandle(
                                         onDragStarted = {
                                             // Haptic feedback when drag starts

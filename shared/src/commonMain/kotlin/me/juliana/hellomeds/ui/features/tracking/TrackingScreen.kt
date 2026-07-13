@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -63,6 +64,7 @@ import me.juliana.hellomeds.data.model.enums.MedicationStrengthUnit
 import me.juliana.hellomeds.data.model.enums.MedicationType
 import me.juliana.hellomeds.data.util.MissedDoseDetector
 import me.juliana.hellomeds.data.util.TimeProvider
+import me.juliana.hellomeds.designsystem.component.AppSnackbarHost
 import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.accessibility_close_menu
@@ -233,7 +235,7 @@ fun TrackingScreen(
     val twoDaysFromNowMs = remember { Clock.System.now().toEpochMilliseconds() + (2 * 24 * 60 * 60 * 1000L) }
 
     // Snackbar for error events
-    val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
+    val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(Unit) {
         trackingViewModel.errorEvents.collect { message ->
             snackbarHostState.showSnackbar(message)
@@ -285,7 +287,7 @@ fun TrackingScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         AppScaffold(
-            snackbarHost = { androidx.compose.material3.SnackbarHost(snackbarHostState) },
+            snackbarHost = { AppSnackbarHost(snackbarHostState) },
             topBar = {
                 DatePickerHeader(
                     selectedDate = previewDate,
@@ -311,7 +313,8 @@ fun TrackingScreen(
                 state = listState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    .padding(paddingValues)
+                    .testTag(ScreenshotTestTags.TRACKING_LIST_SCROLL),
                 contentPadding = PaddingValues(bottom = 88.dp), // Space for FAB
             ) {
                 // Horizontal Date Picker
@@ -946,7 +949,7 @@ private fun TrackingScreenPreview() {
             strengthUnit = MedicationStrengthUnit.MG,
             foregroundShape = MedicationForegroundShape.CAPSULE_PILL.name,
             backgroundShape = MedicationBackgroundShape.CIRCLE.name,
-            shapeColor = MedicationColor.Blue::class.simpleName,
+            shapeColor = MedicationColor.Blue.name,
         )
 
         val scheduledEvent = ProjectedEventWithMedication(

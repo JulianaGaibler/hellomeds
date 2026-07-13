@@ -124,6 +124,7 @@ class GlobalAlarmReceiverSnoozeChannelTest {
                 medicationDao,
                 missedDoseProcessor,
                 LockScreenVisibility.SHOW_WITH_NAMES,
+                false,
             )
 
             // Pre-fix posted NORMAL because the when only checked CRITICAL.

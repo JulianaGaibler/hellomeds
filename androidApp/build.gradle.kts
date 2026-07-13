@@ -4,6 +4,33 @@ val versionProps = Properties().apply {
     rootProject.file("version.properties").inputStream().use { load(it) }
 }
 
+val keystorePropsFile = rootProject.file("keystore.properties")
+val keystoreProps = Properties().apply {
+    if (keystorePropsFile.exists()) keystorePropsFile.inputStream().use { load(it) }
+}
+
+fun releaseSigningInput(envKey: String, propKey: String): String? =
+    System.getenv(envKey) ?: keystoreProps.getProperty(propKey)
+
+val releaseStoreFilePath = releaseSigningInput("HM_KEYSTORE_PATH", "storeFile")
+val releaseStorePassword = releaseSigningInput("HM_KEYSTORE_PASSWORD", "storePassword")
+val releaseKeyAlias = releaseSigningInput("HM_KEY_ALIAS", "keyAlias")
+val releaseKeyPassword = releaseSigningInput("HM_KEY_PASSWORD", "keyPassword")
+val releaseSigningConfigured = releaseStoreFilePath != null &&
+    releaseStorePassword != null &&
+    releaseKeyAlias != null &&
+    releaseKeyPassword != null
+
+// Refuse to silently fall back to the debug key in CI — a typo in a secret
+// name would otherwise ship a "release" build signed with the debug keystore,
+// which Play Console accepts once and locks updates to forever after.
+if (System.getenv("CI") == "true" && !releaseSigningConfigured) {
+    throw GradleException(
+        "Release signing is incomplete. Required env vars in CI: " +
+            "HM_KEYSTORE_PATH, HM_KEYSTORE_PASSWORD, HM_KEY_ALIAS, HM_KEY_PASSWORD.",
+    )
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -41,6 +68,17 @@ android {
         }
     }
 
+    signingConfigs {
+        if (releaseSigningConfigured) {
+            create("release") {
+                storeFile = file(releaseStoreFilePath!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         debug {
             isPseudoLocalesEnabled = true
@@ -68,6 +106,9 @@ android {
             )
             ndk {
                 debugSymbolLevel = "SYMBOL_TABLE"
+            }
+            if (releaseSigningConfigured) {
+                signingConfig = signingConfigs.getByName("release")
             }
         }
     }

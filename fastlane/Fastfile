@@ -13,3 +13,10 @@ platform :android do
     capture_android_screenshots
   end
 end
+
+platform :ios do
+  desc "Capture App Store screenshots on iPhone + iPad simulators"
+  lane :screenshots do
+    capture_ios_screenshots
+  end
+end

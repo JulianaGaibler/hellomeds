@@ -84,3 +84,38 @@ App version is defined in `version.properties` at the project root. This is the 
 ## Technical Documentation
 
 Detailed documentation on some subsystems lives in `docs/`
+
+## F-Droid distribution
+
+The `fdroid` product flavor in `androidApp/build.gradle.kts` excludes all
+proprietary dependencies (ML Kit, CameraX, GenAI prompt) and strips the
+`CAMERA` permission via `androidApp/src/fdroid/AndroidManifest.xml`. Use this
+flavor when building for F-Droid:
+
+```bash
+./gradlew :androidApp:assembleFdroidRelease
+```
+
+The reference fdroiddata build metadata lives at
+[`fdroid/me.juliana.hellomeds.yml`](fdroid/me.juliana.hellomeds.yml). When
+preparing a release for F-Droid, copy this file into a fork of
+`gitlab.com/fdroid/fdroiddata` under `metadata/me.juliana.hellomeds.yml` and
+add a new entry to `Builds:` for the new `versionCode`.
+
+### Reproducible builds
+
+The Android build pulls SQLCipher's native `.so` files as a prebuilt artifact
+from Maven Central — no NDK compilation happens locally, which removes the
+biggest source of build non-determinism. To keep reproducibility working,
+contributors and the F-Droid build server should use:
+
+- **JDK 21** (the Android Studio JBR ships this; `./hm` auto-detects it).
+- Pinned AGP / Kotlin / Compose versions from `gradle/libs.versions.toml`.
+
+Avoid embedding timestamps, git SHAs, or environment paths via
+`buildConfigField`. `BuildConfig.VERSION_NAME`, `VERSION_CODE`, and `DEBUG`
+are the only build-config values the app currently consumes; keep it that
+way unless there's a compelling reason otherwise.
+
+After F-Droid produces a build, comparing it to the GitHub-released APK with
+`apksigcopier` + `diffoscope` will surface any remaining drift.

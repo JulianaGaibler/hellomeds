@@ -1,0 +1,40 @@
+## F-Droid build metadata for HelloMeds.
+##
+## This file is the reference copy that should be submitted to
+## https://gitlab.com/fdroid/fdroiddata as `metadata/me.juliana.hellomeds.yml`.
+## It is kept in this repo so the canonical version lives next to the source
+## it describes. fdroidserver itself does not read this path; only the
+## fdroiddata fork does.
+##
+## After bumping `APP_VERSION_NAME`/`APP_VERSION_CODE` in `version.properties`
+## and tagging a release, add a new entry to `Builds:` and bump
+## `CurrentVersion`/`CurrentVersionCode`. The `AutoUpdateMode: Version` and
+## `UpdateCheckData` settings let F-Droid's checkupdates runner do this for
+## you once the metadata is upstream.
+
+Categories:
+  - Health & Fitness
+License: AGPL-3.0-or-later
+AuthorName: Juliana Gaibler
+AuthorWebSite: https://juliana.me
+WebSite: https://juliana.me/projects/hellomeds
+SourceCode: https://github.com/JulianaGaibler/hellomeds
+IssueTracker: https://github.com/JulianaGaibler/hellomeds/issues
+Changelog: https://github.com/JulianaGaibler/hellomeds/releases
+
+RepoType: git
+Repo: https://github.com/JulianaGaibler/hellomeds.git
+
+Builds:
+  - versionName: 0.1.4
+    versionCode: 12
+    commit: v0.1.4
+    subdir: androidApp
+    gradle:
+      - fdroid
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+UpdateCheckData: 'version.properties|APP_VERSION_NAME=(.+)|.|APP_VERSION_CODE=(.+)'
+CurrentVersion: 0.1.4
+CurrentVersionCode: 12

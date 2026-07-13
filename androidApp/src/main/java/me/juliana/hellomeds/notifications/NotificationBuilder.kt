@@ -76,6 +76,7 @@ class NotificationBuilder(private val context: Context) {
         groupKey: String? = null,
         isFollowUpAlert: Boolean = false,
         followUpNumber: Int = 0,
+        nonDismissable: Boolean = false,
     ): Notification {
         // Downgrade to NORMAL channel if all events are placebo (cycle break days)
         val effectiveChannelId = if (events.all { it.isPlacebo }) {
@@ -114,7 +115,11 @@ class NotificationBuilder(private val context: Context) {
             )
             .setVisibility(visibility)
             .setAutoCancel(false)
-            .setOngoing(isAlarm) // Alarm notifications cannot be swiped away
+            // Alarm channel is always ongoing. When the user opts into "Persistent reminders"
+            // we also pin non-alarm reminders. On Android 14+ the OS still allows a single
+            // ongoing notification to be swiped from the unlocked shade — that is intentional
+            // user agency and we do not fight it.
+            .setOngoing(isAlarm || nonDismissable)
             .setOnlyAlertOnce(!isFollowUpAlert)
 
         // Always attach groupKey even for single notifications. Android treats a lone grouped
@@ -178,6 +183,7 @@ class NotificationBuilder(private val context: Context) {
         isFollowUp: Boolean = false,
         isSnoozed: Boolean = false,
         isFollowUpAlert: Boolean = false,
+        nonDismissable: Boolean = false,
     ): Notification {
         // Downgrade to NORMAL channel if all events are placebo (cycle break days)
         val effectiveChannelId = if (events.all { it.isPlacebo }) {
@@ -216,7 +222,9 @@ class NotificationBuilder(private val context: Context) {
             )
             .setVisibility(visibility)
             .setAutoCancel(false)
-            .setOngoing(isAlarm)
+            // Summary inherits the ongoing flag so children show as ongoing in the
+            // shade. See buildNotification() for the Android 14+ swipe caveat.
+            .setOngoing(isAlarm || nonDismissable)
             .setOnlyAlertOnce(!isFollowUpAlert)
             .setGroup(groupKey)
             .setGroupSummary(true)

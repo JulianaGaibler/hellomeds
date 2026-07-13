@@ -9,12 +9,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import me.juliana.hellomeds.screenshots.IosScreenshotMode
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSOperationQueue
 import platform.UIKit.UIApplicationDidBecomeActiveNotification
 
 @Composable
 actual fun rememberPermissionWarnings(): PermissionWarningState {
+    // Screenshot mode runs against a fresh simulator without notification
+    // permissions granted; banners would pollute the App Store assets.
+    if (IosScreenshotMode.isActive()) return PermissionWarningState()
+
     fun checkAll() = PermissionWarningState(
         notificationsEnabled = PermissionUtils.areNotificationsEnabled(Unit),
         // AlarmKit: only warn if available (iOS 26+) and not authorized

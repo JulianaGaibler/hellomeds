@@ -22,7 +22,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import me.juliana.hellomeds.data.backup.AutoBackupService
 import me.juliana.hellomeds.data.backup.AutoBackupStorageProvider
+import me.juliana.hellomeds.data.backup.BackupDestinationMode
 import me.juliana.hellomeds.data.backup.BackupEncryption
+import me.juliana.hellomeds.data.backup.DestinationAvailability
 import me.juliana.hellomeds.data.crypto.PassphraseManager
 import me.juliana.hellomeds.data.preferences.AutoBackupPreferences
 import me.juliana.hellomeds.ui.util.PlatformCapabilities
@@ -51,7 +53,9 @@ class AutoBackupViewModelTest {
     private val lastBackupMedicationCount = MutableStateFlow(0)
     private val consecutiveFailures = MutableStateFlow(0)
     private val backupRetentionCount = MutableStateFlow(7)
+    private val backupDestinationMode = MutableStateFlow(BackupDestinationMode.CUSTOM_FOLDER)
     private val backupDestinationUri = MutableStateFlow<String?>(null)
+    private val backupDestinationName = MutableStateFlow<String?>(null)
     private val passphraseHint = MutableStateFlow<String?>(null)
 
     // Stateful passphrase mock. `answers { ... }` reads this on every call, avoiding the
@@ -64,6 +68,7 @@ class AutoBackupViewModelTest {
 
         mockkObject(PlatformCapabilities)
         every { PlatformCapabilities.supportsAutoBackupFolderPicker() } returns true
+        every { PlatformCapabilities.supportsBackupDestinationModeChoice() } returns false
 
         mockkObject(BackupEncryption)
         every { BackupEncryption.encrypt(any(), any()) } returns ByteArray(0)
@@ -72,7 +77,7 @@ class AutoBackupViewModelTest {
 
         service = mockk(relaxed = true)
         storageProvider = mockk(relaxed = true) {
-            coEvery { isDestinationAvailable() } returns false
+            coEvery { destinationAvailability() } returns DestinationAvailability.NotSet
         }
         preferences = mockk(relaxed = true) {
             every { autoBackupEnabled } returns enabled
@@ -83,7 +88,9 @@ class AutoBackupViewModelTest {
                 this@AutoBackupViewModelTest.lastBackupMedicationCount
             every { consecutiveFailures } returns this@AutoBackupViewModelTest.consecutiveFailures
             every { backupRetentionCount } returns this@AutoBackupViewModelTest.backupRetentionCount
+            every { backupDestinationMode } returns this@AutoBackupViewModelTest.backupDestinationMode
             every { backupDestinationUri } returns this@AutoBackupViewModelTest.backupDestinationUri
+            every { backupDestinationName } returns this@AutoBackupViewModelTest.backupDestinationName
             every { passphraseHint } returns this@AutoBackupViewModelTest.passphraseHint
         }
         passphraseManager = mockk(relaxed = true)
@@ -189,9 +196,11 @@ class AutoBackupViewModelTest {
     }
 
     @Test
-    fun onEnableToggled_true_withPassphrase_ios_enablesImmediately() = runTest(dispatcher) {
-        every { PlatformCapabilities.supportsAutoBackupFolderPicker() } returns false
+    fun onEnableToggled_true_iOSDefaultICloudMode_enablesImmediatelyWithoutFolderPick() = runTest(dispatcher) {
+        // Simulate iOS with the default mode (ICLOUD): no folder pick is required.
+        every { PlatformCapabilities.supportsBackupDestinationModeChoice() } returns true
         hasPassphrase = true
+        backupDestinationMode.value = BackupDestinationMode.ICLOUD
         backupDestinationUri.value = null
         val viewModel = newViewModel()
         runCurrent()
@@ -208,9 +217,10 @@ class AutoBackupViewModelTest {
     fun enableFlow_chains_passphraseThenFolderThenEnabled() = runTest(dispatcher) {
         hasPassphrase = false
         backupDestinationUri.value = null
-        // Make setBackupDestinationUri actually flip the flow, so the VM sees the change.
-        coEvery { preferences.setBackupDestinationUri(any()) } answers {
+        // Make setBackupDestination actually flip the flow, so the VM sees the change.
+        coEvery { preferences.setBackupDestination(any(), any()) } answers {
             backupDestinationUri.value = firstArg()
+            backupDestinationName.value = secondArg()
         }
         val viewModel = newViewModel()
         runCurrent()
@@ -223,7 +233,7 @@ class AutoBackupViewModelTest {
             runCurrent()
             assertEquals(AutoBackupEvent.RequestPickFolder, awaitItem())
 
-            viewModel.setDestinationUri("content://primary:Documents/HelloMeds/backups")
+            viewModel.setDestination("content://primary:Documents/HelloMeds/backups", "backups")
             runCurrent()
 
             cancelAndIgnoreRemainingEvents()
@@ -256,21 +266,22 @@ class AutoBackupViewModelTest {
     fun cancellingFolderPicker_clearsPendingEnable_soLaterPick_doesNotHijack() = runTest(dispatcher) {
         hasPassphrase = true
         backupDestinationUri.value = null
-        coEvery { preferences.setBackupDestinationUri(any()) } answers {
+        coEvery { preferences.setBackupDestination(any(), any()) } answers {
             backupDestinationUri.value = firstArg()
+            backupDestinationName.value = secondArg()
         }
         val viewModel = newViewModel()
         runCurrent()
 
         // Kick off, then cancel the picker (notified via onFolderPickerCancelled, NOT
-        // setDestinationUri(null), so any previously stored destination is preserved).
+        // setDestination(null), so any previously stored destination is preserved).
         viewModel.onEnableToggled(true)
         runCurrent()
         viewModel.onFolderPickerCancelled()
         runCurrent()
 
         // User later picks a destination from the Settings row. Must NOT enable backups.
-        viewModel.setDestinationUri("content://primary:Documents/later")
+        viewModel.setDestination("content://primary:Documents/later", "later")
         runCurrent()
 
         coVerify(exactly = 0) { preferences.setAutoBackupEnabled(true) }
@@ -291,5 +302,6 @@ class AutoBackupViewModelTest {
 
         coVerify(exactly = 0) { preferences.setBackupDestinationUri(null) }
         coVerify(exactly = 0) { preferences.setBackupDestinationUri(any()) }
+        coVerify(exactly = 0) { preferences.setBackupDestination(any(), any()) }
     }
 }

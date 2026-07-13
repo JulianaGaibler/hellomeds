@@ -198,6 +198,7 @@ class AlarmReconciler(
     private suspend fun cleanupCompletedSessions() {
         val notifMgr = context.getSystemService(NotificationManager::class.java)
         val lockScreenVisibility = notificationPrefs.lockScreenVisibility.first()
+        val nonDismissable = notificationPrefs.nonDismissableReminders.first()
         val allSessions = sessionManager.getAllSessions()
         if (allSessions.isEmpty()) return
 
@@ -237,6 +238,7 @@ class AlarmReconciler(
                             scheduledTime = scheduledTime,
                             lockScreenVisibility = lockScreenVisibility,
                             groupKey = "hellomeds_$scheduledTime",
+                            nonDismissable = nonDismissable,
                         )
                         notifMgr.notify(session.notificationId, notification)
                         AppLogger.d(
