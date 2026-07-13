@@ -1,0 +1,2 @@
+- Fixed picking a color when creating or editing a medication
+- Fixed stock tracking graph grouping events from multiple days onto a single day

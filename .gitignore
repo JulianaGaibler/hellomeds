@@ -64,7 +64,11 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/
 fastlane/test_output/
-fastlane/metadata/
+fastlane/metadata/**
+!fastlane/metadata/android/
+!fastlane/metadata/android/*/
+!fastlane/metadata/android/*/changelogs/
+!fastlane/metadata/android/*/changelogs/*.txt
 Gemfile.lock
 .bundle/
 vendor/bundle/

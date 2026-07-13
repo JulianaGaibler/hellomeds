@@ -1,0 +1,4 @@
+- Improved UI for stock screen
+- Fixed bug with SwipeableListItem caching its swipe state
+- Removed verbose logging
+- Added closed beta sign-up link to README
