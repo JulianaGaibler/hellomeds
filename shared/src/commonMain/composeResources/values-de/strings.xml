@@ -309,7 +309,7 @@
 	<string name="importance_label_alarm_after">Alarm ab</string>
 	<string name="importance_label_alarm_after_suffix">Erinnerung</string>
 	<string name="importance_label_escalation_range_hint">Zwischen 1 und %1$d</string>
-	<string name="importance_label_alarm_after_critical_hint">Muss nach Kritisch liegen (Folgeerinnerung %1$d)</string>
+	<string name="importance_label_alarm_after_critical_hint">Muss nach Erinnerung %1$d liegen</string>
 
 	<!-- Importance Label FSI Permission Dialog -->
 	<string name="importance_label_fsi_dialog_title">Berechtigung erforderlich</string>
