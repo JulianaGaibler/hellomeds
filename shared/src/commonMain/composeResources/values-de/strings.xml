@@ -650,10 +650,10 @@
 	</plurals>
 	<string name="reliability_banner_away_action">Schließen</string>
 	<string name="unlogged_dose_section_title">Nicht protokollierte Einnahmen</string>
-	<string name="unlogged_dose_take_label">Nicht protokollierte Einnahmen als eingenommen markieren</string>
-	<string name="unlogged_dose_skip_description">Einnahmen, die du nicht innerhalb von 24 Stunden protokollierst, werden als übersprungen markiert.</string>
-	<string name="unlogged_dose_take_description">Einnahmen, die du nicht innerhalb von 24 Stunden protokollierst, werden als eingenommen markiert.</string>
-	<string name="unlogged_dose_take_hint">Aktiviere dies nur, wenn du dieses Medikament zuverlässig einnimmst. Automatisch eingenommene Einnahmen werden vom Vorrat abgezogen, und du kannst sie im Verlauf jederzeit korrigieren.</string>
+	<string name="unlogged_dose_action_label">Nach 24 Stunden ohne Protokollierung</string>
+	<string name="unlogged_dose_action_skip">Als übersprungen markieren</string>
+	<string name="unlogged_dose_action_take">Als eingenommen markieren</string>
+	<string name="unlogged_dose_take_hint">Wähle dies nur, wenn du dieses Medikament zuverlässig einnimmst. Automatisch eingenommene Einnahmen werden vom Vorrat abgezogen, und du kannst sie im Verlauf jederzeit korrigieren.</string>
 	<string name="tracking_auto_logged_label">Automatisch erfasst</string>
 	<string name="tracking_auto_logged_hint">Diese Einnahme wurde automatisch erfasst, weil sie nicht innerhalb von 24 Stunden protokolliert wurde. Beim Speichern wird sie durch deinen Eintrag ersetzt.</string>
 

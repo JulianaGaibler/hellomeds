@@ -4,9 +4,9 @@
 package me.juliana.hellomeds.ui.features.medication
 
 import me.juliana.hellomeds.shared.unlogged_dose_take_hint
-import me.juliana.hellomeds.shared.unlogged_dose_take_description
-import me.juliana.hellomeds.shared.unlogged_dose_skip_description
-import me.juliana.hellomeds.shared.unlogged_dose_take_label
+import me.juliana.hellomeds.shared.unlogged_dose_action_label
+import me.juliana.hellomeds.shared.unlogged_dose_action_skip
+import me.juliana.hellomeds.shared.unlogged_dose_action_take
 import me.juliana.hellomeds.shared.unlogged_dose_section_title
 import me.juliana.hellomeds.data.model.enums.UnloggedDoseAction
 import androidx.compose.animation.AnimatedVisibility
@@ -430,24 +430,21 @@ fun EditMedicationScreen(
 
             item {
                 val takeUnlogged = unloggedDoseAction == UnloggedDoseAction.TAKE
+                val skipLabel = stringResource(Res.string.unlogged_dose_action_skip)
+                val takeLabel = stringResource(Res.string.unlogged_dose_action_take)
                 AutoSmartList(
                     items = listOf(
                         SmartListItemConfig(visible = true) { shapes, visible ->
-                            SmartListSwitchItem(
-                                label = stringResource(Res.string.unlogged_dose_take_label),
-                                checked = takeUnlogged,
-                                onCheckedChange = {
-                                    unloggedDoseAction = if (it) UnloggedDoseAction.TAKE else UnloggedDoseAction.SKIP
+                            SmartListDropdownItem(
+                                label = stringResource(Res.string.unlogged_dose_action_label),
+                                selectedValue = if (takeUnlogged) takeLabel else skipLabel,
+                                options = listOf(skipLabel, takeLabel),
+                                onValueChange = {
+                                    unloggedDoseAction =
+                                        if (it == takeLabel) UnloggedDoseAction.TAKE else UnloggedDoseAction.SKIP
                                 },
                                 shapes = shapes,
                                 visible = visible,
-                                supportingText = stringResource(
-                                    if (takeUnlogged) {
-                                        Res.string.unlogged_dose_take_description
-                                    } else {
-                                        Res.string.unlogged_dose_skip_description
-                                    },
-                                ),
                             )
                         },
                         SmartListItemConfig(visible = takeUnlogged) { shapes, visible ->
