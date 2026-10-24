@@ -142,6 +142,20 @@ cmd_build() {
     esac
 }
 
+# Gradle's exit status decides the result. Configuration and dependency resolution
+# failures print no `e:` lines, so grepping for them alone reports false passes.
+verify_task() {
+    local task="$1"
+    local output
+    if output=$(./gradlew "$task" 2>&1); then
+        success "${task#:}"
+    else
+        error "${task#:} failed"
+        echo "$output" | grep -E "^e:|What went wrong" -A3 | head -20
+        return 1
+    fi
+}
+
 cmd_verify() {
     detect_java
     header "Verification Build (both platforms)"
@@ -149,39 +163,19 @@ cmd_verify() {
     local failed=0
 
     info "Shared UI → Android..."
-    if ./gradlew :shared:compileAndroidMain 2>&1 | grep "^e:" | head -20 | grep -q "^e:"; then
-        error "shared:compileAndroidMain failed"; failed=1
-    else
-        success "shared:compileAndroidMain"
-    fi
+    verify_task :shared:compileAndroidMain || failed=1
 
     info "Shared UI → iOS..."
-    if ./gradlew :shared:compileKotlinIosArm64 2>&1 | grep "^e:" | head -20 | grep -q "^e:"; then
-        error "shared:compileKotlinIosArm64 failed"; failed=1
-    else
-        success "shared:compileKotlinIosArm64"
-    fi
+    verify_task :shared:compileKotlinIosArm64 || failed=1
 
     info "Data layer..."
-    if ./gradlew :core:data:compileCommonMainKotlinMetadata 2>&1 | grep "^e:" | head -20 | grep -q "^e:"; then
-        error "core:data:compileCommonMainKotlinMetadata failed"; failed=1
-    else
-        success "core:data:compileCommonMainKotlinMetadata"
-    fi
+    verify_task :core:data:compileCommonMainKotlinMetadata || failed=1
 
     info "Android app (google)..."
-    if ./gradlew :androidApp:compileGoogleDebugKotlin 2>&1 | grep "^e:" | head -20 | grep -q "^e:"; then
-        error "androidApp:compileGoogleDebugKotlin failed"; failed=1
-    else
-        success "androidApp:compileGoogleDebugKotlin"
-    fi
+    verify_task :androidApp:compileGoogleDebugKotlin || failed=1
 
     info "Android app (fdroid)..."
-    if ./gradlew :androidApp:compileFdroidDebugKotlin 2>&1 | grep "^e:" | head -20 | grep -q "^e:"; then
-        error "androidApp:compileFdroidDebugKotlin failed"; failed=1
-    else
-        success "androidApp:compileFdroidDebugKotlin"
-    fi
+    verify_task :androidApp:compileFdroidDebugKotlin || failed=1
 
     echo ""
     if [ "$failed" -eq 0 ]; then
