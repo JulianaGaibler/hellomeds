@@ -35,6 +35,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -43,6 +44,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +53,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
+import me.juliana.hellomeds.designsystem.component.AppSnackbarHost
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import me.juliana.hellomeds.data.database.entities.ImportanceLabel
@@ -64,6 +68,9 @@ import me.juliana.hellomeds.data.model.getCycleDay
 import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.domain.validation.MedicationValidation
 import me.juliana.hellomeds.shared.Res
+import me.juliana.hellomeds.shared.medication_clear_data
+import me.juliana.hellomeds.shared.clear_data_done
+import me.juliana.hellomeds.data.service.ClearRange
 import me.juliana.hellomeds.shared.action_cancel
 import me.juliana.hellomeds.shared.action_confirm
 import me.juliana.hellomeds.shared.action_delete
@@ -121,6 +128,11 @@ fun MedicationDetailScreen(
     onNotesChange: (String) -> Unit,
     onResetCycle: () -> Unit = {},
     onSetCycleDay: (Int) -> Unit = {},
+    hasStockHistory: Boolean = false,
+    autoBackupEnabled: Boolean = true,
+    onClearData: (clearHistory: Boolean, clearStock: Boolean, range: ClearRange, onDone: () -> Unit) -> Unit =
+        { _, _, _, _ -> },
+    onOpenBackups: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var notes by remember(medication) { mutableStateOf(medication.notes ?: "") }
@@ -128,6 +140,11 @@ fun MedicationDetailScreen(
     var showArchiveDialog by remember { mutableStateOf(false) }
     var showResetCycleDialog by remember { mutableStateOf(false) }
     var showSetDayDialog by remember { mutableStateOf(false) }
+    var showNoBackupDialog by remember { mutableStateOf(false) }
+    var showClearDataDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val dataClearedMessage = stringResource(Res.string.clear_data_done)
     var initialNotes by remember(medication) { mutableStateOf(medication.notes ?: "") }
     val isArchived = medication.isArchived
 
@@ -140,6 +157,33 @@ fun MedicationDetailScreen(
 
     val color1 = medication.shapeColor?.let {
         MedicationColor.fromName(it)
+    }
+
+    if (showClearDataDialog) {
+        ClearMedicationDataDialog(
+            showStockOption = medication.stockTrackingEnabled || hasStockHistory,
+            onConfirm = { clearHistory, clearStock, range ->
+                showClearDataDialog = false
+                onClearData(clearHistory, clearStock, range) {
+                    scope.launch { snackbarHostState.showSnackbar(dataClearedMessage) }
+                }
+            },
+            onDismiss = { showClearDataDialog = false },
+        )
+    }
+
+    if (showNoBackupDialog) {
+        ClearDataNoBackupDialog(
+            onGoToBackups = {
+                showNoBackupDialog = false
+                onOpenBackups()
+            },
+            onContinue = {
+                showNoBackupDialog = false
+                showClearDataDialog = true
+            },
+            onDismiss = { showNoBackupDialog = false },
+        )
     }
 
     // Delete confirmation dialog
@@ -271,32 +315,43 @@ fun MedicationDetailScreen(
                     GroupedOverflowDropdown(
                         expanded = menuExpanded,
                         onDismissRequest = { menuExpanded = false },
-                        groups = listOf { dismiss ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        stringResource(
-                                            if (isArchived) {
-                                                Res.string.schedule_action_unarchive
-                                            } else {
-                                                Res.string.schedule_action_archive
-                                            },
-                                        ),
-                                    )
-                                },
-                                onClick = {
-                                    dismiss()
-                                    showArchiveDialog = true
-                                },
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(Res.string.action_delete)) },
-                                onClick = {
-                                    dismiss()
-                                    showDeleteDialog = true
-                                },
-                            )
-                        },
+                        groups = listOf(
+                            { dismiss ->
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(Res.string.medication_clear_data)) },
+                                    onClick = {
+                                        dismiss()
+                                        if (autoBackupEnabled) showClearDataDialog = true else showNoBackupDialog = true
+                                    },
+                                )
+                            },
+                            { dismiss ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            stringResource(
+                                                if (isArchived) {
+                                                    Res.string.schedule_action_unarchive
+                                                } else {
+                                                    Res.string.schedule_action_archive
+                                                },
+                                            ),
+                                        )
+                                    },
+                                    onClick = {
+                                        dismiss()
+                                        showArchiveDialog = true
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(Res.string.action_delete)) },
+                                    onClick = {
+                                        dismiss()
+                                        showDeleteDialog = true
+                                    },
+                                )
+                            },
+                        ),
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -304,6 +359,7 @@ fun MedicationDetailScreen(
                 ),
             )
         },
+        snackbarHost = { AppSnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         modifier = modifier.fillMaxSize(),
     ) { paddingValues ->

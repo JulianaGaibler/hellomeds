@@ -3,6 +3,8 @@
 
 package me.juliana.hellomeds.data.service
 
+import me.juliana.hellomeds.data.util.TimeProvider
+import me.juliana.hellomeds.data.util.SystemTimeProvider
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -35,11 +37,16 @@ import kotlin.time.Instant
  * Timezone-aware: each schedule's events are projected using the timezone resolved by
  * [ScheduleTimeZoneResolver], either system default (LOCAL mode) or the schedule's
  * origin timezone (FIXED mode).
+ *
+ * Unlogged events before `Schedule.resolveFrom` that are older than
+ * [UnloggedDoseResolver.RESOLVE_AFTER_MS] are left out. The resolver never settles them, so
+ * they would otherwise show as unlogged forever. Newer ones stay so they can still be logged.
  */
 class ScheduleProjector(
     private val scheduleDao: ScheduleDao,
     private val historyDao: MedicationHistoryDao,
     private val medicationDao: MedicationDao,
+    private val timeProvider: TimeProvider = SystemTimeProvider(),
 ) {
 
     companion object {
@@ -112,6 +119,7 @@ class ScheduleProjector(
             .associateBy { "${it.medicationId}_${it.scheduleId}_${it.scheduledTime}" }
 
         val events = mutableListOf<ProjectedEvent>()
+        val settledBefore = timeProvider.nowMillis() - UnloggedDoseResolver.RESOLVE_AFTER_MS
 
         // Cache resolved TimeZone objects to avoid redundant IANA ID parsing
         val tzCache = mutableMapOf<String, TimeZone>()
@@ -144,6 +152,12 @@ class ScheduleProjector(
                 // Check if there's a history record for this event
                 val key = "${event.medicationId}_${event.scheduleId}_${event.scheduledTime}"
                 val historyRecord = historyIndex[key]
+                if (historyRecord == null &&
+                    event.scheduledTime < schedule.resolveFrom &&
+                    event.scheduledTime <= settledBefore
+                ) {
+                    continue
+                }
 
                 events.add(event.copy(historyRecord = historyRecord))
             }

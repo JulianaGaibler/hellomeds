@@ -4,6 +4,7 @@
 package me.juliana.hellomeds.ui.navigation3.entries
 
 // CameraDetectionEntryScreen is provided by the app module (platform-specific)
+import me.juliana.hellomeds.data.preferences.AutoBackupPreferences
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -85,6 +86,7 @@ fun MedicationDetailScreenEntry(
     onEditMedication: (medicationId: Int) -> Unit,
     onEditLabel: (medicationId: Int) -> Unit,
     onManageStock: (medicationId: Int) -> Unit,
+    onOpenBackups: () -> Unit,
 ) {
     platformContext()
     val medicationViewModel: MedicationViewModel = koinViewModel()
@@ -93,6 +95,10 @@ fun MedicationDetailScreenEntry(
     val medication by medicationViewModel.getMedicationById(medicationId)
         .collectAsStateWithLifecycle(initial = null)
     val allLabels by labelViewModel.allLabels.collectAsStateWithLifecycle()
+    val hasStockHistory by medicationViewModel.hasStockHistory(medicationId)
+        .collectAsStateWithLifecycle(initial = false)
+    val autoBackupEnabled by koinInject<AutoBackupPreferences>().autoBackupEnabled
+        .collectAsStateWithLifecycle(initial = true)
 
     var hasLoaded by remember { mutableStateOf(false) }
 
@@ -138,6 +144,12 @@ fun MedicationDetailScreenEntry(
             onSetCycleDay = { day ->
                 medicationViewModel.setCycleDay(medicationId, day)
             },
+            hasStockHistory = hasStockHistory,
+            onClearData = { clearHistory, clearStock, range, onDone ->
+                medicationViewModel.clearData(medicationId, clearHistory, clearStock, range, onDone)
+            },
+            autoBackupEnabled = autoBackupEnabled,
+            onOpenBackups = onOpenBackups,
         )
     }
 }

@@ -46,6 +46,7 @@ import me.juliana.hellomeds.data.util.TransactionRunner
  * past (schedule edits, device timezone changes, medication timezone or cycle edits,
  * imports) makes real doses look unlogged. Two guards prevent inventing doses:
  * - `Schedule.resolveFrom`: events before it are never touched. [redefine] bumps it.
+ *   [ScheduleProjector] also hides them once they are older than [RESOLVE_AFTER_MS].
  * - Near-match: an event is skipped if any history row of the same schedule lies within
  *   ±[NEAR_MATCH_MS]. This is safe because a schedule's events are at least about 23h apart.
  *
@@ -120,6 +121,9 @@ class UnloggedDoseResolver(
         if (scheduleIds.isNotEmpty()) scheduleDao.bumpResolveFrom(scheduleIds.toList(), now)
         now
     }
+
+    /** Runs [block] while no resolve, redefine or startFresh can run. */
+    suspend fun <R> runExclusive(block: suspend () -> R): R = mutex.withLock { block() }
 
     /**
      * A new schedule may resolve from the start of its creation day, which can be before

@@ -53,6 +53,9 @@ class StockTrackingRepository(
         return medicationDao.getStockTracked()
     }
 
+    fun hasAdjustments(medicationId: Int): Flow<Boolean> =
+        stockAdjustmentDao.getByMedicationId(medicationId).map { it.isNotEmpty() }
+
     fun getCurrentStock(medicationId: Int): Flow<Double?> {
         return medicationDao.getById(medicationId).map { medication ->
             medication?.let { calculateCurrentStock(it) }

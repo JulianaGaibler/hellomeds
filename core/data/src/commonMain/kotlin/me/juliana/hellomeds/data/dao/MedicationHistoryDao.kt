@@ -153,6 +153,19 @@ interface MedicationHistoryDao {
     @Query("DELETE FROM medication_history WHERE medicationId = :medicationId")
     suspend fun deleteByMedicationId(medicationId: Int)
 
+    /**
+     * Deletes one medication's history before [cutoffTimestamp]. Stock adjustments cascade on
+     * delete, so detach them first with [StockAdjustmentDao.detachFromHistoryOlderThan].
+     */
+    @Query(
+        """
+    DELETE FROM medication_history
+    WHERE medicationId = :medicationId
+      AND COALESCE(scheduledTime, takenTime, createdAt) < :cutoffTimestamp
+  """,
+    )
+    suspend fun deleteForMedicationOlderThan(medicationId: Int, cutoffTimestamp: Long): Int
+
     /** Called by periodic cleanup to keep the database size bounded. */
     @Query(
         """

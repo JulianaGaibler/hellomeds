@@ -347,6 +347,7 @@ fun HelloMedsNavigation3(
                     onManageStock = { medicationId ->
                         navigator.openOverlay(StockTrackingDetailRoute(medicationId))
                     },
+                    onOpenBackups = { navigator.openOverlay(AutoBackupSettingsRoute) },
                 )
             }
         }
@@ -376,7 +377,7 @@ fun HelloMedsNavigation3(
                 val editViewModel: EditMedicationViewModel = koinViewModel()
                 DisposableEffect(Unit) {
                     onDispose {
-                        // Covered by a subpage route keeps the draft, leaving the edit flow drops it.
+                        // A subpage covering this entry keeps the draft. Leaving the edit flow drops it.
                         if (key !in navigator.state.rootBackStack) editViewModel.clear()
                     }
                 }

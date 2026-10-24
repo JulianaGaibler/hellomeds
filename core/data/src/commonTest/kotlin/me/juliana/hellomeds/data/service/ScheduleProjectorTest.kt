@@ -27,6 +27,7 @@ import me.juliana.hellomeds.data.model.enums.TimeZoneMode
 import me.juliana.hellomeds.data.toEpochMillis
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import me.juliana.hellomeds.data.util.TimeProvider
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -299,6 +300,46 @@ class ScheduleProjectorTest {
     }
 
     // --- History matching ---
+
+    @Test
+    fun hidesSettledUnloggedEventsBeforeResolveFrom() {
+        val from = LocalDate(2025, 3, 1)
+        val to = LocalDate(2025, 3, 5)
+        val now = to.toEpochMillis("07:00")
+        val projector = ScheduleProjector(
+            FakeScheduleDao(),
+            FakeHistoryDao(),
+            FakeMedicationDao(),
+            object : TimeProvider {
+                override fun now() = Instant.fromEpochMilliseconds(now)
+            },
+        )
+        val schedule = createSchedule(
+            id = 1,
+            startDate = from.toEpochMillis(),
+            frequencyType = FrequencyType.INTERVAL,
+            frequencyValue = 1,
+            timeOfDay = "08:00",
+            resolveFrom = to.toEpochMillis("06:00"),
+        )
+        val logged = LocalDate(2025, 3, 2).toEpochMillis("08:00")
+        val history = listOf(
+            createHistory(scheduleId = 1, scheduledTime = logged, status = MedicationHistory.STATUS_TAKEN),
+        )
+
+        val events = projector.projectEventsWithHistory(
+            listOf(schedule),
+            from.toEpochMillis(),
+            to.toEpochMillis("23:59"),
+            history,
+        )
+
+        // Logged events stay, unlogged ones within the last 24h stay, older unlogged ones are hidden.
+        assertEquals(
+            listOf(logged, LocalDate(2025, 3, 4).toEpochMillis("08:00"), to.toEpochMillis("08:00")),
+            events.map { it.scheduledTime },
+        )
+    }
 
     @Test
     fun marksTakenEventsAsNonPending() {

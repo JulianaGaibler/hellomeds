@@ -79,7 +79,7 @@ class UnloggedDoseResolverTest {
     private fun resolver(history: MedicationHistoryDao = historyDao): UnloggedDoseResolver {
         val transactionRunner = SnapshotTransactionRunner(historyDao, stockDao)
         return UnloggedDoseResolver(
-            projector = ScheduleProjector(scheduleDao, history, medicationDao),
+            projector = ScheduleProjector(scheduleDao, history, medicationDao, time),
             scheduleDao = scheduleDao,
             medicationDao = medicationDao,
             historyDao = history,

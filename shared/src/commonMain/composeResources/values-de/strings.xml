@@ -1193,4 +1193,18 @@
 	<string name="stock_layout_summary_manual">Manuell — %1$d Spalten</string>
 	<string name="stock_layout_column_decrease">Spalten verringern</string>
 	<string name="stock_layout_column_increase">Spalten erhöhen</string>
+	<string name="medication_clear_data">Daten löschen…</string>
+	<string name="clear_data_title">Daten löschen</string>
+	<string name="clear_data_message">Entfernt protokollierte Einnahmen und Bestandsänderungen für dieses Medikament. Dein aktueller Bestand und die Zeitpläne bleiben erhalten. Das kann nicht rückgängig gemacht werden.</string>
+	<string name="clear_data_logged_doses">Protokollierte Einnahmen</string>
+	<string name="clear_data_stock_changes">Bestandsänderungen</string>
+	<string name="clear_data_range_label">Entfernen</string>
+	<string name="clear_data_range_24_hours">Älter als 24 Stunden</string>
+	<string name="clear_data_range_older_than">Älter als %1$d Tage</string>
+	<string name="clear_data_no_backup_title">Automatische Backups einrichten</string>
+	<string name="clear_data_no_backup_message">Gelöschte Daten lassen sich ohne Backup nicht wiederherstellen. Automatische Backups sichern regelmäßig alle deine Medikamente, Zeitpläne und Verläufe, damit du sie bei Bedarf wiederherstellen kannst.</string>
+	<string name="clear_data_go_to_backups">Zu den Backups</string>
+	<string name="clear_data_continue">Fortfahren</string>
+	<string name="clear_data_confirm">Löschen</string>
+	<string name="clear_data_done">Daten gelöscht</string>
 </resources>

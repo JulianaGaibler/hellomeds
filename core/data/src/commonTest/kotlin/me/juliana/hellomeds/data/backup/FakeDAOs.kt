@@ -244,6 +244,12 @@ class FakeHistoryDao : MedicationHistoryDao {
     val history = mutableListOf<MedicationHistory>()
     private var nextId = 1
 
+    /** When set, deleting history deletes linked adjustments like the real foreign key does. */
+    var cascadeTo: FakeStockAdjustmentDao? = null
+
+    internal fun isOlderThan(entry: MedicationHistory, cutoffTimestamp: Long) =
+        (entry.scheduledTime ?: entry.takenTime ?: entry.createdAt) < cutoffTimestamp
+
     /**
      * Mirrors Room's IGNORE on the unique (medicationId, scheduleId, scheduledTime) index:
      * a duplicate returns -1 and is not stored. SQLite treats NULLs as distinct, so PRN rows
@@ -345,6 +351,14 @@ class FakeHistoryDao : MedicationHistoryDao {
             (it.takenTime ?: it.scheduledTime ?: 0) >= sinceTimestamp
     }
 
+    override suspend fun deleteForMedicationOlderThan(medicationId: Int, cutoffTimestamp: Long): Int {
+        val deleted = history.filter { it.medicationId == medicationId && isOlderThan(it, cutoffTimestamp) }
+        history.removeAll(deleted)
+        val deletedIds = deleted.map { it.id }.toSet()
+        cascadeTo?.adjustments?.removeAll { it.historyId in deletedIds }
+        return deleted.size
+    }
+
     override suspend fun deleteOlderThan(cutoffTimestamp: Long): Int {
         val before = history.size
         history.removeAll { (it.scheduledTime ?: it.takenTime ?: it.createdAt) < cutoffTimestamp }
@@ -352,11 +366,13 @@ class FakeHistoryDao : MedicationHistoryDao {
     }
 }
 
-class FakeStockAdjustmentDao : StockAdjustmentDao {
+class FakeStockAdjustmentDao(private val historyDao: FakeHistoryDao? = null) : StockAdjustmentDao {
     val adjustments = mutableListOf<StockAdjustment>()
+    var failOnInsert = false
     private var nextId = 1
 
     override suspend fun insert(adjustment: StockAdjustment): Long {
+        check(!failOnInsert) { "insert failed" }
         val id = nextId++
         adjustments.add(adjustment.copy(id = id))
         return id.toLong()
@@ -404,6 +420,26 @@ class FakeStockAdjustmentDao : StockAdjustmentDao {
     override suspend fun getLatestByTypeForMedication(medicationId: Int, type: String) =
         adjustments.filter { it.medicationId == medicationId && it.adjustmentType == type }
             .maxByOrNull { it.timestamp }
+
+    override suspend fun detachFromHistoryOlderThan(medicationId: Int, cutoffTimestamp: Long) {
+        val history = historyDao?.history ?: return
+        val ids = history.filter { it.medicationId == medicationId && historyDao.isOlderThan(it, cutoffTimestamp) }
+            .map { it.id }.toSet()
+        for (i in adjustments.indices) {
+            if (adjustments[i].historyId in ids) adjustments[i] = adjustments[i].copy(historyId = null)
+        }
+    }
+
+    private fun unlinkedBefore(medicationId: Int, cutoffTimestamp: Long) = adjustments.filter {
+        it.medicationId == medicationId && it.timestamp < cutoffTimestamp && it.historyId == null
+    }
+
+    override suspend fun getUnlinkedBefore(medicationId: Int, cutoffTimestamp: Long) =
+        unlinkedBefore(medicationId, cutoffTimestamp).sortedBy { it.timestamp }
+
+    override suspend fun deleteUnlinkedBefore(medicationId: Int, cutoffTimestamp: Long) {
+        adjustments.removeAll(unlinkedBefore(medicationId, cutoffTimestamp))
+    }
 }
 
 class NoOpReconciler : ScheduleReconciler {
@@ -460,6 +496,8 @@ class FakeTransactionRunner : me.juliana.hellomeds.data.util.TransactionRunner {
 class SnapshotTransactionRunner(
     private val historyDao: FakeHistoryDao,
     private val stockAdjustmentDao: FakeStockAdjustmentDao? = null,
+    private val scheduleDao: FakeScheduleDao? = null,
+    private val medicationDao: FakeMedicationDao? = null,
 ) : me.juliana.hellomeds.data.util.TransactionRunner {
     private var depth = 0
 
@@ -467,6 +505,8 @@ class SnapshotTransactionRunner(
         if (depth > 0) return block() // Nested: the outermost transaction owns rollback.
         val history = historyDao.history.toList()
         val adjustments = stockAdjustmentDao?.adjustments?.toList()
+        val schedules = scheduleDao?.schedules?.toList()
+        val medications = medicationDao?.medications?.toList()
         depth++
         try {
             return block()
@@ -476,6 +516,14 @@ class SnapshotTransactionRunner(
             if (adjustments != null) {
                 stockAdjustmentDao.adjustments.clear()
                 stockAdjustmentDao.adjustments.addAll(adjustments)
+            }
+            if (schedules != null) {
+                scheduleDao.schedules.clear()
+                scheduleDao.schedules.addAll(schedules)
+            }
+            if (medications != null) {
+                medicationDao.medications.clear()
+                medicationDao.medications.addAll(medications)
             }
             throw e
         } finally {

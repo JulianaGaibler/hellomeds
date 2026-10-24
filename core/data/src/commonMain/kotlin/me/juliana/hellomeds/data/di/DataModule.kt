@@ -21,6 +21,7 @@ import me.juliana.hellomeds.data.repository.MedicationHistoryRepository
 import me.juliana.hellomeds.data.repository.MedicationRepository
 import me.juliana.hellomeds.data.repository.ScheduleRepository
 import me.juliana.hellomeds.data.repository.StockTrackingRepository
+import me.juliana.hellomeds.data.service.MedicationDataClearer
 import me.juliana.hellomeds.data.service.ScheduleProjector
 import me.juliana.hellomeds.data.preferences.ReliabilityPreferences
 import me.juliana.hellomeds.data.service.StockPredictionEngine
@@ -74,7 +75,7 @@ val dataModule = module {
     single { get<AppDatabase>().notificationSessionDao() }
 
     // Services
-    single { ScheduleProjector(get(), get(), get()) }
+    single { ScheduleProjector(get(), get(), get(), get()) }
     single {
         UnloggedDoseResolver(
             projector = get(),
@@ -89,6 +90,18 @@ val dataModule = module {
             stockAdjustmentDao = get(),
             lowStockNotifier = get(),
             depletionNotifier = get(),
+        )
+    }
+    single {
+        MedicationDataClearer(
+            medicationDao = get(),
+            scheduleDao = get(),
+            historyDao = get(),
+            stockAdjustmentDao = get(),
+            transactionRunner = get(),
+            resolver = get(),
+            reconciler = get(),
+            timeProvider = get(),
         )
     }
     single { StockPredictionEngine() }

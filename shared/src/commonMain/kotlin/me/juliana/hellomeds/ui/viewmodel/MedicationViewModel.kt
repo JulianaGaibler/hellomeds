@@ -3,6 +3,8 @@
 
 package me.juliana.hellomeds.ui.viewmodel
 
+import me.juliana.hellomeds.data.service.MedicationDataClearer
+import me.juliana.hellomeds.data.service.ClearRange
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +63,7 @@ class MedicationViewModel(
     private val stockTrackingRepository: StockTrackingRepository,
     private val medicationDao: MedicationDao,
     private val displayFormatter: MedicationDisplayFormatter,
+    private val dataClearer: MedicationDataClearer,
 ) : ViewModel() {
 
     // Loading state - true once the first DB emission arrives
@@ -138,6 +141,21 @@ class MedicationViewModel(
     fun deleteMedication(medication: Medication) {
         viewModelScope.launch {
             medicationRepository.delete(medication)
+        }
+    }
+
+    fun hasStockHistory(medicationId: Int): Flow<Boolean> = stockTrackingRepository.hasAdjustments(medicationId)
+
+    fun clearData(
+        medicationId: Int,
+        clearHistory: Boolean,
+        clearStock: Boolean,
+        range: ClearRange,
+        onDone: () -> Unit,
+    ) {
+        viewModelScope.launch {
+            dataClearer.clear(medicationId, clearHistory, clearStock, range)
+            onDone()
         }
     }
 

@@ -1249,4 +1249,18 @@
     <string name="unlogged_dose_take_hint">Only choose this if you reliably take this medication. Automatically taken doses are deducted from your stock, and you can correct any of them in your history.</string>
     <string name="tracking_auto_logged_label">Auto-logged</string>
     <string name="tracking_auto_logged_hint">This dose was logged automatically because it was not logged within 24 hours. Saving replaces it with your entry.</string>
+    <string name="medication_clear_data">Clear data…</string>
+    <string name="clear_data_title">Clear data</string>
+    <string name="clear_data_message">Removes logged doses and stock changes for this medication. Your current stock and schedules stay as they are. This can't be undone.</string>
+    <string name="clear_data_logged_doses">Logged doses</string>
+    <string name="clear_data_stock_changes">Stock changes</string>
+    <string name="clear_data_range_label">Remove</string>
+    <string name="clear_data_range_24_hours">Older than 24 hours</string>
+    <string name="clear_data_range_older_than">Older than %1$d days</string>
+    <string name="clear_data_no_backup_title">Set up automatic backups</string>
+    <string name="clear_data_no_backup_message">Cleared data can't be restored without a backup. Automatic backups regularly save a copy of all your medications, schedules and history, so you can restore them if you ever need to.</string>
+    <string name="clear_data_go_to_backups">Go to backups</string>
+    <string name="clear_data_continue">Continue</string>
+    <string name="clear_data_confirm">Clear</string>
+    <string name="clear_data_done">Data cleared</string>
 </resources>

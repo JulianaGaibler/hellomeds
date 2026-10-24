@@ -64,4 +64,34 @@ interface StockAdjustmentDao {
   """,
     )
     suspend fun getLatestByTypeForMedication(medicationId: Int, type: String): StockAdjustment?
+
+    /** Unlinks adjustments from the history rows [MedicationHistoryDao.deleteForMedicationOlderThan] would delete. */
+    @Query(
+        """
+    UPDATE stock_adjustments SET historyId = NULL
+    WHERE historyId IN (
+      SELECT id FROM medication_history
+      WHERE medicationId = :medicationId
+        AND COALESCE(scheduledTime, takenTime, createdAt) < :cutoffTimestamp
+    )
+  """,
+    )
+    suspend fun detachFromHistoryOlderThan(medicationId: Int, cutoffTimestamp: Long)
+
+    @Query(
+        """
+    SELECT * FROM stock_adjustments
+    WHERE medicationId = :medicationId AND timestamp < :cutoffTimestamp AND historyId IS NULL
+    ORDER BY timestamp ASC
+  """,
+    )
+    suspend fun getUnlinkedBefore(medicationId: Int, cutoffTimestamp: Long): List<StockAdjustment>
+
+    @Query(
+        """
+    DELETE FROM stock_adjustments
+    WHERE medicationId = :medicationId AND timestamp < :cutoffTimestamp AND historyId IS NULL
+  """,
+    )
+    suspend fun deleteUnlinkedBefore(medicationId: Int, cutoffTimestamp: Long)
 }
