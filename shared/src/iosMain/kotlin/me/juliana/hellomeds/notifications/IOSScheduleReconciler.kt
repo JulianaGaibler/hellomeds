@@ -28,8 +28,11 @@ import me.juliana.hellomeds.shared.notification_text_time_log_generic
 import me.juliana.hellomeds.shared.notification_text_time_log_named
 import me.juliana.hellomeds.shared.notification_title_followup
 import me.juliana.hellomeds.shared.notification_title_followup_numbered
+import me.juliana.hellomeds.shared.notification_reopen_app_body
+import me.juliana.hellomeds.shared.notification_reopen_app_title
 import me.juliana.hellomeds.shared.notification_title_reminder
 import org.jetbrains.compose.resources.getPluralString
+import org.jetbrains.compose.resources.getString
 import platform.Foundation.NSCalendar
 import platform.Foundation.NSCalendarUnitDay
 import platform.Foundation.NSCalendarUnitHour
@@ -87,8 +90,9 @@ internal fun setInterruptionLevel(content: UNMutableNotificationContent, level: 
  *
  * Unlike Android's single-alarm AlarmReconciler, iOS requires pre-scheduling
  * local notifications because the app may not be running when they fire.
- * This reconciler batch-schedules up to [MAX_NOTIFICATIONS] notifications
- * covering a 7-day lookahead window.
+ * This reconciler batch-schedules up to [MAX_EVENT_NOTIFICATIONS] notifications
+ * covering a 7-day lookahead window, then fills leftover budget up to
+ * [EXTENDED_SCHEDULING_WINDOW_MS] and queues a reopen-app notice after the last one.
  *
  * Called after every state mutation (schedule CRUD, medication taken/skipped,
  * settings change) — same contract as AlarmReconciler on Android.
@@ -194,13 +198,16 @@ class IOSScheduleReconciler(
         // Step 2: Project events for the next 7 days, widened backward by
         // PAST_PENDING_LOOKBACK_MS so still-pending events whose follow-up
         // chain was wiped in Step 1 can have their unfired tail re-armed below.
-        val windowEnd = now + LOOKAHEAD_MS
+        // Projection reaches EXTENDED_SCHEDULING_WINDOW_MS so leftover budget can queue
+        // reminders past the 7-day core window (see the constant's doc).
+        val coreWindowEnd = now + LOOKAHEAD_MS
+        val windowEnd = now + EXTENDED_SCHEDULING_WINDOW_MS
 
         val events = projector.projectEvents(now - PAST_PENDING_LOOKBACK_MS, windowEnd)
         val pendingEvents = events.filter { it.isPending }
 
         if (pendingEvents.isEmpty()) {
-            AppLogger.i(TAG, "Reconciled: no pending events in next 7 days")
+            AppLogger.i(TAG, "Reconciled: no pending events in the scheduling window")
             return@withLock
         }
 
@@ -213,12 +220,14 @@ class IOSScheduleReconciler(
         // When projected slot count exceeds the event ceiling, the user has more
         // reminders than we can pre-schedule — surface a recovery banner via
         // ReliabilityPreferences so the UI nudges them to open the app regularly.
-        val budgetExhausted = timeSlots.size > MAX_EVENT_NOTIFICATIONS
+        // Only the core 7-day window counts because the extended horizon is best-effort filler.
+        val coreSlotCount = timeSlots.keys.count { it <= coreWindowEnd }
+        val budgetExhausted = coreSlotCount > MAX_EVENT_NOTIFICATIONS
         reliabilityPrefs.setIosNotificationBudgetExhausted(budgetExhausted)
         if (budgetExhausted) {
             AppLogger.w(
                 TAG,
-                "Notification budget exhausted: ${timeSlots.size} slots projected, " +
+                "Notification budget exhausted: $coreSlotCount slots in 7 days, " +
                     "$MAX_EVENT_NOTIFICATIONS schedulable. Surfacing recovery banner.",
             )
         }
@@ -247,6 +256,7 @@ class IOSScheduleReconciler(
         var followUpCount = 0
         var alarmKitCount = 0
         var skippedSnoozedCount = 0
+        var lastQueuedSlot: Long? = null
 
         for ((slotTime, slotEvents) in timeSlots) {
             if (scheduledCount >= MAX_EVENT_NOTIFICATIONS) {
@@ -271,7 +281,10 @@ class IOSScheduleReconciler(
                 label?.isAlarm == true
             }
 
-            if (hasAlarmMed && alarmKitReady && slotTime > now) {
+            if (slotTime > now) lastQueuedSlot = slotTime
+
+            // AlarmKit is only used in the core window. Extended-horizon slots are plain reminders.
+            if (hasAlarmMed && alarmKitReady && slotTime > now && slotTime <= coreWindowEnd) {
                 // Route to AlarmKit — does NOT count against notification budget.
                 // Past-pending alarm slots fall through to the UN path below:
                 // AlarmKit cannot schedule a past fire time, but
@@ -344,6 +357,10 @@ class IOSScheduleReconciler(
                 }
             }
         }
+
+        // Step 4b: If nothing reconciles before the last queued reminder fires (app never
+        // opened, background refresh throttled), tell the user reminders have stopped.
+        lastQueuedSlot?.let { scheduleReopenAppNotification(center, it + REOPEN_APP_DELAY_MS) }
 
         // Step 5: Re-schedule snooze notifications for still-active snoozes.
         // The wipe in Step 1 removed them — we must restore them so the user
@@ -948,6 +965,38 @@ class IOSScheduleReconciler(
                     ?: emptyList()
                 if (ids.isNotEmpty()) {
                     center.removePendingNotificationRequestsWithIdentifiers(ids)
+                }
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    /**
+     * Queues the "open the app to keep receiving reminders" notice at [fireAt]. The delegate
+     * ignores its type, so tapping it only opens the app, and the foreground resolve and
+     * reconcile re-queue everything including a new notice further out.
+     */
+    private suspend fun scheduleReopenAppNotification(center: UNUserNotificationCenter, fireAt: Long) {
+        val content = UNMutableNotificationContent()
+        content.setTitle(getString(Res.string.notification_reopen_app_title))
+        content.setBody(getString(Res.string.notification_reopen_app_body))
+        content.setSound(UNNotificationSound.defaultSound)
+        content.setUserInfo(mapOf<Any?, Any?>("type" to "reopen_app"))
+
+        val components = NSCalendar.currentCalendar.components(
+            NSCalendarUnitYear or NSCalendarUnitMonth or NSCalendarUnitDay or
+                NSCalendarUnitHour or NSCalendarUnitMinute,
+            fromDate = NSDate.dateWithTimeIntervalSince1970(fireAt / 1000.0),
+        )
+        val request = UNNotificationRequest.requestWithIdentifier(
+            identifier = REOPEN_APP_NOTIFICATION_ID,
+            content = content,
+            trigger = UNCalendarNotificationTrigger.triggerWithDateMatchingComponents(components, repeats = false),
+        )
+        suspendCancellableCoroutine { cont ->
+            center.addNotificationRequest(request) { error ->
+                if (error != null) {
+                    AppLogger.e(TAG, "Failed to queue reopen-app notification: ${error.localizedDescription}")
                 }
                 cont.resume(Unit)
             }

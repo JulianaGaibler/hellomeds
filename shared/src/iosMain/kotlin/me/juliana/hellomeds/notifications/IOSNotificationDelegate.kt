@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import me.juliana.hellomeds.data.dao.MedicationDao
 import me.juliana.hellomeds.data.model.ProjectedEvent
 import me.juliana.hellomeds.data.model.enums.LockScreenVisibility
@@ -15,6 +16,7 @@ import me.juliana.hellomeds.data.preferences.NotificationPreferences
 import me.juliana.hellomeds.data.repository.MedicationHistoryRepository
 import me.juliana.hellomeds.data.repository.StockTrackingRepository
 import me.juliana.hellomeds.data.service.ScheduleProjector
+import me.juliana.hellomeds.data.service.UnloggedDoseResolver
 import me.juliana.hellomeds.data.util.AppLogger
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.notification_text_time_log_generic
@@ -43,6 +45,7 @@ import platform.darwin.NSObject
 import kotlin.time.Clock
 
 private const val DELEGATE_TAG = "IOSNotificationDelegate"
+private const val RESOLVE_TIMEOUT_MS = 5_000L
 
 /**
  * UNUserNotificationCenterDelegate handling notification taps, action buttons
@@ -58,6 +61,7 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
     private val sessionManager: IOSNotificationSessionManager by lazy { KoinPlatform.getKoin().get() }
     private val medicationDao: MedicationDao by lazy { KoinPlatform.getKoin().get() }
     private val stockTrackingRepo: StockTrackingRepository by lazy { KoinPlatform.getKoin().get() }
+    private val resolver: UnloggedDoseResolver by lazy { KoinPlatform.getKoin().get() }
 
     private val clock: Clock = Clock.System
 
@@ -143,7 +147,7 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
                                 "Alarm notification tapped — deep linking to alarm screen for ${scheduleIds.size} schedules",
                             )
                             // Look up medication names for the alarm screen display
-                            val events = projector.getPendingEventsAtTime(scheduledTime)
+                            val events = projector.getActionableEventsAtTime(scheduledTime)
                             val medNames = events
                                 .filter { it.scheduleId in scheduleIds }
                                 .mapNotNull { event ->
@@ -160,6 +164,9 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
                         NotificationDeepLinkState.setPending(scheduleIds.toIntArray(), isAlarm = isAlarm)
                     }
                 }
+                // Users who never open the app only reach our code through notification
+                // actions, so resolve here too. The timeout keeps it inside the background task.
+                withTimeoutOrNull(RESOLVE_TIMEOUT_MS) { resolver.resolve() }
             } catch (e: Exception) {
                 AppLogger.e(DELEGATE_TAG, "Error processing notification action: $actionId", e)
             } finally {
@@ -294,7 +301,7 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
         val now = clock.now().toEpochMilliseconds()
 
         for (event in events) {
-            if (event.isPending) {
+            if (event.isActionable) {
                 historyRepo.markAsTaken(event, event.dose, now)
                 AppLogger.d(DELEGATE_TAG, "Marked schedule=${event.scheduleId} as taken")
             }
@@ -328,7 +335,7 @@ class IOSNotificationDelegate : NSObject(), UNUserNotificationCenterDelegateProt
         val events = findMatchingEvents(scheduledTime, scheduleIds)
 
         for (event in events) {
-            if (event.isPending) {
+            if (event.isActionable) {
                 historyRepo.markAsSkipped(event)
                 AppLogger.d(DELEGATE_TAG, "Marked schedule=${event.scheduleId} as skipped")
             }

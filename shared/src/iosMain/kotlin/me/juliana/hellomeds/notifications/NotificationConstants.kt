@@ -3,11 +3,10 @@
 
 package me.juliana.hellomeds.notifications
 
-// Standalone constants -- no class dependencies, safe at file level.
-// These were previously in IOSScheduleReconciler.companion object, which caused
-// FileFailedToInitializeException when Koin accessed iosPlatformModule because
-// referencing the companion object triggered class initialization of
-// IOSScheduleReconciler (and its iOS framework API imports) at file load time.
+// Standalone constants with no class dependencies, safe at file level.
+// They stay out of the IOSScheduleReconciler companion object because referencing it
+// initializes IOSScheduleReconciler and its iOS framework imports at file load time,
+// which throws FileFailedToInitializeException when Koin accesses iosPlatformModule.
 
 const val NOTIFICATION_CATEGORY_MEDICATION = "MEDICATION_REMINDER"
 const val NOTIFICATION_CATEGORY_DEPLETION_REMINDER = "DEPLETION_REMINDER"
@@ -49,6 +48,24 @@ const val SNOOZE_RESERVED_SLOTS = 5
 const val MAX_EVENT_NOTIFICATIONS = MAX_SCHEDULED_NOTIFICATIONS - SNOOZE_RESERVED_SLOTS
 
 const val SCHEDULING_WINDOW_MS = 7L * 24 * 60 * 60 * 1000
+
+/**
+ * Beyond [SCHEDULING_WINDOW_MS], leftover event budget is filled with plain reminders up
+ * to this horizon. Without it a user who never opens the app, and whose BGAppRefresh never
+ * runs, goes silent after a week.
+ */
+const val EXTENDED_SCHEDULING_WINDOW_MS = 90L * 24 * 60 * 60 * 1000
+
+/**
+ * Identifier of the "open the app to keep receiving reminders" notification queued after
+ * the last scheduled reminder. Shares [NOTIFICATION_ID_PREFIX] so every reconcile wipes
+ * and re-queues it, which means it only fires if no reconcile happened before it was due.
+ * Uses one of the 4 slots between [MAX_SCHEDULED_NOTIFICATIONS] and the iOS cap of 64.
+ */
+const val REOPEN_APP_NOTIFICATION_ID = "${NOTIFICATION_ID_PREFIX}reopen_app"
+
+/** Delay after the last queued reminder before the reopen-app notification fires. */
+const val REOPEN_APP_DELAY_MS = 30L * 60 * 1000
 
 /** Follow-ups are only pre-scheduled within this window to conserve notification budget. */
 const val FOLLOWUP_WINDOW_MS = 24L * 60 * 60 * 1000

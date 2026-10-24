@@ -17,8 +17,8 @@ interface MedicationHistoryDao {
      * Insert a history row. Returns the new rowId, or -1 if the row was ignored due to
      * the unique (medicationId, scheduleId, scheduledTime) index. Callers that already
      * checked `findByCompositeKey` inside a transaction will never observe -1; the
-     * IGNORE strategy is structural defense-in-depth for paths like `autoSkipMissedEvents`
-     * that insert without a prior lookup.
+     * IGNORE means a dose logged concurrently always wins over paths that insert without a
+     * prior lookup, such as `UnloggedDoseResolver`.
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(history: MedicationHistory): Long

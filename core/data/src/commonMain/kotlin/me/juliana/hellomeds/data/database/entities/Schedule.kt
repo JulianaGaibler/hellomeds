@@ -3,14 +3,14 @@
 
 package me.juliana.hellomeds.data.database.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.toLocalDateTime
 import me.juliana.hellomeds.data.model.enums.FrequencyType
 import me.juliana.hellomeds.data.util.currentTimeMillis
+import me.juliana.hellomeds.data.util.startOfDayMillis
 
 @Entity(
     tableName = "schedules",
@@ -41,6 +41,14 @@ data class Schedule(
     val isArchived: Boolean = false,
     val originTimeZone: String? = null, // IANA timezone ID captured at creation (e.g., "America/New_York")
     val createdAt: Long = currentTimeMillis(),
+    /**
+     * Earliest `scheduledTime` that `UnloggedDoseResolver` may auto-resolve for this
+     * schedule. Bumped when the past projection changes (timing, timezone or cycle edits,
+     * backup import) so re-projected events are not mistaken for unlogged doses. 0 means
+     * unset, and `ScheduleRepository` fills it on insert.
+     */
+    @ColumnInfo(defaultValue = "0")
+    val resolveFrom: Long = 0,
 ) {
     /**
      * Returns true if the schedule is effectively archived.
@@ -55,7 +63,7 @@ data class Schedule(
      * Returns true if the schedule has an end date that is in the past (before today).
      */
     fun isDateArchived(): Boolean {
-        return endDate != null && endDate < getTodayStartOfDayMillis()
+        return endDate != null && endDate < startOfDayMillis()
     }
 
     /**
@@ -65,9 +73,16 @@ data class Schedule(
         return isArchived
     }
 
-    private fun getTodayStartOfDayMillis(): Long {
-        val tz = kotlinx.datetime.TimeZone.currentSystemDefault()
-        val today = kotlin.time.Clock.System.now().toLocalDateTime(tz).date
-        return today.atStartOfDayIn(tz).toEpochMilliseconds()
-    }
+    /**
+     * True when changing from [old] to this alters which past instants this schedule
+     * projects to. An end-date change counts: extending a past end date makes days the
+     * user was never reminded about look like unlogged doses.
+     */
+    fun timingDiffersFrom(old: Schedule): Boolean = timeOfDay != old.timeOfDay ||
+        frequencyType != old.frequencyType ||
+        frequencyValue != old.frequencyValue ||
+        daysOfWeek != old.daysOfWeek ||
+        startDate != old.startDate ||
+        endDate != old.endDate ||
+        originTimeZone != old.originTimeZone
 }

@@ -3,7 +3,6 @@
 
 package me.juliana.hellomeds.data.service
 
-import kotlinx.coroutines.flow.first
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -31,11 +30,10 @@ import kotlin.time.Instant
  * Generates projected medication events on-the-fly from schedule definitions.
  * Combines with MedicationHistory to determine which events have been acted upon.
  *
- * Replaces the old ScheduleGenerator + VirtualEventService + EventPersistenceService chain.
  * Future events are NEVER stored in the database.
  *
  * Timezone-aware: each schedule's events are projected using the timezone resolved by
- * [ScheduleTimeZoneResolver] — either system default (LOCAL mode) or the schedule's
+ * [ScheduleTimeZoneResolver], either system default (LOCAL mode) or the schedule's
  * origin timezone (FIXED mode).
  */
 class ScheduleProjector(
@@ -62,12 +60,15 @@ class ScheduleProjector(
     }
 
     /**
-     * Project all events for active schedules within a time range.
+     * Project all events for non-archived schedules within a time range.
      * Each event is annotated with its history record (if acted upon).
      * Cycle masking is applied automatically using medications from the database.
+     *
+     * Schedules whose end date has passed are included: generation is bounded by
+     * `endDate`, so they contribute only their real past events and nothing in the future.
      */
     suspend fun projectEvents(startTime: Long, endTime: Long): List<ProjectedEvent> {
-        val schedules = scheduleDao.getActive().first()
+        val schedules = scheduleDao.getNonArchived()
         return projectEventsForSchedules(schedules, startTime, endTime)
     }
 
@@ -116,7 +117,9 @@ class ScheduleProjector(
         val tzCache = mutableMapOf<String, TimeZone>()
 
         for (schedule in schedules) {
-            if (schedule.isEffectivelyArchived()) continue
+            // Only manual archival hides a schedule. Ended schedules still own their past
+            // events (generation stops at endDate), which tracking and resolution need.
+            if (schedule.isArchived) continue
 
             val medication = medications[schedule.medicationId]
             val tz = resolveAndCache(medication, schedule, tzCache)
@@ -260,7 +263,7 @@ class ScheduleProjector(
 
     /**
      * Find the next pending event across all active schedules from a given time.
-     * Used for alarm scheduling — finds the soonest event that hasn't been acted upon.
+     * Used for alarm scheduling. Finds the soonest event that hasn't been acted upon.
      *
      * Walks progressively wider windows so weekly/biweekly/monthly schedules still
      * produce a wakeup. Returns as soon as a pending event is found, so the common
@@ -276,7 +279,7 @@ class ScheduleProjector(
 
     /**
      * Get all pending events at a specific time (1-minute tolerance).
-     * Used for notification building — groups all meds at the same time slot.
+     * Used for notification building. Groups all meds at the same time slot.
      */
     suspend fun getPendingEventsAtTime(scheduledTime: Long): List<ProjectedEvent> {
         val tolerance = 60_000L // 1 minute
@@ -285,41 +288,21 @@ class ScheduleProjector(
     }
 
     /**
-     * Return all pending events in [startTime, endTime).
-     * Used by the watermark model to catch up on missed events.
+     * Events at a time slot (1-minute tolerance) that a user Take/Skip action may still
+     * apply to: pending ones plus auto-resolved ones. A notification can outlive the
+     * resolver's 24h deadline. The user's answer must win over the automatic one.
      */
-    suspend fun getPendingEventsSince(startTime: Long, endTime: Long): List<ProjectedEvent> {
-        return projectEvents(startTime, endTime).filter { it.isPending }
+    suspend fun getActionableEventsAtTime(scheduledTime: Long): List<ProjectedEvent> {
+        val tolerance = 60_000L // 1 minute
+        val events = projectEvents(scheduledTime - tolerance, scheduledTime + tolerance)
+        return events.filter { it.isActionable && kotlin.math.abs(it.scheduledTime - scheduledTime) < tolerance }
     }
 
     /**
-     * Check if a specific event (identified by schedule + time) should be auto-skipped.
-     * An event should be auto-skipped if the next scheduled occurrence has already passed.
+     * Return all pending events in [startTime, endTime).
      */
-    suspend fun shouldAutoSkip(
-        scheduleId: Int,
-        scheduledTime: Long,
-        currentTime: Long = Clock.System.now().toEpochMilliseconds(),
-    ): Boolean {
-        val schedule = scheduleDao.getById(scheduleId).first() ?: return false
-        if (schedule.isEffectivelyArchived()) return false
-
-        val medication = medicationDao.getByIdSync(schedule.medicationId)
-        val tz = ScheduleTimeZoneResolver.resolve(medication, schedule)
-
-        val eventDate = Instant.fromEpochMilliseconds(scheduledTime)
-            .toLocalDateTime(tz)
-            .date
-
-        val nextEvents = generateEventsForSchedule(
-            schedule,
-            fromDate = eventDate.plus(1, DateTimeUnit.DAY),
-            toDate = eventDate.plus(31, DateTimeUnit.DAY),
-            tz = tz,
-        )
-
-        val nextOccurrence = nextEvents.firstOrNull()
-        return nextOccurrence != null && nextOccurrence.scheduledTime < currentTime
+    suspend fun getPendingEventsSince(startTime: Long, endTime: Long): List<ProjectedEvent> {
+        return projectEvents(startTime, endTime).filter { it.isPending }
     }
 
     private fun generateIntervalEvents(
@@ -334,8 +317,8 @@ class ScheduleProjector(
         // Defense in depth: validation should reject this at write-time, but
         // frequencyValue <= 0 here would throw ArithmeticException on the
         // modulo alignment below or produce an infinite loop (currentDate.plus(0)
-        // never advances). Drop the schedule rather than propagate the crash —
-        // a bad row can surface via backup import, manual DB edit, or partial migration.
+        // never advances). Drop the schedule rather than propagate the crash.
+        // A bad row can surface via backup import, manual DB edit, or partial migration.
         if (schedule.frequencyValue <= 0) return emptyList()
 
         val events = mutableListOf<ProjectedEvent>()

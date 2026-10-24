@@ -370,6 +370,9 @@ private fun BackupSchedule.toEntity(medicationId: Int) = Schedule(
     isArchived = isArchived,
     originTimeZone = originTimeZone,
     createdAt = parseIsoToMillis(createdAt) ?: kotlin.time.Clock.System.now().toEpochMilliseconds(),
+    // The source device's history may have gaps and its stock already reflects what was
+    // taken, so the imported past is never auto-resolved.
+    resolveFrom = kotlin.time.Clock.System.now().toEpochMilliseconds(),
 )
 
 private fun BackupHistory.toEntity(medicationId: Int, scheduleId: Int? = null) = MedicationHistory(

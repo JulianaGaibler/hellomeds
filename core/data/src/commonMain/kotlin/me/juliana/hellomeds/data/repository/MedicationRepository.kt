@@ -3,13 +3,16 @@
 
 package me.juliana.hellomeds.data.repository
 
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import me.juliana.hellomeds.data.dao.MedicationDao
 import me.juliana.hellomeds.data.dao.ScheduleDao
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.interfaces.ScheduleReconciler
 import me.juliana.hellomeds.data.model.enums.BubbleFlowDirection
+import me.juliana.hellomeds.data.service.UnloggedDoseResolver
 import me.juliana.hellomeds.data.util.TransactionRunner
 
 class MedicationRepository(
@@ -17,6 +20,7 @@ class MedicationRepository(
     private val scheduleDao: ScheduleDao,
     private val transactionRunner: TransactionRunner,
     private val reconciler: ScheduleReconciler,
+    private val resolver: UnloggedDoseResolver,
 ) {
 
     fun getAll(): Flow<List<Medication>> = medicationDao.getAll()
@@ -32,7 +36,14 @@ class MedicationRepository(
         return medicationDao.insert(medication.copy(displayOrder = nextOrder))
     }
 
-    suspend fun update(medication: Medication) {
+    suspend fun update(medication: Medication) = withContext(NonCancellable) {
+        val existing = medicationDao.getByIdSync(medication.id)
+        if (existing != null && medication.projectionDiffersFrom(existing)) {
+            // Timezone and cycle settings re-project every past event of this medication.
+            // Resolve under the old settings first, then start resolving afresh.
+            val scheduleIds = scheduleDao.getByMedicationId(medication.id).first().map { it.id }
+            resolver.redefine(scheduleIds)
+        }
         medicationDao.update(medication)
         // Refresh alarms to pick up any changes (importance label, name, etc.)
         reconciler.reconcile()
@@ -41,7 +52,7 @@ class MedicationRepository(
     suspend fun delete(medication: Medication) {
         medicationDao.delete(medication)
         compactDisplayOrder()
-        // Cascades to schedules via FK — reconcile to cancel stale alarms
+        // Cascades to schedules via FK, so reconcile to cancel stale alarms.
         reconciler.reconcile()
     }
 
@@ -67,16 +78,14 @@ class MedicationRepository(
      * Unarchives a medication and all its archived schedules
      * Uses a transaction to ensure atomic operation
      */
-    suspend fun unarchive(medicationId: Int) {
-        transactionRunner.run {
+    suspend fun unarchive(medicationId: Int) = withContext(NonCancellable) {
+        val unarchived = transactionRunner.run {
             medicationDao.unarchive(medicationId)
             val schedules = scheduleDao.getByMedicationId(medicationId).first()
-            schedules.forEach { schedule ->
-                if (schedule.isArchived) {
-                    scheduleDao.unarchive(schedule.id)
-                }
-            }
+            schedules.filter { it.isArchived }.onEach { scheduleDao.unarchive(it.id) }.map { it.id }
         }
+        // The archived span was never reminded about, so it must not resolve as unlogged.
+        resolver.startFresh(unarchived)
         // Refresh alarms to reschedule alarms for unarchived schedules
         reconciler.reconcile()
     }

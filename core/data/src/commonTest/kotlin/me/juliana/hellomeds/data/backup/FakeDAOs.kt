@@ -215,10 +215,20 @@ class FakeScheduleDao : ScheduleDao {
         emit(schedules.filter { it.medicationId == medicationId })
     }
 
-    override fun getActive(currentTime: Long) = flow {
-        emit(schedules.filter { !it.isArchived && (it.endDate == null || it.endDate > currentTime) })
+    override fun getActive(startOfToday: Long) = flow {
+        emit(schedules.filter { !it.isArchived && (it.endDate == null || it.endDate >= startOfToday) })
     }
 
+    override suspend fun getNonArchived() = schedules.filter { !it.isArchived }
+
+    override fun observeNonArchived() = flow { emit(schedules.filter { !it.isArchived }) }
+
+    override suspend fun bumpResolveFrom(ids: List<Int>, resolveFrom: Long) {
+        for (i in schedules.indices) {
+            val s = schedules[i]
+            if (s.id in ids && s.resolveFrom < resolveFrom) schedules[i] = s.copy(resolveFrom = resolveFrom)
+        }
+    }
     override suspend fun archive(id: Int) {
         val idx = schedules.indexOfFirst { it.id == id }
         if (idx >= 0) schedules[idx] = schedules[idx].copy(isArchived = true)
@@ -234,7 +244,26 @@ class FakeHistoryDao : MedicationHistoryDao {
     val history = mutableListOf<MedicationHistory>()
     private var nextId = 1
 
+    /**
+     * Mirrors Room's IGNORE on the unique (medicationId, scheduleId, scheduledTime) index:
+     * a duplicate returns -1 and is not stored. SQLite treats NULLs as distinct, so PRN rows
+     * (null scheduleId/scheduledTime) never collide.
+     */
     override suspend fun insert(historyEntry: MedicationHistory): Long {
+        if (historyEntry.scheduleId != null && historyEntry.scheduledTime != null &&
+            history.any {
+                it.medicationId == historyEntry.medicationId &&
+                    it.scheduleId == historyEntry.scheduleId &&
+                    it.scheduledTime == historyEntry.scheduledTime
+            }
+        ) {
+            return -1L
+        }
+        return insertRaw(historyEntry)
+    }
+
+    /** Bypasses the dedup index to simulate duplicate rows written before the index existed. */
+    fun insertRaw(historyEntry: MedicationHistory): Long {
         val id = nextId++
         history.add(historyEntry.copy(id = id))
         return id.toLong()
@@ -416,12 +445,67 @@ class FakeNotificationSessionDao : NotificationSessionDao() {
 }
 
 /**
- * Test [TransactionRunner] that just executes the block — no atomicity, no
+ * Test [TransactionRunner] that just executes the block, with no atomicity and no
  * thread confinement. Works because the [Fake*Dao] implementations are all
  * pure in-memory operations and tests run on a single coroutine via runTest.
  */
 class FakeTransactionRunner : me.juliana.hellomeds.data.util.TransactionRunner {
     override suspend fun <R> run(block: suspend () -> R): R = block()
+}
+
+/**
+ * Transaction runner with real rollback for the fake DAOs: snapshots their contents and
+ * restores them if the block throws, so tests can observe all-or-nothing chunk commits.
+ */
+class SnapshotTransactionRunner(
+    private val historyDao: FakeHistoryDao,
+    private val stockAdjustmentDao: FakeStockAdjustmentDao? = null,
+) : me.juliana.hellomeds.data.util.TransactionRunner {
+    private var depth = 0
+
+    override suspend fun <R> run(block: suspend () -> R): R {
+        if (depth > 0) return block() // Nested: the outermost transaction owns rollback.
+        val history = historyDao.history.toList()
+        val adjustments = stockAdjustmentDao?.adjustments?.toList()
+        depth++
+        try {
+            return block()
+        } catch (e: Throwable) {
+            historyDao.history.clear()
+            historyDao.history.addAll(history)
+            if (adjustments != null) {
+                stockAdjustmentDao.adjustments.clear()
+                stockAdjustmentDao.adjustments.addAll(adjustments)
+            }
+            throw e
+        } finally {
+            depth--
+        }
+    }
+}
+
+/** In-memory [me.juliana.hellomeds.data.preferences.ResolverStateStore]. */
+class FakeResolverState : me.juliana.hellomeds.data.preferences.ResolverStateStore {
+    var watermark: Long? = null
+    var timeZoneId: String? = null
+
+    override suspend fun getWatermark() = watermark
+    override suspend fun setWatermark(value: Long) {
+        watermark = value
+    }
+
+    override suspend fun getLastSeenTimeZoneId() = timeZoneId
+    override suspend fun setLastSeenTimeZoneId(id: String) {
+        timeZoneId = id
+    }
+}
+
+/** Counts reconcile() calls. */
+class CountingReconciler : ScheduleReconciler {
+    var count = 0
+    override suspend fun reconcile() {
+        count++
+    }
 }
 
 class FakeAppDatabase(

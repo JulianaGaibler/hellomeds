@@ -76,4 +76,16 @@ data class Medication(
     // SQL default lets the v4→v5 migration backfill existing rows without an explicit per-row UPDATE.
     @ColumnInfo(defaultValue = "LTR_TOP_BOTTOM")
     val bubbleFlowDirection: BubbleFlowDirection = BubbleFlowDirection.LTR_TOP_BOTTOM,
-)
+) {
+    /**
+     * True when changing from [old] to this re-projects past events of every schedule:
+     * timezone settings move them to other instants, cycle settings mask other days.
+     */
+    fun projectionDiffersFrom(old: Medication): Boolean = timeZoneMode != old.timeZoneMode ||
+        anchorTimeZone != old.anchorTimeZone ||
+        cycleType != old.cycleType ||
+        cycleDaysActive != old.cycleDaysActive ||
+        cycleDaysBreak != old.cycleDaysBreak ||
+        cycleHasPlacebos != old.cycleHasPlacebos ||
+        cycleStartDate != old.cycleStartDate
+}

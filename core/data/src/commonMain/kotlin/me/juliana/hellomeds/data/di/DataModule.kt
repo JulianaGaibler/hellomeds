@@ -12,6 +12,7 @@ import me.juliana.hellomeds.data.crypto.configureEncryptedDriver
 import me.juliana.hellomeds.data.database.AppDatabase
 import me.juliana.hellomeds.data.database.migrations.MIGRATION_3_4
 import me.juliana.hellomeds.data.database.migrations.MIGRATION_4_5
+import me.juliana.hellomeds.data.database.migrations.MIGRATION_5_6
 import me.juliana.hellomeds.data.database.seedDefaultImportanceLabels
 import me.juliana.hellomeds.data.interfaces.StockContainerAnchor
 import me.juliana.hellomeds.data.repository.ImportanceLabelRepository
@@ -20,7 +21,9 @@ import me.juliana.hellomeds.data.repository.MedicationRepository
 import me.juliana.hellomeds.data.repository.ScheduleRepository
 import me.juliana.hellomeds.data.repository.StockTrackingRepository
 import me.juliana.hellomeds.data.service.ScheduleProjector
+import me.juliana.hellomeds.data.preferences.ReliabilityPreferences
 import me.juliana.hellomeds.data.service.StockPredictionEngine
+import me.juliana.hellomeds.data.service.UnloggedDoseResolver
 import me.juliana.hellomeds.data.util.MissedDoseDetector
 import me.juliana.hellomeds.data.util.ReliabilityStateProvider
 import me.juliana.hellomeds.data.util.RoomTransactionRunner
@@ -36,18 +39,18 @@ expect val platformDataModule: Module
 val dataModule = module {
     includes(platformDataModule)
 
-    // Single source of truth for "now" — see TimeProvider.kt for rationale.
+    // Single source of truth for "now", see TimeProvider.kt for rationale.
     single<TimeProvider> { SystemTimeProvider() }
 
     // Database (encrypted via SQLCipher).
     // Migrations are registered via .addMigrations(...). There is intentionally no
-    // fallbackToDestructiveMigration() — a missing migration must throw at startup
-    // rather than silently wiping user health data. Downgrades still wipe to recover
-    // from a downgrade install (rare; would otherwise crash on schema mismatch).
+    // fallbackToDestructiveMigration(), so a missing migration throws at startup rather
+    // than silently wiping user health data. Downgrades still wipe because they would
+    // otherwise crash on schema mismatch.
     single<AppDatabase> {
         val builder = get<RoomDatabase.Builder<AppDatabase>>()
             .fallbackToDestructiveMigrationOnDowngrade(true)
-            .addMigrations(MIGRATION_3_4, MIGRATION_4_5)
+            .addMigrations(MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
         configureEncryptedDriver(builder, get<DatabaseKeyManager>())
             .build()
             .also { db ->
@@ -57,8 +60,8 @@ val dataModule = module {
             }
     } bind RoomDatabase::class
 
-    // Transaction abstraction — production wraps Room's writer connection; tests
-    // can substitute a no-op runner without needing the Room builder to run.
+    // Production wraps Room's writer connection. Tests can substitute a runner that
+    // does not need the Room builder.
     single<TransactionRunner> { RoomTransactionRunner(get<AppDatabase>()) }
 
     // DAOs
@@ -71,8 +74,20 @@ val dataModule = module {
 
     // Services
     single { ScheduleProjector(get(), get(), get()) }
+    single {
+        UnloggedDoseResolver(
+            projector = get(),
+            scheduleDao = get(),
+            medicationDao = get(),
+            historyDao = get(),
+            transactionRunner = get(),
+            timeProvider = get(),
+            state = get<ReliabilityPreferences>(),
+            reconciler = get(),
+        )
+    }
     single { StockPredictionEngine() }
-    // Reliability surfacing — combines missed doses + platform-specific flags
+    // Reliability surfacing combines missed doses with platform-specific flags.
     single { MissedDoseDetector(get(), get(), get(), get(), get(), get()) }
     single { ReliabilityStateProvider(get(), get()) }
     single { me.juliana.hellomeds.data.backup.BackupExportService(get(), get(), get(), get(), get()) }
@@ -103,8 +118,8 @@ val dataModule = module {
     }
 
     // Repositories (param counts match constructors)
-    single { MedicationRepository(get(), get(), get(), get()) } // 4 params
-    single { ScheduleRepository(get(), get(), get()) } // 3 params
+    single { MedicationRepository(get(), get(), get(), get(), get()) } // 5 params
+    single { ScheduleRepository(get(), get(), get(), get(), get()) } // 5 params
     single {
         MedicationHistoryRepository(
             get(),

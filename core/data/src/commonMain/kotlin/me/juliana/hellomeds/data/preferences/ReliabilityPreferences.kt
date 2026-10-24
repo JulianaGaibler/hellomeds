@@ -8,14 +8,16 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 /**
  * Persistent flags that drive the reliability/recovery surfaces in the UI.
  *
- * [lastReconciliationTimestamp] backs the missed-dose detector's lookback window —
- * the detector queries `[max(this, now - 24h), now]` and shows past doses with
+ * [lastReconciliationTimestamp] backs the missed-dose detector's lookback window.
+ * The detector queries `[max(this, now - 24h), now]` and shows past doses with
  * no history record.
  *
  * [exactAlarmsDisabled] is written by the Android `AlarmReconciler` whenever it
@@ -31,9 +33,11 @@ import kotlinx.coroutines.flow.map
  * a "data lost — restore from backup" banner, and the user clears it via
  * `setDatabaseRecovered(false)` once acknowledged.
  */
-class ReliabilityPreferences(private val dataStore: DataStore<Preferences>) {
+class ReliabilityPreferences(private val dataStore: DataStore<Preferences>) : ResolverStateStore {
 
     companion object {
+        private val AUTO_RESOLVE_WATERMARK = longPreferencesKey("auto_resolve_watermark")
+        private val LAST_SEEN_TIME_ZONE_ID = stringPreferencesKey("last_seen_time_zone_id")
         private val LAST_RECONCILIATION_TIMESTAMP =
             longPreferencesKey("last_reconciliation_timestamp")
         private val EXACT_ALARMS_DISABLED = booleanPreferencesKey("exact_alarms_disabled")
@@ -44,7 +48,7 @@ class ReliabilityPreferences(private val dataStore: DataStore<Preferences>) {
 
     /**
      * Last time the missed-dose detector was acknowledged by the user.
-     * `null` on first run — caller defaults to `now - 24h` for the lookback.
+     * `null` on first run, so the caller defaults to `now - 24h` for the lookback.
      */
     val lastReconciliationTimestamp: Flow<Long?> = dataStore.data.map { prefs ->
         prefs[LAST_RECONCILIATION_TIMESTAMP]
@@ -60,6 +64,18 @@ class ReliabilityPreferences(private val dataStore: DataStore<Preferences>) {
 
     val databaseRecovered: Flow<Boolean> = dataStore.data.map { prefs ->
         prefs[DATABASE_RECOVERED] ?: false
+    }
+
+    override suspend fun getWatermark(): Long? = dataStore.data.first()[AUTO_RESOLVE_WATERMARK]
+
+    override suspend fun setWatermark(value: Long) {
+        dataStore.edit { it[AUTO_RESOLVE_WATERMARK] = value }
+    }
+
+    override suspend fun getLastSeenTimeZoneId(): String? = dataStore.data.first()[LAST_SEEN_TIME_ZONE_ID]
+
+    override suspend fun setLastSeenTimeZoneId(id: String) {
+        dataStore.edit { it[LAST_SEEN_TIME_ZONE_ID] = id }
     }
 
     suspend fun setLastReconciliationTimestamp(timestamp: Long) {
