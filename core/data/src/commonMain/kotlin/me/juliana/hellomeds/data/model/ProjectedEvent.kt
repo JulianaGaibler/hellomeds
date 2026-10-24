@@ -26,8 +26,13 @@ data class ProjectedEvent(
     /** True when the user has not yet acted on this event. */
     val isPending: Boolean get() = historyRecord == null
 
-    /** True when the event was taken. */
+    /** True when the event was taken, by the user or automatically. */
     val isTaken: Boolean
+        get() = historyRecord?.status == MedicationHistory.STATUS_TAKEN ||
+            historyRecord?.status == MedicationHistory.STATUS_AUTO_TAKEN
+
+    /** True when the user confirmed the event was taken. */
+    val isConfirmedTaken: Boolean
         get() = historyRecord?.status == MedicationHistory.STATUS_TAKEN
 
     /** True when the event was skipped (manually or auto). */
@@ -37,7 +42,8 @@ data class ProjectedEvent(
 
     /** True when the app, not the user, resolved this event. */
     val isAutoResolved: Boolean
-        get() = historyRecord?.status == MedicationHistory.STATUS_AUTO_SKIPPED
+        get() = historyRecord?.status == MedicationHistory.STATUS_AUTO_SKIPPED ||
+            historyRecord?.status == MedicationHistory.STATUS_AUTO_TAKEN
 
     /**
      * True when a user action (Take/Skip, e.g. from a lingering notification) should still

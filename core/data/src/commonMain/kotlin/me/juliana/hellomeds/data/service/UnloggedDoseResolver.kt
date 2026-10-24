@@ -11,14 +11,20 @@ import kotlinx.datetime.TimeZone
 import me.juliana.hellomeds.data.dao.MedicationDao
 import me.juliana.hellomeds.data.dao.MedicationHistoryDao
 import me.juliana.hellomeds.data.dao.ScheduleDao
+import me.juliana.hellomeds.data.dao.StockAdjustmentDao
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.database.entities.MedicationHistory
 import me.juliana.hellomeds.data.database.entities.Schedule
 import me.juliana.hellomeds.data.interfaces.ScheduleReconciler
 import me.juliana.hellomeds.data.model.ProjectedEvent
+import me.juliana.hellomeds.data.model.enums.StockAdjustmentType
 import me.juliana.hellomeds.data.model.enums.TimeZoneMode
+import me.juliana.hellomeds.data.model.enums.UnloggedDoseAction
 import me.juliana.hellomeds.data.preferences.ResolverStateStore
+import me.juliana.hellomeds.data.repository.StockTrackingRepository
 import me.juliana.hellomeds.data.util.AppLogger
+import me.juliana.hellomeds.data.interfaces.DepletionChecker
+import me.juliana.hellomeds.data.interfaces.LowStockChecker
 import me.juliana.hellomeds.data.util.MissedDoseDetector
 import me.juliana.hellomeds.data.util.TimeProvider
 import me.juliana.hellomeds.data.util.TransactionRunner
@@ -47,6 +53,10 @@ import me.juliana.hellomeds.data.util.TransactionRunner
  * nothing is deleted, because that case can't be told apart from an earlier forward jump.
  *
  * Inserts use the dedup index with IGNORE, so a dose the user logs concurrently wins.
+ *
+ * Medications set to [UnloggedDoseAction.TAKE] get `AUTO_TAKEN` rows that deduct stock.
+ * Doses at or before the latest stock recount, refill or initial stock entry are not
+ * deducted, because that entry already reflects them.
  */
 class UnloggedDoseResolver(
     private val projector: ScheduleProjector,
@@ -57,6 +67,10 @@ class UnloggedDoseResolver(
     private val timeProvider: TimeProvider,
     private val state: ResolverStateStore,
     private val reconciler: ScheduleReconciler,
+    private val stockTracking: StockTrackingRepository,
+    private val stockAdjustmentDao: StockAdjustmentDao,
+    private val lowStockNotifier: LowStockChecker,
+    private val depletionNotifier: DepletionChecker,
     private val deviceTimeZone: () -> TimeZone = { TimeZone.currentSystemDefault() },
 ) {
     companion object {
@@ -69,6 +83,9 @@ class UnloggedDoseResolver(
 
         /** Tolerated clock disagreement before a run is treated as a backwards clock jump. */
         const val CLOCK_SKEW_MS: Long = 5 * 60 * 1000L
+
+        /** Runs covering less than this are routine and do not raise the "while you were away" banner. */
+        const val AWAY_SUMMARY_MIN_SPAN_MS: Long = 3L * 24 * 60 * 60 * 1000L
     }
 
     private val mutex = Mutex()
@@ -185,6 +202,7 @@ class UnloggedDoseResolver(
         val counts = write(toResolve, medications)
         scheduleDao.bumpResolveFrom(scheduleIds.toList(), now)
         if (counts.written > 0) reconciler.reconcile()
+        checkStock(counts)
         AppLogger.i(TAG, "Redefined schedules $scheduleIds at $now, pre-resolved ${counts.written}")
         return counts
     }
@@ -218,27 +236,65 @@ class UnloggedDoseResolver(
 
     private suspend fun write(events: List<ProjectedEvent>, medications: Map<Int, Medication>): Counts {
         if (events.isEmpty()) return Counts()
+        val stockCutoffs = mutableMapOf<Int, Long>()
         return transactionRunner.run {
             var counts = Counts()
             for (event in events) {
-                if (medications[event.medicationId] == null) continue
+                val medication = medications[event.medicationId] ?: continue
+                val take = medication.unloggedDoseAction == UnloggedDoseAction.TAKE
                 val id = historyDao.insert(
                     MedicationHistory(
                         medicationId = event.medicationId,
                         scheduleId = event.scheduleId,
                         scheduledTime = event.scheduledTime,
+                        takenTime = if (take) event.scheduledTime else null,
                         scheduledDose = event.dose,
-                        status = MedicationHistory.STATUS_AUTO_SKIPPED,
+                        actualDose = if (take) event.dose else null,
+                        status = if (take) MedicationHistory.STATUS_AUTO_TAKEN else MedicationHistory.STATUS_AUTO_SKIPPED,
                     ),
                 )
-                if (id != -1L) {
-                    counts = counts.copy(
-                        skipped = counts.skipped + 1,
-                        medicationIds = counts.medicationIds + event.medicationId,
-                    )
+                if (id == -1L) continue
+                counts = if (take) {
+                    val cutoff = stockCutoffs.getOrPut(event.medicationId) { latestStockBaseline(event.medicationId) }
+                    if (event.scheduledTime > cutoff) deductStock(event, id.toInt())
+                    counts.copy(taken = counts.taken + 1, medicationIds = counts.medicationIds + event.medicationId)
+                        .withTaken(event.medicationId)
+                } else {
+                    counts.copy(skipped = counts.skipped + 1, medicationIds = counts.medicationIds + event.medicationId)
                 }
             }
             counts
+        }
+    }
+
+    /** Timestamp of the newest stock entry that sets the level directly, or 0 if there is none. */
+    private suspend fun latestStockBaseline(medicationId: Int): Long = listOf(
+        StockAdjustmentType.INITIAL_STOCK,
+        StockAdjustmentType.MANUAL_CORRECTION,
+        StockAdjustmentType.REFILL,
+    ).maxOf { type -> stockAdjustmentDao.getLatestByTypeForMedication(medicationId, type.value)?.timestamp ?: 0L }
+
+    private suspend fun deductStock(event: ProjectedEvent, historyId: Int) {
+        try {
+            stockTracking.recordDoseConsumption(event.medicationId, historyId, event.dose, event.scheduledTime)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to deduct stock for history $historyId", e)
+        }
+    }
+
+    /** Low-stock and depletion checks are best effort and run once per medication per run. */
+    private suspend fun checkStock(counts: Counts) {
+        for (medicationId in counts.takenMedicationIds) {
+            try {
+                lowStockNotifier.checkAndNotify(medicationId)
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Low stock check failed (non-fatal)", e)
+            }
+            try {
+                depletionNotifier.checkAndNotify(medicationId)
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "Depletion check failed (non-fatal)", e)
+            }
         }
     }
 
@@ -247,6 +303,10 @@ class UnloggedDoseResolver(
             AppLogger.i(TAG, "Resolved ${counts.skipped} skipped / ${counts.taken} taken over ${spanMs}ms")
             reconciler.reconcile()
         }
+        if (spanMs >= AWAY_SUMMARY_MIN_SPAN_MS && counts.written > 0) {
+            state.addAwaySummary(counts.skipped, counts.taken)
+        }
+        checkStock(counts)
         return ResolveResult(counts.skipped, counts.taken, spanMs, counts.medicationIds)
     }
 
@@ -254,13 +314,17 @@ class UnloggedDoseResolver(
         val skipped: Int = 0,
         val taken: Int = 0,
         val medicationIds: Set<Int> = emptySet(),
+        val takenMedicationIds: Set<Int> = emptySet(),
     ) {
         val written: Int get() = skipped + taken
+
+        fun withTaken(medicationId: Int) = copy(takenMedicationIds = takenMedicationIds + medicationId)
 
         operator fun plus(other: Counts) = Counts(
             skipped + other.skipped,
             taken + other.taken,
             medicationIds + other.medicationIds,
+            takenMedicationIds + other.takenMedicationIds,
         )
     }
 

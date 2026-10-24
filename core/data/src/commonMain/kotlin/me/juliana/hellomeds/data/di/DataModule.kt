@@ -13,6 +13,7 @@ import me.juliana.hellomeds.data.database.AppDatabase
 import me.juliana.hellomeds.data.database.migrations.MIGRATION_3_4
 import me.juliana.hellomeds.data.database.migrations.MIGRATION_4_5
 import me.juliana.hellomeds.data.database.migrations.MIGRATION_5_6
+import me.juliana.hellomeds.data.database.migrations.MIGRATION_6_7
 import me.juliana.hellomeds.data.database.seedDefaultImportanceLabels
 import me.juliana.hellomeds.data.interfaces.StockContainerAnchor
 import me.juliana.hellomeds.data.repository.ImportanceLabelRepository
@@ -50,7 +51,7 @@ val dataModule = module {
     single<AppDatabase> {
         val builder = get<RoomDatabase.Builder<AppDatabase>>()
             .fallbackToDestructiveMigrationOnDowngrade(true)
-            .addMigrations(MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+            .addMigrations(MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
         configureEncryptedDriver(builder, get<DatabaseKeyManager>())
             .build()
             .also { db ->
@@ -84,6 +85,10 @@ val dataModule = module {
             timeProvider = get(),
             state = get<ReliabilityPreferences>(),
             reconciler = get(),
+            stockTracking = get(),
+            stockAdjustmentDao = get(),
+            lowStockNotifier = get(),
+            depletionNotifier = get(),
         )
     }
     single { StockPredictionEngine() }

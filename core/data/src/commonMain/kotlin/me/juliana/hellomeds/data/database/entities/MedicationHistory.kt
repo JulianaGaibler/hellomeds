@@ -10,10 +10,8 @@ import androidx.room.PrimaryKey
 import me.juliana.hellomeds.data.util.currentTimeMillis
 
 /**
- * Records past medication actions (taken, skipped, auto-skipped).
- * Future events are never stored — they are projected on-the-fly by ScheduleProjector.
- *
- * Replaces the old dual-purpose LogEvent entity.
+ * Records past medication actions (taken, skipped, and their auto-resolved variants).
+ * Future events are never stored. ScheduleProjector projects them on the fly.
  */
 @Entity(
     tableName = "medication_history",
@@ -55,7 +53,7 @@ data class MedicationHistory(
     val takenTime: Long? = null, // When was it actually taken? null for skipped
     val scheduledDose: Double,
     val actualDose: Double? = null,
-    val status: String, // TAKEN, SKIPPED, AUTO_SKIPPED
+    val status: String, // TAKEN, SKIPPED, AUTO_SKIPPED, AUTO_TAKEN
     val notes: String? = null,
     val createdAt: Long = currentTimeMillis(),
 ) {
@@ -63,5 +61,6 @@ data class MedicationHistory(
         const val STATUS_TAKEN = "TAKEN"
         const val STATUS_SKIPPED = "SKIPPED"
         const val STATUS_AUTO_SKIPPED = "AUTO_SKIPPED"
+        const val STATUS_AUTO_TAKEN = "AUTO_TAKEN"
     }
 }

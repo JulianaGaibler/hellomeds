@@ -134,14 +134,14 @@ interface MedicationHistoryDao {
     suspend fun deleteByCompositeKey(medId: Int, scheduleId: Int, scheduledTime: Long)
 
     /**
-     * Count TAKEN history records for a medication since a given timestamp.
+     * Count TAKEN and AUTO_TAKEN history records for a medication since a given timestamp.
      * Used for depletion reminder calculation.
      */
     @Query(
         """
     SELECT COUNT(*) FROM medication_history
     WHERE medicationId = :medicationId
-      AND status = 'TAKEN'
+      AND status IN ('TAKEN', 'AUTO_TAKEN')
       AND COALESCE(takenTime, scheduledTime) >= :sinceTimestamp
   """,
     )

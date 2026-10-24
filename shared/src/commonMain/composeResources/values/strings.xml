@@ -1234,4 +1234,16 @@
     <string name="reliability_banner_ios_budget_message">Too many reminders scheduled. Open the app every 2 days to keep them active.</string>
     <string name="reliability_banner_database_recovered_message">A system error caused your local database to be wiped to prevent a fatal crash. Please restore your medications from a backup or re-enter them.</string>
     <string name="reliability_banner_database_recovered_action">Dismiss</string>
+    <plurals name="reliability_banner_away_message">
+        <item quantity="one">While you were away, %1$d unlogged dose was logged automatically.</item>
+        <item quantity="other">While you were away, %1$d unlogged doses were logged automatically.</item>
+    </plurals>
+    <string name="reliability_banner_away_action">Dismiss</string>
+    <string name="unlogged_dose_section_title">Unlogged doses</string>
+    <string name="unlogged_dose_take_label">Mark unlogged doses as taken</string>
+    <string name="unlogged_dose_skip_description">Doses you don't log within 24 hours are marked as skipped.</string>
+    <string name="unlogged_dose_take_description">Doses you don't log within 24 hours are marked as taken.</string>
+    <string name="unlogged_dose_take_hint">Only turn this on if you reliably take this medication. Automatically taken doses are deducted from your stock, and you can correct any of them in your history.</string>
+    <string name="tracking_auto_logged_label">Auto-logged</string>
+    <string name="tracking_auto_logged_hint">This dose was logged automatically because it was not logged within 24 hours. Saving replaces it with your entry.</string>
 </resources>

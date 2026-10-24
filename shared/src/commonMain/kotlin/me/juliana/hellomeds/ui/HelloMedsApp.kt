@@ -93,6 +93,9 @@ fun HelloMedsApp(
                     onDismissDatabaseRecovered = {
                         reliabilityScope.launch { reliabilityProvider.dismissDatabaseRecoveryWarning() }
                     },
+                    onDismissAwaySummary = {
+                        reliabilityScope.launch { reliabilityProvider.dismissAwaySummary() }
+                    },
                 )
                 HelloMedsNavigation(
                     initialRoute = MainAppRoute,

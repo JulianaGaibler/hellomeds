@@ -38,6 +38,7 @@ import me.juliana.hellomeds.data.model.enums.MedicationStrengthUnit
 import me.juliana.hellomeds.data.model.enums.MedicationType
 import me.juliana.hellomeds.data.model.enums.TimeZoneMode
 import me.juliana.hellomeds.data.model.enums.TrackingPrecision
+import me.juliana.hellomeds.data.model.enums.UnloggedDoseAction
 import kotlin.time.Instant
 
 class BackupImportService(
@@ -356,6 +357,7 @@ private fun BackupMedication.toEntity(importanceLabelId: Int) = Medication(
     cycleHasPlacebos = cycleHasPlacebos ?: false,
     cycleStartDate = cycleStartDate?.let { parseLocalDate(it) },
     timeZoneMode = timeZoneMode?.let { parseTimeZoneMode(it) } ?: TimeZoneMode.LOCAL,
+    unloggedDoseAction = unloggedDoseAction?.let { parseUnloggedDoseAction(it) } ?: UnloggedDoseAction.SKIP,
 )
 
 private fun BackupSchedule.toEntity(medicationId: Int) = Schedule(
@@ -382,7 +384,7 @@ private fun BackupHistory.toEntity(medicationId: Int, scheduleId: Int? = null) =
     takenTime = takenTime?.let { parseIsoToMillis(it) },
     scheduledDose = scheduledDose,
     actualDose = actualDose,
-    status = if (status in listOf("TAKEN", "SKIPPED", "AUTO_SKIPPED")) status else "TAKEN",
+    status = if (status in listOf("TAKEN", "SKIPPED", "AUTO_SKIPPED", "AUTO_TAKEN")) status else "TAKEN",
     notes = notes,
     createdAt = parseIsoToMillis(createdAt) ?: kotlin.time.Clock.System.now().toEpochMilliseconds(),
 )
@@ -428,6 +430,12 @@ internal fun parseCycleType(value: String): CycleType? = try {
 
 internal fun parseTimeZoneMode(value: String): TimeZoneMode? = try {
     TimeZoneMode.valueOf(value)
+} catch (_: Exception) {
+    null
+}
+
+internal fun parseUnloggedDoseAction(value: String): UnloggedDoseAction? = try {
+    UnloggedDoseAction.valueOf(value)
 } catch (_: Exception) {
     null
 }

@@ -341,7 +341,7 @@ class FakeHistoryDao : MedicationHistoryDao {
     }
 
     override suspend fun countTakenSince(medicationId: Int, sinceTimestamp: Long) = history.count {
-        it.medicationId == medicationId && it.status == "TAKEN" &&
+        it.medicationId == medicationId && it.status in setOf("TAKEN", "AUTO_TAKEN") &&
             (it.takenTime ?: it.scheduledTime ?: 0) >= sinceTimestamp
     }
 
@@ -497,6 +497,13 @@ class FakeResolverState : me.juliana.hellomeds.data.preferences.ResolverStateSto
     override suspend fun getLastSeenTimeZoneId() = timeZoneId
     override suspend fun setLastSeenTimeZoneId(id: String) {
         timeZoneId = id
+    }
+
+    var awaySkipped = 0
+    var awayTaken = 0
+    override suspend fun addAwaySummary(skipped: Int, taken: Int) {
+        awaySkipped += skipped
+        awayTaken += taken
     }
 }
 

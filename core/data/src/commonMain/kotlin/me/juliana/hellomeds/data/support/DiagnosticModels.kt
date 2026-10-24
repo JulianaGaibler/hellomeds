@@ -26,7 +26,7 @@ data class DoseDiagnostic(
     val dose: Double,
     val strengthUnit: String?,
     val scheduledTime: Long,
-    /** MedicationHistory.STATUS_TAKEN/SKIPPED/AUTO_SKIPPED, or "PENDING" for unacted events. */
+    /** MedicationHistory.STATUS_TAKEN/SKIPPED/AUTO_SKIPPED/AUTO_TAKEN, or "PENDING" for unacted events. */
     val status: String,
     val isOverdue: Boolean,
 )

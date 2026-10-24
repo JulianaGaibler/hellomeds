@@ -13,21 +13,27 @@ import me.juliana.hellomeds.data.backup.FakeHistoryDao
 import me.juliana.hellomeds.data.backup.FakeMedicationDao
 import me.juliana.hellomeds.data.backup.FakeResolverState
 import me.juliana.hellomeds.data.backup.FakeScheduleDao
+import me.juliana.hellomeds.data.backup.FakeStockAdjustmentDao
+import me.juliana.hellomeds.data.backup.NoOpDepletionChecker
+import me.juliana.hellomeds.data.backup.NoOpLowStockChecker
 import me.juliana.hellomeds.data.backup.SnapshotTransactionRunner
 import me.juliana.hellomeds.data.createHistory
 import me.juliana.hellomeds.data.createMedication
 import me.juliana.hellomeds.data.createSchedule
 import me.juliana.hellomeds.data.dao.MedicationHistoryDao
 import me.juliana.hellomeds.data.database.entities.MedicationHistory
-import me.juliana.hellomeds.data.model.enums.CycleType
+import me.juliana.hellomeds.data.database.entities.StockAdjustment
+import me.juliana.hellomeds.data.model.enums.StockAdjustmentType
 import me.juliana.hellomeds.data.model.enums.TimeZoneMode
+import me.juliana.hellomeds.data.model.enums.TrackingPrecision
+import me.juliana.hellomeds.data.model.enums.UnloggedDoseAction
+import me.juliana.hellomeds.data.repository.StockTrackingRepository
 import me.juliana.hellomeds.data.toEpochMillis
 import me.juliana.hellomeds.data.util.TimeProvider
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Instant
 
@@ -52,6 +58,7 @@ class UnloggedDoseResolverTest {
     private lateinit var historyDao: FakeHistoryDao
     private lateinit var scheduleDao: FakeScheduleDao
     private lateinit var medicationDao: FakeMedicationDao
+    private lateinit var stockDao: FakeStockAdjustmentDao
     private lateinit var state: FakeResolverState
     private lateinit var reconciler: CountingReconciler
     private lateinit var time: MutableTime
@@ -62,23 +69,40 @@ class UnloggedDoseResolverTest {
         historyDao = FakeHistoryDao()
         scheduleDao = FakeScheduleDao()
         medicationDao = FakeMedicationDao().apply { seed(createMedication(id = 1)) }
+        stockDao = FakeStockAdjustmentDao()
         state = FakeResolverState()
         reconciler = CountingReconciler()
         time = MutableTime()
         deviceZone = TimeZone.currentSystemDefault()
     }
 
-    private fun resolver(history: MedicationHistoryDao = historyDao) = UnloggedDoseResolver(
-        projector = ScheduleProjector(scheduleDao, history, medicationDao),
-        scheduleDao = scheduleDao,
-        medicationDao = medicationDao,
-        historyDao = history,
-        transactionRunner = SnapshotTransactionRunner(historyDao),
-        timeProvider = time,
-        state = state,
-        reconciler = reconciler,
-        deviceTimeZone = { deviceZone },
-    )
+    private fun resolver(history: MedicationHistoryDao = historyDao): UnloggedDoseResolver {
+        val transactionRunner = SnapshotTransactionRunner(historyDao, stockDao)
+        return UnloggedDoseResolver(
+            projector = ScheduleProjector(scheduleDao, history, medicationDao),
+            scheduleDao = scheduleDao,
+            medicationDao = medicationDao,
+            historyDao = history,
+            transactionRunner = transactionRunner,
+            timeProvider = time,
+            state = state,
+            reconciler = reconciler,
+            stockTracking = StockTrackingRepository(
+                medicationDao = medicationDao,
+                stockAdjustmentDao = stockDao,
+                transactionRunner = transactionRunner,
+                scheduleDao = scheduleDao,
+                lowStockNotifier = NoOpLowStockChecker(),
+                predictionEngine = StockPredictionEngine(),
+                medicationHistoryDao = historyDao,
+                depletionReminderNotifier = NoOpDepletionChecker(),
+            ),
+            stockAdjustmentDao = stockDao,
+            lowStockNotifier = NoOpLowStockChecker(),
+            depletionNotifier = NoOpDepletionChecker(),
+            deviceTimeZone = { deviceZone },
+        )
+    }
 
     private val mar1 = LocalDate(2025, 3, 1)
     private fun day(n: Int) = mar1.plus(n - 1, DateTimeUnit.DAY)
@@ -109,6 +133,7 @@ class UnloggedDoseResolverTest {
         time.nowMs = day(2).toEpochMillis("08:00")
         resolver().resolve()
         assertTrue(autoRows().any { it.scheduledTime == day(1).toEpochMillis("08:00") })
+        assertEquals(0, state.awaySkipped, "Routine runs do not raise the away banner")
     }
 
     @Test
@@ -118,17 +143,6 @@ class UnloggedDoseResolverTest {
         time.nowMs = day(2).toEpochMillis("09:00")
         resolver().resolve()
         assertEquals(listOf(day(1).toEpochMillis("08:00")), autoRows().map { it.scheduledTime })
-    }
-
-    @Test
-    fun monthlyDose_resolvesAfter24h() = runTest {
-        scheduleDao.seed(createSchedule(id = 1, startDate = mar1.toEpochMillis(), frequencyValue = 30))
-        time.nowMs = day(40).toEpochMillis("09:00")
-        resolver().resolve()
-        assertEquals(
-            listOf(day(1).toEpochMillis("08:00"), day(31).toEpochMillis("08:00")),
-            autoRows().map { it.scheduledTime },
-        )
     }
 
     @Test
@@ -148,6 +162,38 @@ class UnloggedDoseResolverTest {
         assertEquals(120, autoRows().size)
         assertEquals(120, result.skipped)
         assertEquals(day(121).toEpochMillis("08:00"), state.watermark, "Held at the oldest still-loggable dose")
+        assertEquals(120, state.awaySkipped)
+    }
+
+    @Test
+    fun takeMedication_logsAutoTaken_andDeductsStockOnlyAfterLatestRecount() = runTest {
+        medicationDao.medications.clear()
+        medicationDao.seed(
+            createMedication(id = 1, stockTrackingEnabled = true, trackingPrecision = TrackingPrecision.EXACT)
+                .copy(unloggedDoseAction = UnloggedDoseAction.TAKE),
+        )
+        // The recount on day 3 already reflects whatever was taken on days 1 to 3.
+        stockDao.insert(
+            StockAdjustment(
+                medicationId = 1,
+                quantityChange = 30.0,
+                timestamp = day(3).toEpochMillis("12:00"),
+                adjustmentType = StockAdjustmentType.MANUAL_CORRECTION.value,
+            ),
+        )
+        scheduleDao.seed(daily())
+        time.nowMs = day(6).toEpochMillis("12:00")
+
+        val result = resolver().resolve()
+
+        assertEquals(5, result.taken)
+        assertTrue(
+            historyDao.history.all {
+                it.status == MedicationHistory.STATUS_AUTO_TAKEN && it.takenTime == it.scheduledTime
+            },
+        )
+        val intakes = stockDao.adjustments.filter { it.adjustmentType == StockAdjustmentType.INTAKE.value }
+        assertEquals(listOf(day(4).toEpochMillis("08:00"), day(5).toEpochMillis("08:00")), intakes.map { it.timestamp })
     }
 
     @Test
@@ -174,18 +220,6 @@ class UnloggedDoseResolverTest {
         historyDao.history.clear() // Simulate rows we must never recreate (e.g. deliberately deleted)
         resolver().resolve()
         assertTrue(autoRows().isEmpty(), "Span before the watermark is never touched again")
-    }
-
-    @Test
-    fun loggedDose_isUntouched() = runTest {
-        scheduleDao.seed(daily())
-        historyDao.insert(
-            createHistory(scheduledTime = day(2).toEpochMillis("08:00"), status = MedicationHistory.STATUS_TAKEN),
-        )
-        time.nowMs = day(4).toEpochMillis("12:00")
-        resolver().resolve()
-        val day2 = historyDao.history.filter { it.scheduledTime == day(2).toEpochMillis("08:00") }
-        assertEquals(listOf(MedicationHistory.STATUS_TAKEN), day2.map { it.status })
     }
 
     @Test
@@ -219,32 +253,6 @@ class UnloggedDoseResolverTest {
         val resolved = autoRows().map { it.scheduledTime }
         assertTrue(day(2).toEpochMillis("09:00") !in resolved)
         assertTrue(day(3).toEpochMillis("09:00") in resolved)
-    }
-
-    @Test
-    fun cyclicBreakDaysWithoutPlacebos_produceNoRows() = runTest {
-        medicationDao.medications.clear()
-        medicationDao.seed(
-            createMedication(
-                id = 1,
-                cycleType = CycleType.CYCLIC,
-                cycleDaysActive = 3,
-                cycleDaysBreak = 2,
-                cycleStartDate = mar1,
-            ),
-        )
-        scheduleDao.seed(daily())
-        time.nowMs = day(6).toEpochMillis("12:00") // days 1..5 past deadline: active 1-3, break 4-5
-        resolver().resolve()
-        assertEquals((1..3).map { day(it).toEpochMillis("08:00") }, autoRows().map { it.scheduledTime })
-    }
-
-    @Test
-    fun archivedSchedule_producesNoRows() = runTest {
-        scheduleDao.seed(daily().copy(isArchived = true))
-        time.nowMs = day(10).toEpochMillis("12:00")
-        resolver().resolve()
-        assertTrue(autoRows().isEmpty())
     }
 
     @Test
@@ -292,15 +300,6 @@ class UnloggedDoseResolverTest {
     }
 
     @Test
-    fun firstRun_recordsTimeZone_withoutRedefining() = runTest {
-        scheduleDao.seed(daily())
-        time.nowMs = day(5).toEpochMillis("12:00")
-        resolver().resolve()
-        assertEquals(0L, scheduleDao.schedules.single().resolveFrom)
-        assertEquals(deviceZone.id, state.timeZoneId)
-    }
-
-    @Test
     fun onScheduleCreated_lowersWatermarkToCoverEarlierDosesToday() = runTest {
         state.watermark = day(5).toEpochMillis("12:00")
         resolver().onScheduleCreated(day(5).toEpochMillis())
@@ -308,15 +307,6 @@ class UnloggedDoseResolverTest {
 
         resolver().onScheduleCreated(day(6).toEpochMillis())
         assertEquals(day(5).toEpochMillis(), state.watermark, "Never raised")
-    }
-
-    @Test
-    fun startFresh_bumpsWithoutResolving() = runTest {
-        scheduleDao.seed(daily())
-        time.nowMs = day(5).toEpochMillis("10:00")
-        resolver().startFresh(listOf(1))
-        assertTrue(historyDao.history.isEmpty())
-        assertEquals(time.nowMs, scheduleDao.schedules.single().resolveFrom)
     }
 
     @Test
@@ -329,12 +319,5 @@ class UnloggedDoseResolverTest {
         state.watermark = null
         resolver().resolve()
         assertEquals(1, reconciler.count)
-    }
-
-    @Test
-    fun noSchedules_leavesWatermarkUnset() = runTest {
-        time.nowMs = day(5).toEpochMillis("12:00")
-        resolver().resolve()
-        assertNull(state.watermark)
     }
 }

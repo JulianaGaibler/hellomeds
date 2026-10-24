@@ -26,8 +26,9 @@ class ReliabilityStateProvider(
         reliabilityPrefs.exactAlarmsDisabled,
         reliabilityPrefs.iosNotificationBudgetExhausted,
         reliabilityPrefs.databaseRecovered,
-    ) { missed, exactDisabled, budgetExhausted, dbRecovered ->
-        if (missed.isEmpty() && !exactDisabled && !budgetExhausted && !dbRecovered) {
+        reliabilityPrefs.awaySummary,
+    ) { missed, exactDisabled, budgetExhausted, dbRecovered, awaySummary ->
+        if (missed.isEmpty() && !exactDisabled && !budgetExhausted && !dbRecovered && awaySummary == null) {
             ReliabilityState.Healthy
         } else {
             ReliabilityState.Degraded(
@@ -35,6 +36,7 @@ class ReliabilityStateProvider(
                 exactAlarmsDisabled = exactDisabled,
                 iosNotificationBudgetExhausted = budgetExhausted,
                 databaseRecovered = dbRecovered,
+                awaySummary = awaySummary,
             )
         }
     }
@@ -47,5 +49,9 @@ class ReliabilityStateProvider(
      */
     suspend fun dismissDatabaseRecoveryWarning() {
         reliabilityPrefs.setDatabaseRecovered(false)
+    }
+
+    suspend fun dismissAwaySummary() {
+        reliabilityPrefs.clearAwaySummary()
     }
 }

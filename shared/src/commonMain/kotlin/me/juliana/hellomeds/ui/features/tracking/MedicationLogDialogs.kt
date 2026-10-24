@@ -3,6 +3,7 @@
 
 package me.juliana.hellomeds.ui.features.tracking
 
+import me.juliana.hellomeds.shared.tracking_auto_logged_hint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -150,6 +151,13 @@ fun MedicationLogBottomSheet(
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    if (event.isAutoResolved) {
+                        Text(
+                            text = stringResource(Res.string.tracking_auto_logged_hint),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
 

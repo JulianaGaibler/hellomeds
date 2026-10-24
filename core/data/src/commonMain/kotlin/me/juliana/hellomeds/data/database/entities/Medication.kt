@@ -15,6 +15,7 @@ import me.juliana.hellomeds.data.model.enums.MedicationContainer
 import me.juliana.hellomeds.data.model.enums.MedicationStrengthUnit
 import me.juliana.hellomeds.data.model.enums.MedicationType
 import me.juliana.hellomeds.data.model.enums.TimeZoneMode
+import me.juliana.hellomeds.data.model.enums.UnloggedDoseAction
 import me.juliana.hellomeds.data.model.enums.TrackingPrecision
 import me.juliana.hellomeds.data.util.currentTimeMillis
 
@@ -76,6 +77,8 @@ data class Medication(
     // SQL default lets the v4→v5 migration backfill existing rows without an explicit per-row UPDATE.
     @ColumnInfo(defaultValue = "LTR_TOP_BOTTOM")
     val bubbleFlowDirection: BubbleFlowDirection = BubbleFlowDirection.LTR_TOP_BOTTOM,
+    @ColumnInfo(defaultValue = "SKIP")
+    val unloggedDoseAction: UnloggedDoseAction = UnloggedDoseAction.SKIP,
 ) {
     /**
      * True when changing from [old] to this re-projects past events of every schedule:

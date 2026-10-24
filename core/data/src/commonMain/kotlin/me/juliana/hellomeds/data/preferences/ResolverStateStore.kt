@@ -15,4 +15,7 @@ interface ResolverStateStore {
     /** Device timezone at the last resolver run, used to detect timezone changes. */
     suspend fun getLastSeenTimeZoneId(): String?
     suspend fun setLastSeenTimeZoneId(id: String)
+
+    /** Adds to the counts shown in the "while you were away" banner until the user dismisses it. */
+    suspend fun addAwaySummary(skipped: Int, taken: Int)
 }

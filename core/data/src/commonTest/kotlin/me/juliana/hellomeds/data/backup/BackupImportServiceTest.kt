@@ -3,6 +3,7 @@
 
 package me.juliana.hellomeds.data.backup
 
+import me.juliana.hellomeds.data.model.enums.UnloggedDoseAction
 import kotlinx.coroutines.test.runTest
 import me.juliana.hellomeds.data.backup.model.BackupData
 import me.juliana.hellomeds.data.backup.model.BackupHistory
@@ -274,7 +275,7 @@ class BackupImportServiceTest {
         val result = service.executeImport(
             backup(
                 labels = listOf(label("Silent")),
-                medications = listOf(med("Aspirin")),
+                medications = listOf(med("Aspirin").copy(unloggedDoseAction = "TAKE")),
             ),
             decisions = mapOf(0 to ImportDecision.IMPORT_AS_NEW),
         )
@@ -283,6 +284,7 @@ class BackupImportServiceTest {
         assertEquals(0, result.medicationsReplaced)
         assertEquals(1, medDao.medications.size)
         assertEquals("Aspirin", medDao.medications[0].name)
+        assertEquals(UnloggedDoseAction.TAKE, medDao.medications[0].unloggedDoseAction)
     }
 
     @Test

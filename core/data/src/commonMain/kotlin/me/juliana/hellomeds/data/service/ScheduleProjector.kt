@@ -425,7 +425,9 @@ class ScheduleProjector(
 
         return me.juliana.hellomeds.data.support.DoseOverviewDiagnostic(
             totalCount = doses.size,
-            takenCount = doses.count { it.status == MedicationHistory.STATUS_TAKEN },
+            takenCount = doses.count {
+                it.status == MedicationHistory.STATUS_TAKEN || it.status == MedicationHistory.STATUS_AUTO_TAKEN
+            },
             pendingCount = doses.count { it.status == "PENDING" },
             skippedCount = doses.count {
                 it.status == MedicationHistory.STATUS_SKIPPED ||

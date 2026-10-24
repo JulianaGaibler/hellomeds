@@ -3,6 +3,9 @@
 
 package me.juliana.hellomeds.ui.components.reliability
 
+import org.jetbrains.compose.resources.pluralStringResource
+import me.juliana.hellomeds.shared.reliability_banner_away_action
+import me.juliana.hellomeds.shared.reliability_banner_away_message
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,8 +40,9 @@ import org.jetbrains.compose.resources.stringResource
 /**
  * Persistent reliability banner that surfaces system-level reminder pipeline
  * degradations: revoked exact-alarm permission (Android), notification budget
- * exhaustion (iOS), and destructive database recovery (cross-platform — fired
- * after a Keychain/MasterKey invalidation forced a wipe).
+ * exhaustion (iOS), destructive database recovery (cross-platform — fired
+ * after a Keychain/MasterKey invalidation forced a wipe), and the summary of doses
+ * logged automatically after a long absence.
  *
  * Renders nothing on [ReliabilityState.Healthy]. Renders nothing for the
  * `missedDoses`-only Degraded case — those surface in the Tracking screen's
@@ -56,12 +60,14 @@ fun ReliabilityBanner(
     state: ReliabilityState,
     onFixExactAlarms: () -> Unit,
     onDismissDatabaseRecovered: () -> Unit,
+    onDismissAwaySummary: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val degraded = state as? ReliabilityState.Degraded ?: return
     if (!degraded.exactAlarmsDisabled &&
         !degraded.iosNotificationBudgetExhausted &&
-        !degraded.databaseRecovered
+        !degraded.databaseRecovered &&
+        degraded.awaySummary == null
     ) {
         return
     }
@@ -111,6 +117,33 @@ fun ReliabilityBanner(
                         Text(
                             text = stringResource(Res.string.reliability_banner_exact_alarms_action),
                             color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                    }
+                },
+            )
+        }
+        degraded.awaySummary?.let { summary ->
+            BannerRow(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                icon = { tint ->
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(20.dp),
+                    )
+                },
+                message = pluralStringResource(
+                    Res.plurals.reliability_banner_away_message,
+                    summary.total,
+                    summary.total,
+                ),
+                action = {
+                    TextButton(onClick = onDismissAwaySummary) {
+                        Text(
+                            text = stringResource(Res.string.reliability_banner_away_action),
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
                         )
                     }
                 },

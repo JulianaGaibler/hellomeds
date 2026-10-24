@@ -3,6 +3,7 @@
 
 package me.juliana.hellomeds.data.backup
 
+import me.juliana.hellomeds.data.model.enums.UnloggedDoseAction
 import kotlinx.coroutines.test.runTest
 import me.juliana.hellomeds.data.database.entities.ImportanceLabel
 import me.juliana.hellomeds.data.database.entities.Medication
@@ -255,7 +256,8 @@ class BackupExportServiceTest {
     fun generateBackup_medicationFieldsMapped() = runTest {
         labelDao.seed(label(1, "Silent"))
         medDao.seed(
-            med(1, "Aspirin", strengthValue = 500.0, strengthUnit = MedicationStrengthUnit.MG),
+            med(1, "Aspirin", strengthValue = 500.0, strengthUnit = MedicationStrengthUnit.MG)
+                .copy(unloggedDoseAction = UnloggedDoseAction.TAKE),
         )
 
         val backup = service.generateBackup(
@@ -270,6 +272,7 @@ class BackupExportServiceTest {
         assertEquals("TABLET", m.type)
         assertEquals(500.0, m.strengthValue)
         assertEquals("MG", m.strengthUnit)
+        assertEquals("TAKE", m.unloggedDoseAction)
     }
 
     @Test

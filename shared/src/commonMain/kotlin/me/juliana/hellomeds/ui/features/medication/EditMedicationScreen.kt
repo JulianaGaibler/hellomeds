@@ -3,6 +3,12 @@
 
 package me.juliana.hellomeds.ui.features.medication
 
+import me.juliana.hellomeds.shared.unlogged_dose_take_hint
+import me.juliana.hellomeds.shared.unlogged_dose_take_description
+import me.juliana.hellomeds.shared.unlogged_dose_skip_description
+import me.juliana.hellomeds.shared.unlogged_dose_take_label
+import me.juliana.hellomeds.shared.unlogged_dose_section_title
+import me.juliana.hellomeds.data.model.enums.UnloggedDoseAction
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -152,6 +158,8 @@ fun EditMedicationScreen(
     var anchorTimeZone by remember(medicationId) { mutableStateOf(medication.anchorTimeZone) }
     var showTimeZonePicker by remember { mutableStateOf(false) }
 
+    var unloggedDoseAction by remember(medicationId) { mutableStateOf(medication.unloggedDoseAction) }
+
     // Cycle state
     val isCyclic = medication.cycleType == CycleType.CYCLIC
     var cycleEnabled by remember(medicationId) { mutableStateOf(isCyclic) }
@@ -191,6 +199,7 @@ fun EditMedicationScreen(
             cycleStartDate = cycleStartDate,
             timeZoneMode = timeZoneMode,
             anchorTimeZone = if (timeZoneMode == TimeZoneMode.FIXED) anchorTimeZone else null,
+            unloggedDoseAction = unloggedDoseAction,
         )
     }
 
@@ -408,6 +417,55 @@ fun EditMedicationScreen(
                         )
                     }
                 }
+            }
+
+            // ── Unlogged doses section ──
+            item {
+                SettingsHeader(
+                    text = stringResource(Res.string.unlogged_dose_section_title),
+                    topPadding = 24.dp,
+                    bottomPadding = 0.dp,
+                )
+            }
+
+            item {
+                val takeUnlogged = unloggedDoseAction == UnloggedDoseAction.TAKE
+                AutoSmartList(
+                    items = listOf(
+                        SmartListItemConfig(visible = true) { shapes, visible ->
+                            SmartListSwitchItem(
+                                label = stringResource(Res.string.unlogged_dose_take_label),
+                                checked = takeUnlogged,
+                                onCheckedChange = {
+                                    unloggedDoseAction = if (it) UnloggedDoseAction.TAKE else UnloggedDoseAction.SKIP
+                                },
+                                shapes = shapes,
+                                visible = visible,
+                                supportingText = stringResource(
+                                    if (takeUnlogged) {
+                                        Res.string.unlogged_dose_take_description
+                                    } else {
+                                        Res.string.unlogged_dose_skip_description
+                                    },
+                                ),
+                            )
+                        },
+                        SmartListItemConfig(visible = takeUnlogged) { shapes, visible ->
+                            SmartListInfoCard(
+                                headlineContent = {
+                                    Text(
+                                        stringResource(Res.string.unlogged_dose_take_hint),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                    )
+                                },
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                shapes = shapes,
+                                visible = visible,
+                            )
+                        },
+                    ),
+                )
             }
 
             // ── Type section ──
