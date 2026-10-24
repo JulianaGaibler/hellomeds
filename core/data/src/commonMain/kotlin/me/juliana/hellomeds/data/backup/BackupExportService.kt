@@ -23,10 +23,12 @@ import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.database.entities.MedicationHistory
 import me.juliana.hellomeds.data.database.entities.Schedule
 import me.juliana.hellomeds.data.database.entities.StockAdjustment
+import me.juliana.hellomeds.data.util.TransactionRunner
 import kotlin.time.Clock
 import kotlin.time.Instant
 
 class BackupExportService(
+    private val transactionRunner: TransactionRunner,
     private val medicationDao: MedicationDao,
     private val importanceLabelDao: ImportanceLabelDao,
     private val scheduleDao: ScheduleDao,
@@ -41,50 +43,54 @@ class BackupExportService(
         includeHistory: Boolean,
         appVersion: String = "unknown",
     ): BackupData {
-        val allLabels = importanceLabelDao.getAll().first()
-        val labelMap = allLabels.associateBy { it.id }
+        val (usedLabels, backupMedications) = transactionRunner.run {
+            val allLabels = importanceLabelDao.getAll().first()
+            val labelMap = allLabels.associateBy { it.id }
 
-        val allMedications = medicationDao.getAll().first()
-        val selectedMedications = allMedications.filter { it.id in selectedMedicationIds }
+            val allMedications = medicationDao.getAll().first()
+            val selectedMedications = allMedications.filter { it.id in selectedMedicationIds }
 
-        // Collect only the labels used by selected medications
-        val usedLabelIds = selectedMedications.map { it.importanceLabelId }.toSet()
-        val usedLabels = allLabels.filter { it.id in usedLabelIds }
+            // Collect only the labels used by selected medications
+            val usedLabelIds = selectedMedications.map { it.importanceLabelId }.toSet()
+            val usedLabels = allLabels.filter { it.id in usedLabelIds }
 
-        val backupMedications = selectedMedications.map { medication ->
-            val labelName = labelMap[medication.importanceLabelId]?.name ?: "Silent"
+            val backupMedications = selectedMedications.map { medication ->
+                val labelName = labelMap[medication.importanceLabelId]?.name ?: "Silent"
 
-            val schedules = if (includeSchedules) {
-                scheduleDao.getByMedicationId(medication.id).first().map { it.toBackup() }
-            } else {
-                emptyList()
+                val schedules = if (includeSchedules) {
+                    scheduleDao.getByMedicationId(medication.id).first().map { it.toBackup() }
+                } else {
+                    emptyList()
+                }
+
+                val stock = if (includeStockSettings && medication.stockTrackingEnabled) {
+                    medication.toBackupStock()
+                } else {
+                    null
+                }
+
+                val history = if (includeHistory) {
+                    historyDao.getByMedicationId(medication.id).first().map { it.toBackup() }
+                } else {
+                    emptyList()
+                }
+
+                val stockAdjustments = if (includeHistory) {
+                    stockAdjustmentDao.getByMedicationId(medication.id).first().map { it.toBackup() }
+                } else {
+                    emptyList()
+                }
+
+                medication.toBackup(
+                    labelName = labelName,
+                    schedules = schedules,
+                    stock = stock,
+                    history = history,
+                    stockAdjustments = stockAdjustments,
+                )
             }
 
-            val stock = if (includeStockSettings && medication.stockTrackingEnabled) {
-                medication.toBackupStock()
-            } else {
-                null
-            }
-
-            val history = if (includeHistory) {
-                historyDao.getByMedicationId(medication.id).first().map { it.toBackup() }
-            } else {
-                emptyList()
-            }
-
-            val stockAdjustments = if (includeHistory) {
-                stockAdjustmentDao.getByMedicationId(medication.id).first().map { it.toBackup() }
-            } else {
-                emptyList()
-            }
-
-            medication.toBackup(
-                labelName = labelName,
-                schedules = schedules,
-                stock = stock,
-                history = history,
-                stockAdjustments = stockAdjustments,
-            )
+            usedLabels to backupMedications
         }
 
         return BackupData(
@@ -147,6 +153,9 @@ private fun Medication.toBackup(
     cycleHasPlacebos = cycleHasPlacebos,
     cycleStartDate = cycleStartDate?.toString(),
     timeZoneMode = timeZoneMode.name,
+    anchorTimeZone = anchorTimeZone,
+    bubbleManualLayout = bubbleManualLayout,
+    bubbleFlowDirection = bubbleFlowDirection.name,
     unloggedDoseAction = unloggedDoseAction.name,
     stock = stock,
     schedules = schedules,

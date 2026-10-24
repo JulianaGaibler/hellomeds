@@ -28,6 +28,7 @@ private const val MAX_IMPORT_FILE_BYTES = 50L * 1024L * 1024L // 50 MB
 @Composable
 actual fun rememberFileSaver(
     onResult: (SavedFile?) -> Unit,
+    onError: () -> Unit,
 ): (fileName: String, mimeType: String, data: ByteArray) -> Unit {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -50,7 +51,7 @@ actual fun rememberFileSaver(
                         null
                     }
                 }
-                onResult(saved)
+                if (saved != null) onResult(saved) else onError()
                 pendingData = null
             }
         } else {
@@ -150,7 +151,7 @@ actual fun rememberFileSharer(
 }
 
 @Composable
-actual fun rememberFileLoader(onResult: (data: ByteArray?) -> Unit): () -> Unit {
+actual fun rememberFileLoader(onResult: (data: ByteArray?) -> Unit, onError: () -> Unit): () -> Unit {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -183,7 +184,7 @@ actual fun rememberFileLoader(onResult: (data: ByteArray?) -> Unit): () -> Unit 
                     null
                 }
             }
-            onResult(bytes)
+            if (bytes == null || bytes.isEmpty()) onError() else onResult(bytes)
         }
     }
 

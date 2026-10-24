@@ -3,6 +3,13 @@
 
 package me.juliana.hellomeds.ui.viewmodel
 
+import me.juliana.hellomeds.shared.Res
+import me.juliana.hellomeds.shared.tracking_error_delete_log
+import me.juliana.hellomeds.shared.tracking_error_mark_skipped
+import me.juliana.hellomeds.shared.tracking_error_mark_taken
+import me.juliana.hellomeds.shared.tracking_error_save_log
+import me.juliana.hellomeds.shared.tracking_error_update_log
+import org.jetbrains.compose.resources.getString
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -249,7 +256,7 @@ class TrackingViewModel(
                     }
                 } catch (e: Exception) {
                     AppLogger.e("TrackingViewModel", "Error saving log: ${e.message}", e)
-                    _errorEvents.tryEmit("Failed to save medication log")
+                    _errorEvents.emit(getString(Res.string.tracking_error_save_log))
                 }
             }
 
@@ -281,6 +288,7 @@ class TrackingViewModel(
                     AppLogger.d("TrackingViewModel", "Created manual dose with ID: $id")
                 } catch (e: Exception) {
                     AppLogger.e("TrackingViewModel", "Error creating manual dose: ${e.message}", e)
+                    _errorEvents.emit(getString(Res.string.tracking_error_save_log))
                 }
             }
 
@@ -324,7 +332,7 @@ class TrackingViewModel(
                     "markAsTakenViaSwipe: ERROR - schedule=${event.scheduleId}, error=${e.message}",
                     e,
                 )
-                _errorEvents.tryEmit("Failed to mark medication as taken")
+                _errorEvents.emit(getString(Res.string.tracking_error_mark_taken))
             } finally {
                 doseOperationGuard.release(operationKey)
             }
@@ -363,7 +371,7 @@ class TrackingViewModel(
                     "markAsSkippedViaSwipe: ERROR - schedule=${event.scheduleId}, error=${e.message}",
                     e,
                 )
-                _errorEvents.tryEmit("Failed to mark medication as skipped")
+                _errorEvents.emit(getString(Res.string.tracking_error_mark_skipped))
             } finally {
                 doseOperationGuard.release(operationKey)
             }
@@ -435,7 +443,7 @@ class TrackingViewModel(
                 AppLogger.d("TrackingViewModel", "Updated logged item successfully")
             } catch (e: Exception) {
                 AppLogger.e("TrackingViewModel", "Error updating logged item: ${e.message}", e)
-                _errorEvents.tryEmit("Failed to update medication log")
+                _errorEvents.emit(getString(Res.string.tracking_error_update_log))
             }
         }
     }
@@ -460,7 +468,7 @@ class TrackingViewModel(
                     "deleteLoggedItem: ERROR - scheduleId=${event.scheduleId}, error=${e.message}",
                     e,
                 )
-                _errorEvents.tryEmit("Failed to delete medication log")
+                _errorEvents.emit(getString(Res.string.tracking_error_delete_log))
             }
         }
     }

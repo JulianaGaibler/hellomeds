@@ -108,7 +108,7 @@ val dataModule = module {
     // Reliability surfacing combines missed doses with platform-specific flags.
     single { MissedDoseDetector(get(), get(), get(), get(), get(), get()) }
     single { ReliabilityStateProvider(get(), get()) }
-    single { me.juliana.hellomeds.data.backup.BackupExportService(get(), get(), get(), get(), get()) }
+    single { me.juliana.hellomeds.data.backup.BackupExportService(get(), get(), get(), get(), get(), get()) }
     single {
         me.juliana.hellomeds.data.backup.BackupImportService(
             get(),

@@ -121,9 +121,12 @@ fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
         "hellomeds-backup-$dateStr.hmbackup"
     }
 
-    val fileSaver = rememberFileSaver { saved ->
-        if (saved != null) viewModel.onFileSaved(saved)
-    }
+    val fileSaver = rememberFileSaver(
+        onResult = { saved ->
+            if (saved != null) viewModel.onFileSaved(saved)
+        },
+        onError = viewModel::onFileSaveFailed,
+    )
     val openFileLocation = rememberFileLocationOpener()
 
     val fileSharer = rememberFileSharer { shared ->

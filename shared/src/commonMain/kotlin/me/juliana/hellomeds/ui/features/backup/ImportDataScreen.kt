@@ -124,11 +124,14 @@ fun ImportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
         canScroll = { scrollState.canScrollForward || scrollState.canScrollBackward },
     )
 
-    val fileLoader = rememberFileLoader { data ->
-        if (data != null) {
-            viewModel.parseImportFile(data)
-        }
-    }
+    val fileLoader = rememberFileLoader(
+        onResult = { data ->
+            if (data != null) {
+                viewModel.parseImportFile(data)
+            }
+        },
+        onError = viewModel::onFileUnreadable,
+    )
 
     AppScaffold(
         modifier = modifier.fillMaxSize(),

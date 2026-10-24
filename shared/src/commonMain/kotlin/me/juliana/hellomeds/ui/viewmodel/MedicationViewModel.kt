@@ -171,6 +171,13 @@ class MedicationViewModel(
         }
     }
 
+    /** Applies [edit] to the stored medication, not to a snapshot that may be out of date. */
+    fun editMedication(medicationId: Int, edit: (Medication) -> Medication) {
+        viewModelScope.launch {
+            medicationRepository.edit(medicationId, edit)
+        }
+    }
+
     fun updateMedication(medication: Medication) {
         viewModelScope.launch {
             medicationRepository.update(medication)

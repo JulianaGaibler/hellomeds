@@ -78,7 +78,8 @@ class EditMedicationDraft(val medication: Medication, private val today: LocalDa
         }
     }
 
-    fun toMedication(): Medication = medication.copy(
+    /** Applies the edits to [latest], so stock and alert fields written meanwhile are kept. */
+    fun applyTo(latest: Medication): Medication = latest.copy(
         name = name.trim(),
         type = type,
         strengthValue = if (hasStrength) strengthValue.toDoubleOrNull() else null,

@@ -29,6 +29,7 @@ fun registerEncryptionBridge(
 actual object BackupEncryption {
 
     private val MAGIC = "HMEDS01\u0000".encodeToByteArray()
+    private const val MIN_SIZE = 8 + 16 + 12 + 16
 
     actual fun encrypt(json: String, passphrase: String): ByteArray {
         val callback = encryptCallback
@@ -39,6 +40,8 @@ actual object BackupEncryption {
     actual fun decrypt(data: ByteArray, passphrase: String): String {
         val callback = decryptCallback
             ?: throw UnsupportedOperationException("Encryption bridge not registered")
+        if (!isEncrypted(data)) throw IllegalArgumentException("Not an encrypted HelloMeds backup")
+        if (data.size < MIN_SIZE) throw IllegalArgumentException("Encrypted file too short")
         try {
             return callback(data, passphrase)
         } catch (e: Exception) {

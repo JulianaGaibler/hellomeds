@@ -44,6 +44,7 @@ private var activePickerDelegate: NSObject? = null
 @Composable
 actual fun rememberFileSaver(
     onResult: (SavedFile?) -> Unit,
+    onError: () -> Unit,
 ): (fileName: String, mimeType: String, data: ByteArray) -> Unit {
     return remember {
         { fileName: String, _: String, data: ByteArray ->
@@ -74,7 +75,7 @@ actual fun rememberFileSaver(
                 topViewController()?.presentViewController(picker, animated = true, completion = null)
             } else {
                 deleteFile(tempPath)
-                onResult(null)
+                onError()
             }
         }
     }
@@ -130,7 +131,7 @@ actual fun rememberFileSharer(
  * File picker for import — opens document picker to select a file.
  */
 @Composable
-actual fun rememberFileLoader(onResult: (data: ByteArray?) -> Unit): () -> Unit {
+actual fun rememberFileLoader(onResult: (data: ByteArray?) -> Unit, onError: () -> Unit): () -> Unit {
     return remember {
         {
             val types = listOf(UTTypeJSON, UTTypeData).filterNotNull()
@@ -147,11 +148,8 @@ actual fun rememberFileLoader(onResult: (data: ByteArray?) -> Unit): () -> Unit 
                         val accessing = url.startAccessingSecurityScopedResource()
                         try {
                             val nsData = NSData.dataWithContentsOfURL(url)
-                            if (nsData != null) {
-                                onResult(nsData.toByteArray())
-                            } else {
-                                onResult(null)
-                            }
+                            val bytes = nsData?.toByteArray()
+                            if (bytes != null && bytes.isNotEmpty()) onResult(bytes) else onError()
                         } finally {
                             if (accessing) url.stopAccessingSecurityScopedResource()
                         }

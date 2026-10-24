@@ -27,12 +27,14 @@ import me.juliana.hellomeds.data.dao.MedicationDao
 import me.juliana.hellomeds.data.dao.MedicationHistoryDao
 import me.juliana.hellomeds.data.dao.ScheduleDao
 import me.juliana.hellomeds.data.dao.StockAdjustmentDao
+import me.juliana.hellomeds.data.database.DefaultLabelType
 import me.juliana.hellomeds.data.database.entities.ImportanceLabel
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.database.entities.MedicationHistory
 import me.juliana.hellomeds.data.database.entities.Schedule
 import me.juliana.hellomeds.data.database.entities.StockAdjustment
 import me.juliana.hellomeds.data.interfaces.ScheduleReconciler
+import me.juliana.hellomeds.data.model.enums.BubbleFlowDirection
 import me.juliana.hellomeds.data.model.enums.CycleType
 import me.juliana.hellomeds.data.model.enums.FrequencyType
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
@@ -76,15 +78,7 @@ class BackupImportService(
         // Analyze labels
         val existingLabels = importanceLabelDao.getAll().first()
         val labelInfos = backup.importanceLabels.map { backupLabel ->
-            val exactMatch = existingLabels.find { existing ->
-                existing.name == backupLabel.name &&
-                    existing.shouldRemind == backupLabel.shouldRemind &&
-                    existing.isCritical == backupLabel.isCritical &&
-                    existing.hasFollowUps == backupLabel.hasFollowUps &&
-                    existing.followUpCount == backupLabel.followUpCount &&
-                    existing.followUpIntervalMinutes == backupLabel.followUpIntervalMinutes &&
-                    existing.criticalAfterFollowUp == backupLabel.criticalAfterFollowUp
-            }
+            val exactMatch = existingLabels.find { it.matches(backupLabel) }
             LabelImportInfo(backupLabel = backupLabel, existingMatch = exactMatch)
         }
 
@@ -195,15 +189,7 @@ class BackupImportService(
         existingLabels.forEach { labelNameToId[it.name] = it.id }
 
         for (backupLabel in backup.importanceLabels) {
-            val exactMatch = existingLabels.find { existing ->
-                existing.name == backupLabel.name &&
-                    existing.shouldRemind == backupLabel.shouldRemind &&
-                    existing.isCritical == backupLabel.isCritical &&
-                    existing.hasFollowUps == backupLabel.hasFollowUps &&
-                    existing.followUpCount == backupLabel.followUpCount &&
-                    existing.followUpIntervalMinutes == backupLabel.followUpIntervalMinutes &&
-                    existing.criticalAfterFollowUp == backupLabel.criticalAfterFollowUp
-            }
+            val exactMatch = existingLabels.find { it.matches(backupLabel) }
 
             if (exactMatch != null) {
                 labelNameToId[backupLabel.name] = exactMatch.id
@@ -211,11 +197,11 @@ class BackupImportService(
                 // Same name with different config — disambiguate to avoid clobbering existing label.
                 val nameMatch = existingLabels.find { it.name == backupLabel.name }
                 val labelName = if (nameMatch != null) {
-                    "${backupLabel.name} (imported)"
+                    backupLabel.name + IMPORTED_SUFFIX
                 } else {
                     backupLabel.name
                 }
-                val newId = importanceLabelDao.insert(backupLabel.toEntity(labelName))
+                val newId = importanceLabelDao.insert(backupLabel.toEntity(labelName).copy(defaultType = null))
                 labelNameToId[backupLabel.name] = newId.toInt()
                 labelsCreated++
             }
@@ -238,8 +224,9 @@ class BackupImportService(
 
             // Resolve label ID
             val labelId = labelNameToId[backupMed.importanceLabel]
+                ?: existingLabels.find { it.defaultType == DefaultLabelType.SILENT.defaultType }?.id
                 ?: existingLabels.firstOrNull()?.id
-                ?: 1 // Fallback to ID 1 (Silent)
+                ?: 1
 
             val medication = backupMed.toEntity(labelId)
 
@@ -386,6 +373,20 @@ class BackupImportService(
     }
 }
 
+private const val IMPORTED_SUFFIX = " (imported)"
+
+/** Also matches the "(imported)" copy an earlier import made, so a re-import reuses it. */
+private fun ImportanceLabel.matches(backup: BackupImportanceLabel) =
+    (name == backup.name || (defaultType == null && name == backup.name + IMPORTED_SUFFIX)) &&
+        shouldRemind == backup.shouldRemind &&
+        isCritical == backup.isCritical &&
+        isAlarm == backup.isAlarm &&
+        hasFollowUps == backup.hasFollowUps &&
+        followUpCount == backup.followUpCount &&
+        followUpIntervalMinutes == backup.followUpIntervalMinutes &&
+        criticalAfterFollowUp == backup.criticalAfterFollowUp &&
+        alarmAfterFollowUp == backup.alarmAfterFollowUp
+
 private fun BackupImportanceLabel.toEntity(name: String = this.name) = ImportanceLabel(
     name = name,
     shouldRemind = shouldRemind,
@@ -430,6 +431,10 @@ private fun BackupMedication.toEntity(importanceLabelId: Int) = Medication(
     cycleHasPlacebos = cycleHasPlacebos ?: false,
     cycleStartDate = cycleStartDate?.let { parseLocalDate(it) },
     timeZoneMode = timeZoneMode?.let { parseTimeZoneMode(it) } ?: TimeZoneMode.LOCAL,
+    anchorTimeZone = anchorTimeZone,
+    bubbleManualLayout = bubbleManualLayout,
+    bubbleFlowDirection = bubbleFlowDirection?.let { runCatching { BubbleFlowDirection.valueOf(it) }.getOrNull() }
+        ?: BubbleFlowDirection.LTR_TOP_BOTTOM,
     unloggedDoseAction = unloggedDoseAction?.let { parseUnloggedDoseAction(it) } ?: UnloggedDoseAction.SKIP,
 )
 

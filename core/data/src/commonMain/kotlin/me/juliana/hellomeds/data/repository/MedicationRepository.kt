@@ -49,6 +49,22 @@ class MedicationRepository(
         reconciler.reconcile()
     }
 
+    /**
+     * Applies [change] to the stored row. The edit screen can stay open while doses are logged
+     * and stock changes, so saving a snapshot would write those fields back with old values.
+     */
+    suspend fun edit(medicationId: Int, change: (Medication) -> Medication) = withContext(NonCancellable) {
+        val existing = medicationDao.getByIdSync(medicationId) ?: return@withContext
+        if (change(existing).projectionDiffersFrom(existing)) {
+            val scheduleIds = scheduleDao.getByMedicationId(medicationId).first().map { it.id }
+            resolver.redefine(scheduleIds)
+        }
+        // Read again, because the resolver may have written stock while redefining.
+        val latest = medicationDao.getByIdSync(medicationId) ?: return@withContext
+        medicationDao.update(change(latest))
+        reconciler.reconcile()
+    }
+
     suspend fun delete(medication: Medication) {
         medicationDao.delete(medication)
         compactDisplayOrder()

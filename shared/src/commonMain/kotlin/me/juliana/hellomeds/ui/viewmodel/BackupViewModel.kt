@@ -3,6 +3,13 @@
 
 package me.juliana.hellomeds.ui.viewmodel
 
+import me.juliana.hellomeds.shared.Res
+import me.juliana.hellomeds.shared.backup_error_export_failed
+import me.juliana.hellomeds.shared.backup_error_import_failed
+import me.juliana.hellomeds.shared.backup_error_invalid_file
+import me.juliana.hellomeds.shared.backup_error_read_failed
+import me.juliana.hellomeds.shared.backup_error_save_failed
+import org.jetbrains.compose.resources.getString
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -166,13 +173,21 @@ class BackupViewModel(
                 )
                 onResult(result, outputBytes)
             } catch (e: Exception) {
-                val result = ExportResult.Error(e.message ?: "Export failed")
+                val result = ExportResult.Error(getString(Res.string.backup_error_export_failed))
                 _exportState.value = _exportState.value.copy(
                     isExporting = false,
                     exportResult = result,
                 )
                 onResult(result, null)
             }
+        }
+    }
+
+    fun onFileSaveFailed() {
+        viewModelScope.launch {
+            _exportState.value = _exportState.value.copy(
+                exportResult = ExportResult.Error(getString(Res.string.backup_error_save_failed)),
+            )
         }
     }
 
@@ -221,8 +236,14 @@ class BackupViewModel(
                 val jsonString = rawBytes.decodeToString()
                 proceedWithJson(jsonString)
             } catch (e: Exception) {
-                _importState.value = ImportUiState.Error(e.message ?: "Failed to read file")
+                _importState.value = ImportUiState.Error(getString(Res.string.backup_error_read_failed))
             }
+        }
+    }
+
+    fun onFileUnreadable() {
+        viewModelScope.launch {
+            _importState.value = ImportUiState.Error(getString(Res.string.backup_error_read_failed))
         }
     }
 
@@ -242,7 +263,7 @@ class BackupViewModel(
             } catch (_: BadPassphraseException) {
                 _importState.value = current.copy(wrongPassphrase = true)
             } catch (e: Exception) {
-                _importState.value = ImportUiState.Error(e.message ?: "Decryption failed")
+                _importState.value = ImportUiState.Error(getString(Res.string.backup_error_read_failed))
             }
         }
     }
@@ -250,7 +271,7 @@ class BackupViewModel(
     private suspend fun proceedWithJson(jsonString: String) {
         val backupResult = withContext(Dispatchers.Default) { importService.parseBackup(jsonString) }
         val backup = backupResult.getOrElse { e ->
-            _importState.value = ImportUiState.Error("Invalid backup file: ${e.message}")
+            _importState.value = ImportUiState.Error(getString(Res.string.backup_error_invalid_file))
             return
         }
 
@@ -290,7 +311,7 @@ class BackupViewModel(
                 )
                 _importState.value = ImportUiState.Success(result)
             } catch (e: Exception) {
-                _importState.value = ImportUiState.Error(e.message ?: "Import failed")
+                _importState.value = ImportUiState.Error(getString(Res.string.backup_error_import_failed))
             }
         }
     }

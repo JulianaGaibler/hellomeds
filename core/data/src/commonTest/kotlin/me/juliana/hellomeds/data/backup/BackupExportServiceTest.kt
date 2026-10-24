@@ -37,7 +37,7 @@ class BackupExportServiceTest {
         scheduleDao = FakeScheduleDao()
         historyDao = FakeHistoryDao()
         stockAdjDao = FakeStockAdjustmentDao()
-        service = BackupExportService(medDao, labelDao, scheduleDao, historyDao, stockAdjDao)
+        service = BackupExportService(FakeTransactionRunner(), medDao, labelDao, scheduleDao, historyDao, stockAdjDao)
     }
 
     private fun label(id: Int, name: String) = ImportanceLabel(

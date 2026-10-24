@@ -52,6 +52,25 @@ class ScheduleProjectorTest {
     // --- Interval frequency ---
 
     @Test
+    fun interval_createdEastOfDeviceZone_keepsDoseDays() {
+        val berlin = TimeZone.of("Europe/Berlin")
+        val newYork = TimeZone.of("America/New_York")
+        val start = LocalDate(2025, 3, 1)
+        val schedule = createSchedule(
+            startDate = start.atStartOfDayIn(berlin).toEpochMilliseconds(),
+            frequencyType = FrequencyType.INTERVAL,
+            frequencyValue = 2,
+            timeOfDay = "08:00",
+            originTimeZone = berlin.id,
+        )
+
+        val events = projector.generateEventsForSchedule(schedule, start, LocalDate(2025, 3, 7), newYork)
+
+        val days = events.map { Instant.fromEpochMilliseconds(it.scheduledTime).toLocalDateTime(newYork).date }
+        assertEquals(listOf(1, 3, 5, 7), days.map { it.day })
+    }
+
+    @Test
     fun interval_daily_generatesCorrectEventCount() {
         val from = LocalDate(2025, 3, 1)
         val to = LocalDate(2025, 3, 7)

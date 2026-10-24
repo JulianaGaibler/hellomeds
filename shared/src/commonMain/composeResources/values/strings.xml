@@ -1248,6 +1248,16 @@
         <item quantity="one">HelloMeds has not updated your dose history for %1$d day. Unlogged doses in that time will be marked as skipped or taken.</item>
         <item quantity="other">HelloMeds has not updated your dose history for %1$d days. Unlogged doses in that time will be marked as skipped or taken.</item>
     </plurals>
+    <string name="tracking_error_save_log">Couldn't save the medication log</string>
+    <string name="tracking_error_mark_taken">Couldn't mark the dose as taken</string>
+    <string name="tracking_error_mark_skipped">Couldn't mark the dose as skipped</string>
+    <string name="tracking_error_update_log">Couldn't update the medication log</string>
+    <string name="tracking_error_delete_log">Couldn't delete the medication log</string>
+    <string name="backup_error_save_failed">Couldn't save the backup file</string>
+    <string name="backup_error_read_failed">Couldn't read that file. It may be empty, too large or unavailable.</string>
+    <string name="backup_error_export_failed">Couldn't create the backup</string>
+    <string name="backup_error_invalid_file">This isn't a valid HelloMeds backup</string>
+    <string name="backup_error_import_failed">The import failed and nothing was changed</string>
     <string name="reliability_banner_backfill_update">Update</string>
     <string name="reliability_banner_backfill_ignore">Ignore</string>
     <string name="unlogged_dose_section_title">Unlogged doses</string>

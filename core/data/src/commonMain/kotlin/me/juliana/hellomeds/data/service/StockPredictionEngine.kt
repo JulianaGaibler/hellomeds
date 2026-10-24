@@ -453,7 +453,7 @@ class StockPredictionEngine(
                 when (schedule.frequencyType) {
                     FrequencyType.INTERVAL -> {
                         val startDate = Instant.fromEpochMilliseconds(schedule.startDate)
-                            .toLocalDateTime(tz).date
+                            .toLocalDateTime(schedule.dateZone(tz)).date
                         val daysSince = startDate.daysUntil(date)
                         daysSince >= 0 && daysSince % schedule.frequencyValue == 0
                     }

@@ -245,13 +245,14 @@ class ScheduleProjector(
     ): List<ProjectedEvent> {
         val timeOfDay = LocalTime.parse(schedule.timeOfDay)
 
+        val dateZone = schedule.dateZone(tz)
         val scheduleStart = Instant.fromEpochMilliseconds(schedule.startDate)
-            .toLocalDateTime(tz)
+            .toLocalDateTime(dateZone)
             .date
 
         val scheduleEnd = schedule.endDate?.let {
             Instant.fromEpochMilliseconds(it)
-                .toLocalDateTime(tz)
+                .toLocalDateTime(dateZone)
                 .date
         }
 

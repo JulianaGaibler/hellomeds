@@ -654,6 +654,16 @@
 		<item quantity="one">HelloMeds hat deinen Einnahmeverlauf seit %1$d Tag nicht aktualisiert. Nicht protokollierte Einnahmen aus dieser Zeit werden als übersprungen oder eingenommen markiert.</item>
 		<item quantity="other">HelloMeds hat deinen Einnahmeverlauf seit %1$d Tagen nicht aktualisiert. Nicht protokollierte Einnahmen aus dieser Zeit werden als übersprungen oder eingenommen markiert.</item>
 	</plurals>
+	<string name="tracking_error_save_log">Der Einnahmeeintrag konnte nicht gespeichert werden</string>
+	<string name="tracking_error_mark_taken">Die Einnahme konnte nicht als eingenommen markiert werden</string>
+	<string name="tracking_error_mark_skipped">Die Einnahme konnte nicht als übersprungen markiert werden</string>
+	<string name="tracking_error_update_log">Der Einnahmeeintrag konnte nicht aktualisiert werden</string>
+	<string name="tracking_error_delete_log">Der Einnahmeeintrag konnte nicht gelöscht werden</string>
+	<string name="backup_error_save_failed">Die Backup-Datei konnte nicht gespeichert werden</string>
+	<string name="backup_error_read_failed">Diese Datei konnte nicht gelesen werden. Sie ist vielleicht leer, zu groß oder nicht verfügbar.</string>
+	<string name="backup_error_export_failed">Das Backup konnte nicht erstellt werden</string>
+	<string name="backup_error_invalid_file">Das ist keine gültige HelloMeds-Sicherung</string>
+	<string name="backup_error_import_failed">Der Import ist fehlgeschlagen und es wurde nichts geändert</string>
 	<string name="reliability_banner_backfill_update">Aktualisieren</string>
 	<string name="reliability_banner_backfill_ignore">Ignorieren</string>
 	<string name="unlogged_dose_section_title">Nicht protokollierte Einnahmen</string>

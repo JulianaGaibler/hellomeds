@@ -196,6 +196,20 @@ class BackupImportServiceTest {
     }
 
     @Test
+    fun executeImport_conflictingLabel_importedCopyIsReusedAndNotDefault() = runTest {
+        labelDao.seed(existingLabel(1, "Critical", isCritical = true).copy(defaultType = "CRITICAL_FOLLOW_UPS"))
+        val data = backup(labels = listOf(label("Critical", isCritical = false)))
+
+        service.executeImport(data, emptyMap())
+        val second = service.executeImport(data, emptyMap())
+
+        assertEquals(2, labelDao.labels.size)
+        assertEquals(0, second.labelsCreated)
+        val copy = labelDao.labels.single { it.name == "Critical (imported)" }
+        assertNull(copy.defaultType)
+    }
+
+    @Test
     fun analyzeImport_detectsDuplicateMedication() = runTest {
         labelDao.seed(existingLabel(1, "Silent"))
         medDao.seed(existingMed(1, "Ibuprofen", displayName = "My Ibuprofen"))
@@ -736,6 +750,23 @@ class BackupImportServiceTest {
             listOf<ImportWarning>(ImportWarning.InvalidScheduleTime(1, "8:00")),
             analysis.medications.single().validationWarnings,
         )
+    }
+
+    @Test
+    fun executeImport_keepsFixedTimeZoneAnchor() = runTest {
+        labelDao.seed(existingLabel(1, "Silent"))
+
+        service.executeImport(
+            backup(
+                labels = listOf(label("Silent")),
+                medications = listOf(
+                    med("Aspirin").copy(timeZoneMode = "FIXED", anchorTimeZone = "Asia/Tokyo"),
+                ),
+            ),
+            decisions = emptyMap(),
+        )
+
+        assertEquals("Asia/Tokyo", medDao.medications.single().anchorTimeZone)
     }
 
     @Test

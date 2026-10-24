@@ -46,6 +46,9 @@ data class BackupMedication(
     val cycleStartDate: String? = null,
     // Timezone handling
     val timeZoneMode: String? = null, // "LOCAL" or "FIXED"; null treated as LOCAL
+    val anchorTimeZone: String? = null,
+    val bubbleManualLayout: String? = null,
+    val bubbleFlowDirection: String? = null,
     val unloggedDoseAction: String? = null, // "SKIP" or "TAKE"; null treated as SKIP
     val stock: BackupStockSettings? = null,
     val schedules: List<BackupSchedule> = emptyList(),

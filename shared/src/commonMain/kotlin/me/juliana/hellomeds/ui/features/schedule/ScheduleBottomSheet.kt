@@ -161,13 +161,14 @@ fun ScheduleBottomSheet(
 
     var dose by remember(schedule) { mutableDoubleStateOf(schedule?.dose ?: 1.0) }
 
+    val dateZone = schedule?.dateZone() ?: TimeZone.currentSystemDefault()
     val initialStartDate = schedule?.startDate?.let {
-        Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.currentSystemDefault()).date
+        Instant.fromEpochMilliseconds(it).toLocalDateTime(dateZone).date
     } ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     var startDate by remember(schedule) { mutableStateOf(initialStartDate) }
 
     val initialEndDate = schedule?.endDate?.let {
-        Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.currentSystemDefault()).date
+        Instant.fromEpochMilliseconds(it).toLocalDateTime(dateZone).date
     }
     var endDate by remember(schedule) { mutableStateOf(initialEndDate) }
 
@@ -219,9 +220,9 @@ fun ScheduleBottomSheet(
     fun saveSchedule() {
         val timeOfDay = selectedTime.toString()
         val startDateMillis =
-            startDate.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+            startDate.atStartOfDayIn(dateZone).toEpochMilliseconds()
         val endDateMillis =
-            endDate?.atStartOfDayIn(TimeZone.currentSystemDefault())?.toEpochMilliseconds()
+            endDate?.atStartOfDayIn(dateZone)?.toEpochMilliseconds()
 
         val updatedSchedule = Schedule(
             id = schedule?.id ?: 0,

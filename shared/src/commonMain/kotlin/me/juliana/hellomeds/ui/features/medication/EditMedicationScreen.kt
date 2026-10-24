@@ -82,7 +82,7 @@ import org.jetbrains.compose.resources.stringResource
 fun EditMedicationScreen(
     draft: EditMedicationDraft,
     onNavigateBack: () -> Unit,
-    onSave: (Medication) -> Unit,
+    onSave: ((Medication) -> Medication) -> Unit,
     onOpenTimeZone: () -> Unit,
     onOpenCycle: () -> Unit,
     modifier: Modifier = Modifier,
@@ -102,7 +102,7 @@ fun EditMedicationScreen(
                 actions = {
                     Button(
                         onClick = {
-                            onSave(draft.toMedication())
+                            onSave(draft::applyTo)
                             onNavigateBack()
                         },
                         enabled = draft.canSave,

@@ -21,6 +21,7 @@ actual object BackupEncryption {
     private const val GCM_TAG_LENGTH = 128
     private const val PBKDF2_ITERATIONS = 210_000
     private const val HEADER_SIZE = 8 + SALT_LENGTH + IV_LENGTH
+    private const val TAG_BYTES = GCM_TAG_LENGTH / 8
 
     actual fun encrypt(json: String, passphrase: String): ByteArray {
         val random = SecureRandom()
@@ -43,7 +44,7 @@ actual object BackupEncryption {
 
     actual fun decrypt(data: ByteArray, passphrase: String): String {
         if (!isEncrypted(data)) throw IllegalArgumentException("Not an encrypted HelloMeds backup")
-        if (data.size <= HEADER_SIZE) throw IllegalArgumentException("Encrypted file too short")
+        if (data.size < HEADER_SIZE + TAG_BYTES) throw IllegalArgumentException("Encrypted file too short")
 
         val salt = data.copyOfRange(MAGIC.size, MAGIC.size + SALT_LENGTH)
         val iv = data.copyOfRange(MAGIC.size + SALT_LENGTH, HEADER_SIZE)

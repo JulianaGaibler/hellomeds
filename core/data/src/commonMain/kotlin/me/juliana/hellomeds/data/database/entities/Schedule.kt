@@ -8,6 +8,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import kotlinx.datetime.TimeZone
 import me.juliana.hellomeds.data.model.enums.FrequencyType
 import me.juliana.hellomeds.data.util.currentTimeMillis
 import me.juliana.hellomeds.data.util.startOfDayMillis
@@ -72,6 +73,10 @@ data class Schedule(
     fun isManuallyArchived(): Boolean {
         return isArchived
     }
+
+    /** The zone `startDate` and `endDate` were stored in as local midnight. */
+    fun dateZone(fallback: TimeZone = TimeZone.currentSystemDefault()): TimeZone =
+        originTimeZone?.let { runCatching { TimeZone.of(it) }.getOrNull() } ?: fallback
 
     /**
      * True when changing from [old] to this alters which past instants this schedule

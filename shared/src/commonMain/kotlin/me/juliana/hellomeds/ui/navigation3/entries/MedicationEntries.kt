@@ -216,9 +216,7 @@ fun EditMedicationScreenEntry(
             draft = editViewModel.draftFor(med),
             modifier = Modifier.fillMaxSize(),
             onNavigateBack = onNavigateBack,
-            onSave = { updatedMedication ->
-                medicationViewModel.updateMedication(updatedMedication)
-            },
+            onSave = { edit -> medicationViewModel.editMedication(med.id, edit) },
             onOpenTimeZone = onOpenTimeZone,
             onOpenCycle = onOpenCycle,
         )
