@@ -3,6 +3,7 @@
 
 package me.juliana.hellomeds.ui
 
+import me.juliana.hellomeds.data.service.UnloggedDoseResolver
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -80,6 +81,7 @@ fun HelloMedsApp(
     // not the banner — see ReliabilityBanner for the early-return on that.
     val reliabilityProvider: ReliabilityStateProvider = koinInject()
     val platformNavigator: PlatformNavigator = koinInject()
+    val resolver: UnloggedDoseResolver = koinInject()
     val reliabilityFlow = remember(reliabilityProvider) { reliabilityProvider.state() }
     val reliabilityState by reliabilityFlow.collectAsStateWithLifecycle(
         initial = ReliabilityState.Healthy,
@@ -101,6 +103,8 @@ fun HelloMedsApp(
                     onDismissAwaySummary = {
                         reliabilityScope.launch { reliabilityProvider.dismissAwaySummary() }
                     },
+                    onConfirmBackfill = { reliabilityScope.launch { resolver.resolve(confirmed = true) } },
+                    onIgnoreBackfill = { reliabilityScope.launch { resolver.discardBackfill() } },
                 )
                 // The banner already pads for the status bar, so screens must not pad for it again.
                 Box(

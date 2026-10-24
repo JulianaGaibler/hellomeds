@@ -67,6 +67,20 @@ class MedicationHistoryRepositoryTest {
         )
     }
 
+    @Test
+    fun markAsSkipped_overATakenRecord_clearsDoseAndTakenTime() = runTest {
+        medicationDao.insert(createMedication(id = 1, stockTrackingEnabled = true))
+        val event = createProjectedEvent(medicationId = 1, scheduleId = 10, scheduledTime = 1_000_000L, dose = 1.0)
+        repository.markAsTaken(event, actualDose = 1.0, takenTime = 2_000_000L)
+
+        repository.markAsSkipped(event)
+
+        val record = historyDao.getAllByCompositeKey(1, 10, 1_000_000L).single()
+        assertEquals(MedicationHistory.STATUS_SKIPPED, record.status)
+        assertEquals(null, record.actualDose)
+        assertEquals(null, record.takenTime)
+    }
+
     // "Double Tap" — duplicate insert becomes update, stock only decremented once.
     @Test
     fun markAsTaken_calledTwice_createsOnlyOneRecord() = runTest {

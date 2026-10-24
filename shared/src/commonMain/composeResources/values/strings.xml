@@ -1244,6 +1244,12 @@
         <item quantity="other">While you were away, %1$d unlogged doses were logged automatically.</item>
     </plurals>
     <string name="reliability_banner_away_action">Dismiss</string>
+    <plurals name="reliability_banner_backfill_message">
+        <item quantity="one">HelloMeds has not updated your dose history for %1$d day. Unlogged doses in that time will be marked as skipped or taken.</item>
+        <item quantity="other">HelloMeds has not updated your dose history for %1$d days. Unlogged doses in that time will be marked as skipped or taken.</item>
+    </plurals>
+    <string name="reliability_banner_backfill_update">Update</string>
+    <string name="reliability_banner_backfill_ignore">Ignore</string>
     <string name="unlogged_dose_section_title">Unlogged doses</string>
     <string name="unlogged_dose_action_skip">Mark as skipped</string>
     <string name="unlogged_dose_action_take">Mark as taken</string>

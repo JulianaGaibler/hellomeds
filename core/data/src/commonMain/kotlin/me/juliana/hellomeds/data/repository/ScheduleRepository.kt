@@ -44,8 +44,9 @@ class ScheduleRepository(
         // From the start of the creation day, so an earlier dose today still resolves.
         val resolveFrom = startOfDayMillis(timeProvider.nowMillis())
         val snapshot = stockAnchor.snapshotBeforeRateChange(schedule.medicationId)
-        val id = scheduleDao.insert(schedule.copy(resolveFrom = resolveFrom))
+        // Lowering the watermark first is harmless if the insert never happens.
         resolver.onScheduleCreated(resolveFrom)
+        val id = scheduleDao.insert(schedule.copy(resolveFrom = resolveFrom))
         stockAnchor.reanchorAfterRateChange(schedule.medicationId, snapshot)
         reconciler.reconcile()
         id
@@ -87,9 +88,11 @@ class ScheduleRepository(
     suspend fun unarchive(scheduleId: Int) = withContext(NonCancellable) {
         val medicationId = scheduleDao.getById(scheduleId).first()?.medicationId
         val snapshot = if (medicationId != null) stockAnchor.snapshotBeforeRateChange(medicationId) else null
-        scheduleDao.unarchive(scheduleId)
         // The archived span was never reminded about, so it must not resolve as unlogged.
-        resolver.startFresh(listOf(scheduleId))
+        resolver.startFreshAfter {
+            scheduleDao.unarchive(scheduleId)
+            listOf(scheduleId)
+        }
         if (medicationId != null) stockAnchor.reanchorAfterRateChange(medicationId, snapshot)
         reconciler.reconcile()
     }

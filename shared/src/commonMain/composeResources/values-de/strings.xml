@@ -650,6 +650,12 @@
 		<item quantity="other">Während deiner Abwesenheit wurden %1$d nicht protokollierte Einnahmen automatisch erfasst.</item>
 	</plurals>
 	<string name="reliability_banner_away_action">Schließen</string>
+	<plurals name="reliability_banner_backfill_message">
+		<item quantity="one">HelloMeds hat deinen Einnahmeverlauf seit %1$d Tag nicht aktualisiert. Nicht protokollierte Einnahmen aus dieser Zeit werden als übersprungen oder eingenommen markiert.</item>
+		<item quantity="other">HelloMeds hat deinen Einnahmeverlauf seit %1$d Tagen nicht aktualisiert. Nicht protokollierte Einnahmen aus dieser Zeit werden als übersprungen oder eingenommen markiert.</item>
+	</plurals>
+	<string name="reliability_banner_backfill_update">Aktualisieren</string>
+	<string name="reliability_banner_backfill_ignore">Ignorieren</string>
 	<string name="unlogged_dose_section_title">Nicht protokollierte Einnahmen</string>
 	<string name="unlogged_dose_action_skip">Als übersprungen markieren</string>
 	<string name="unlogged_dose_action_take">Als eingenommen markieren</string>

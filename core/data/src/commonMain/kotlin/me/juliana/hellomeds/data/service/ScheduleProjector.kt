@@ -36,7 +36,8 @@ import kotlin.time.Instant
  *
  * Timezone-aware: each schedule's events are projected using the timezone resolved by
  * [ScheduleTimeZoneResolver], either system default (LOCAL mode) or the schedule's
- * origin timezone (FIXED mode).
+ * origin timezone (FIXED mode). Callers can pass the device zone to project the past as the
+ * user lived it, which the resolver needs after the device zone changed.
  *
  * Unlogged events before `Schedule.resolveFrom` that are older than
  * [UnloggedDoseResolver.RESOLVE_AFTER_MS] are left out. The resolver never settles them, so
@@ -112,6 +113,7 @@ class ScheduleProjector(
         endTime: Long,
         history: List<MedicationHistory>,
         medications: Map<Int, Medication> = emptyMap(),
+        deviceZone: TimeZone = TimeZone.currentSystemDefault(),
     ): List<ProjectedEvent> {
         // Index history by (scheduleId, scheduledTime) for fast lookup
         val historyIndex = history
@@ -130,7 +132,7 @@ class ScheduleProjector(
             if (schedule.isArchived) continue
 
             val medication = medications[schedule.medicationId]
-            val tz = resolveAndCache(medication, schedule, tzCache)
+            val tz = resolveAndCache(medication, schedule, tzCache, deviceZone)
 
             // Convert time range to local dates in the schedule's timezone,
             // with +-1 day buffer to handle cross-timezone date boundaries
@@ -169,9 +171,9 @@ class ScheduleProjector(
             if (medication != null) {
                 val schedule = schedules.find { it.id == event.scheduleId }
                 val tz = if (schedule != null) {
-                    resolveAndCache(medication, schedule, tzCache)
+                    resolveAndCache(medication, schedule, tzCache, deviceZone)
                 } else {
-                    TimeZone.currentSystemDefault()
+                    deviceZone
                 }
                 applyCycleMask(event, medication, tz)
             } else {
@@ -189,8 +191,9 @@ class ScheduleProjector(
         medication: Medication?,
         schedule: Schedule,
         cache: MutableMap<String, TimeZone>,
+        deviceZone: TimeZone,
     ): TimeZone {
-        val tz = ScheduleTimeZoneResolver.resolve(medication, schedule)
+        val tz = ScheduleTimeZoneResolver.resolve(medication, schedule, deviceZone)
         val id = tz.id
         return cache.getOrPut(id) { tz }
     }

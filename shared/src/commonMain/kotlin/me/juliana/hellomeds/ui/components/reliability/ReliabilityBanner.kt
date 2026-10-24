@@ -6,6 +6,9 @@ package me.juliana.hellomeds.ui.components.reliability
 import org.jetbrains.compose.resources.pluralStringResource
 import me.juliana.hellomeds.shared.reliability_banner_away_action
 import me.juliana.hellomeds.shared.reliability_banner_away_message
+import me.juliana.hellomeds.shared.reliability_banner_backfill_ignore
+import me.juliana.hellomeds.shared.reliability_banner_backfill_message
+import me.juliana.hellomeds.shared.reliability_banner_backfill_update
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -65,6 +68,8 @@ fun ReliabilityBanner(
     onFixExactAlarms: () -> Unit,
     onDismissDatabaseRecovered: () -> Unit,
     onDismissAwaySummary: () -> Unit,
+    onConfirmBackfill: () -> Unit,
+    onIgnoreBackfill: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (!state.showsBanner()) return
@@ -73,7 +78,8 @@ fun ReliabilityBanner(
     // The first row sits under the status bar, so the column paints that row's color behind it.
     val topColor = when {
         degraded.databaseRecovered || degraded.exactAlarmsDisabled -> MaterialTheme.colorScheme.errorContainer
-        degraded.awaySummary != null -> MaterialTheme.colorScheme.secondaryContainer
+        degraded.backfillPending != null || degraded.awaySummary != null ->
+            MaterialTheme.colorScheme.secondaryContainer
         else -> MaterialTheme.colorScheme.tertiaryContainer
     }
     Column(
@@ -131,6 +137,41 @@ fun ReliabilityBanner(
                 },
             )
         }
+        degraded.backfillPending?.let { pending ->
+            BannerRow(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                icon = { tint ->
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(20.dp),
+                    )
+                },
+                message = pluralStringResource(
+                    Res.plurals.reliability_banner_backfill_message,
+                    pending.days,
+                    pending.days,
+                ),
+                action = {
+                    Row {
+                        TextButton(onClick = onIgnoreBackfill) {
+                            Text(
+                                text = stringResource(Res.string.reliability_banner_backfill_ignore),
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            )
+                        }
+                        TextButton(onClick = onConfirmBackfill) {
+                            Text(
+                                text = stringResource(Res.string.reliability_banner_backfill_update),
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            )
+                        }
+                    }
+                },
+            )
+        }
         degraded.awaySummary?.let { summary ->
             BannerRow(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -183,7 +224,8 @@ fun ReliabilityState.showsBanner(): Boolean {
     return degraded.exactAlarmsDisabled ||
         degraded.iosNotificationBudgetExhausted ||
         degraded.databaseRecovered ||
-        degraded.awaySummary != null
+        degraded.awaySummary != null ||
+        degraded.backfillPending != null
 }
 
 @Composable

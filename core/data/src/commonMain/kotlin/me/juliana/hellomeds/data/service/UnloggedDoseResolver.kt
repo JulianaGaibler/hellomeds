@@ -50,14 +50,18 @@ import me.juliana.hellomeds.data.util.TransactionRunner
  * - Near-match: an event is skipped if any history row of the same schedule lies within
  *   ±[NEAR_MATCH_MS]. This is safe because a schedule's events are at least about 23h apart.
  *
+ * A gap of more than [MAX_UNATTENDED_SPAN_MS] since the previous run is not settled on its own,
+ * because a device clock set far ahead looks the same as a long absence. The user confirms it
+ * with `resolve(confirmed = true)` or drops it with [discardBackfill].
+ *
  * If the watermark is ahead of now, the device clock went back. The run is skipped and
  * nothing is deleted, because that case can't be told apart from an earlier forward jump.
  *
  * Inserts use the dedup index with IGNORE, so a dose the user logs concurrently wins.
  *
  * Medications set to [UnloggedDoseAction.TAKE] get `AUTO_TAKEN` rows that deduct stock.
- * Doses at or before the latest stock recount, refill or initial stock entry are not
- * deducted, because that entry already reflects them.
+ * Doses at or before the latest stock recount or initial stock entry are not deducted,
+ * because that entry already reflects them. A refill only adds stock, so it never counts.
  */
 class UnloggedDoseResolver(
     private val projector: ScheduleProjector,
@@ -85,23 +89,44 @@ class UnloggedDoseResolver(
         /** Tolerated clock disagreement before a run is treated as a backwards clock jump. */
         const val CLOCK_SKEW_MS: Long = 5 * 60 * 1000L
 
+        /** A gap longer than this since the last run needs the user's confirmation before it is settled. */
+        const val MAX_UNATTENDED_SPAN_MS: Long = 30L * 24 * 60 * 60 * 1000L
+
+        private const val DAY_MS: Long = 24L * 60 * 60 * 1000L
+
         /** Runs covering less than this are routine and do not raise the "while you were away" banner. */
         const val AWAY_SUMMARY_MIN_SPAN_MS: Long = 3L * 24 * 60 * 60 * 1000L
     }
 
     private val mutex = Mutex()
 
-    /** Resolve every eligible dose since the watermark. Safe to call from any trigger. */
-    suspend fun resolve(): ResolveResult = mutex.withLock {
-        withContext(Dispatchers.Default) { resolveLocked(timeProvider.nowMillis()) }
+    /**
+     * Resolve every eligible dose since the watermark. Safe to call from any trigger.
+     * A gap longer than [MAX_UNATTENDED_SPAN_MS] is left alone and reported through the
+     * state store until [confirmed] is true or [discardBackfill] runs.
+     */
+    suspend fun resolve(confirmed: Boolean = false): ResolveResult = mutex.withLock {
+        withContext(Dispatchers.Default) { resolveLocked(timeProvider.nowMillis(), confirmed) }
+    }
+
+    /**
+     * The user chose not to settle a long gap. Everything before now stays untouched and the
+     * projector hides it, as after [startFresh].
+     */
+    suspend fun discardBackfill() = mutex.withLock {
+        val now = timeProvider.nowMillis()
+        val scheduleIds = scheduleDao.getNonArchived().map { it.id }
+        if (scheduleIds.isNotEmpty()) scheduleDao.bumpResolveFrom(scheduleIds, now)
+        state.setWatermark(now)
+        state.setBackfillPendingDays(null)
     }
 
     /**
      * Call before a change that re-projects these schedules' past (timing edit, medication
-     * timezone or cycle edit). Resolves the old definition's still-pending doses from the
-     * last 24h, which could no longer be matched afterwards, then bumps `resolveFrom` to
-     * now. Returns the bump instant. Callers that write the Schedule entity themselves must
-     * carry it, or their update overwrites the bump.
+     * timezone or cycle edit). Resolves what is already past its 24h window under the old
+     * definition, then bumps `resolveFrom` to now. Doses newer than that stay pending, and
+     * the projector hides them once they settle. Returns the bump instant. Callers that
+     * write the Schedule entity themselves must carry it, or their update overwrites the bump.
      */
     suspend fun redefine(scheduleIds: Collection<Int>): Long = mutex.withLock {
         withContext(Dispatchers.Default) {
@@ -122,6 +147,18 @@ class UnloggedDoseResolver(
         now
     }
 
+    /**
+     * Runs [block] under the resolver lock, then starts the schedules it returns fresh from
+     * now. For changes that make past events appear that the user was never reminded about
+     * (unarchiving), so no resolver run can see the schedules between the change and the bump.
+     */
+    suspend fun startFreshAfter(block: suspend () -> List<Int>): Long = mutex.withLock {
+        val scheduleIds = block()
+        val now = timeProvider.nowMillis()
+        if (scheduleIds.isNotEmpty()) scheduleDao.bumpResolveFrom(scheduleIds, now)
+        now
+    }
+
     /** Runs [block] while no resolve, redefine or startFresh can run. */
     suspend fun <R> runExclusive(block: suspend () -> R): R = mutex.withLock { block() }
 
@@ -135,30 +172,46 @@ class UnloggedDoseResolver(
         if (resolveFrom < watermark) state.setWatermark(resolveFrom)
     }
 
-    private suspend fun resolveLocked(now: Long): ResolveResult {
+    private suspend fun resolveLocked(now: Long, confirmed: Boolean = false): ResolveResult {
         val storedWatermark = state.getWatermark()
         if (storedWatermark != null && storedWatermark > now + CLOCK_SKEW_MS) {
             AppLogger.w(TAG, "Watermark $storedWatermark is ahead of now $now — clock went back, skipping run")
             return ResolveResult.EMPTY
         }
+        // The first run is exempt, because it settles the history of an existing install.
+        if (storedWatermark != null && !confirmed && now - storedWatermark > MAX_UNATTENDED_SPAN_MS) {
+            AppLogger.w(TAG, "Gap since $storedWatermark is too long to settle unattended, asking the user")
+            state.setBackfillPendingDays(((now - storedWatermark) / DAY_MS).toInt())
+            return ResolveResult.EMPTY
+        }
 
-        var counts = Counts()
-        counts += handleDeviceTimeZoneChange(now)
+        var counts = handleDeviceTimeZoneChange(now)
+        val walk = walkLocked(now, deviceTimeZone())
+        counts += walk.counts
+        state.setBackfillPendingDays(null)
+        val spanStart = storedWatermark ?: walk.start ?: return finish(counts, spanMs = 0)
+        return finish(counts, spanMs = now - spanStart)
+    }
 
+    private class Walk(val counts: Counts, val start: Long?)
+
+    /** Resolves `[watermark, now)` with the device zone set to [zone]. */
+    private suspend fun walkLocked(now: Long, zone: TimeZone): Walk {
         val schedules = scheduleDao.getNonArchived()
         // First run: from the earliest instant any schedule may resolve. resolveFrom can be
         // 0 for rows written outside ScheduleRepository, and nothing projects before startDate.
-        val start = storedWatermark
+        val start = state.getWatermark()
             ?: schedules.minOfOrNull { maxOf(it.resolveFrom, it.startDate) }
-            ?: return finish(counts, spanMs = 0)
+            ?: return Walk(Counts(), start = null)
         val schedulesById = schedules.associateBy { it.id }
         val medications = medicationDao.getAllSuspend().associateBy { it.id }
 
+        var counts = Counts()
         var cursor = start
         while (cursor < now) {
             val chunkEnd = minOf(cursor + CHUNK_MS, now)
             val history = historyDao.getInTimeRangeSuspend(cursor - NEAR_MATCH_MS, chunkEnd + NEAR_MATCH_MS)
-            val events = projector.projectEventsWithHistory(schedules, cursor, chunkEnd, history, medications)
+            val events = projector.projectEventsWithHistory(schedules, cursor, chunkEnd, history, medications, zone)
             val nearIndex = NearMatchIndex(history)
 
             var oldestHeld: Long? = null
@@ -185,50 +238,42 @@ class UnloggedDoseResolver(
             cursor = chunkEnd
         }
 
-        return finish(counts, spanMs = now - start)
+        return Walk(counts, start)
     }
 
-    private suspend fun redefineLocked(scheduleIds: Set<Int>, now: Long): Counts {
-        if (scheduleIds.isEmpty()) return Counts()
-        val schedules = scheduleDao.getNonArchived().filter { it.id in scheduleIds }
-        val medications = medicationDao.getAllSuspend().associateBy { it.id }
-        val windowStart = now - RESOLVE_AFTER_MS
-        val history = historyDao.getInTimeRangeSuspend(windowStart - NEAR_MATCH_MS, now + NEAR_MATCH_MS)
-        val nearIndex = NearMatchIndex(history)
-        val schedulesById = schedules.associateBy { it.id }
-
-        val toResolve = projector.projectEventsWithHistory(schedules, windowStart, now, history, medications)
-            .filter { event ->
-                event.isPending &&
-                    event.scheduledTime >= (schedulesById[event.scheduleId]?.resolveFrom ?: Long.MAX_VALUE) &&
-                    !nearIndex.hasNear(event)
-            }
-        val counts = write(toResolve, medications)
+    /** Doses newer than the 24h window stay pending, so only `resolveFrom` moves. */
+    private suspend fun redefineLocked(scheduleIds: Set<Int>, now: Long) {
+        if (scheduleIds.isEmpty()) return
         scheduleDao.bumpResolveFrom(scheduleIds.toList(), now)
-        if (counts.written > 0) reconciler.reconcile()
-        checkStock(counts)
-        AppLogger.i(TAG, "Redefined schedules $scheduleIds at $now, pre-resolved ${counts.written}")
-        return counts
+        AppLogger.i(TAG, "Redefined schedules $scheduleIds at $now")
     }
 
     /**
      * Schedules that follow the device timezone re-project their past when it changes.
-     * Treat that as a redefinition of exactly those schedules.
+     * The backlog is settled in the zone the user lived it in first, then those schedules
+     * are redefined for the new zone.
      */
     private suspend fun handleDeviceTimeZoneChange(now: Long): Counts {
-        val currentId = deviceTimeZone().id
+        val current = deviceTimeZone()
         val lastId = state.getLastSeenTimeZoneId()
-        if (lastId == currentId) return Counts()
-        state.setLastSeenTimeZoneId(currentId)
-        if (lastId == null) return Counts() // First run: nothing to compare against.
+        if (lastId == current.id) return Counts()
+        if (lastId == null) { // First run: nothing to compare against.
+            state.setLastSeenTimeZoneId(current.id)
+            return Counts()
+        }
+
+        val previous = runCatching { TimeZone.of(lastId) }.getOrNull()
+        val counts = if (previous != null) walkLocked(now, previous).counts else Counts()
 
         val medications = medicationDao.getAllSuspend().associateBy { it.id }
         val followingDevice = scheduleDao.getNonArchived()
             .filter { followsDeviceTimeZone(medications[it.medicationId], it) }
             .map { it.id }
             .toSet()
-        AppLogger.i(TAG, "Device timezone $lastId → $currentId, redefining ${followingDevice.size} schedules")
-        return redefineLocked(followingDevice, now)
+        AppLogger.i(TAG, "Device timezone $lastId → ${current.id}, redefining ${followingDevice.size} schedules")
+        redefineLocked(followingDevice, now)
+        state.setLastSeenTimeZoneId(current.id)
+        return counts
     }
 
     /** Mirrors [ScheduleTimeZoneResolver]: everything except FIXED mode with a usable zone. */
@@ -275,7 +320,6 @@ class UnloggedDoseResolver(
     private suspend fun latestStockBaseline(medicationId: Int): Long = listOf(
         StockAdjustmentType.INITIAL_STOCK,
         StockAdjustmentType.MANUAL_CORRECTION,
-        StockAdjustmentType.REFILL,
     ).maxOf { type -> stockAdjustmentDao.getLatestByTypeForMedication(medicationId, type.value)?.timestamp ?: 0L }
 
     private suspend fun deductStock(event: ProjectedEvent, historyId: Int) {

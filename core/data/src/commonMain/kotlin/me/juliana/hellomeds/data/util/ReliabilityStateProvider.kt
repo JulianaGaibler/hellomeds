@@ -26,9 +26,11 @@ class ReliabilityStateProvider(
         reliabilityPrefs.exactAlarmsDisabled,
         reliabilityPrefs.iosNotificationBudgetExhausted,
         reliabilityPrefs.databaseRecovered,
-        reliabilityPrefs.awaySummary,
-    ) { missed, exactDisabled, budgetExhausted, dbRecovered, awaySummary ->
-        if (missed.isEmpty() && !exactDisabled && !budgetExhausted && !dbRecovered && awaySummary == null) {
+        combine(reliabilityPrefs.awaySummary, reliabilityPrefs.backfillPending) { away, backfill -> away to backfill },
+    ) { missed, exactDisabled, budgetExhausted, dbRecovered, (awaySummary, backfillPending) ->
+        if (missed.isEmpty() && !exactDisabled && !budgetExhausted && !dbRecovered &&
+            awaySummary == null && backfillPending == null
+        ) {
             ReliabilityState.Healthy
         } else {
             ReliabilityState.Degraded(
@@ -37,6 +39,7 @@ class ReliabilityStateProvider(
                 iosNotificationBudgetExhausted = budgetExhausted,
                 databaseRecovered = dbRecovered,
                 awaySummary = awaySummary,
+                backfillPending = backfillPending,
             )
         }
     }

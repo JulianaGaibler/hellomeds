@@ -16,15 +16,18 @@ import me.juliana.hellomeds.data.model.enums.TimeZoneMode
  */
 object ScheduleTimeZoneResolver {
 
-    fun resolve(medication: Medication?, schedule: Schedule): TimeZone {
+    fun resolve(
+        medication: Medication?,
+        schedule: Schedule,
+        deviceZone: TimeZone = TimeZone.currentSystemDefault(),
+    ): TimeZone {
         if (medication?.timeZoneMode == TimeZoneMode.FIXED) {
             // Prefer medication-level anchor, fall back to schedule-level origin
             val tzId = medication.anchorTimeZone ?: schedule.originTimeZone
             if (tzId != null) {
-                return runCatching { TimeZone.of(tzId) }.getOrNull()
-                    ?: TimeZone.currentSystemDefault()
+                return runCatching { TimeZone.of(tzId) }.getOrNull() ?: deviceZone
             }
         }
-        return TimeZone.currentSystemDefault()
+        return deviceZone
     }
 }

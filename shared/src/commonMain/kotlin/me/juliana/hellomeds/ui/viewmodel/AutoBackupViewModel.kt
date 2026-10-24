@@ -215,7 +215,7 @@ class AutoBackupViewModel(
     }
 
     fun setRetentionCount(count: Int) {
-        viewModelScope.launch { preferences.setBackupRetentionCount(count) }
+        viewModelScope.launch { preferences.setBackupRetentionCount(count.coerceAtLeast(1)) }
     }
 
     fun setMode(mode: BackupDestinationMode) {

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import me.juliana.hellomeds.data.util.AwaySummary
+import me.juliana.hellomeds.data.util.BackfillPending
 
 /**
  * Persistent flags that drive the reliability/recovery surfaces in the UI.
@@ -37,6 +38,9 @@ import me.juliana.hellomeds.data.util.AwaySummary
  *
  * [awaySummary] accumulates the doses `UnloggedDoseResolver` logged after a long absence
  * until the user dismisses the banner with [clearAwaySummary].
+ *
+ * [backfillPending] holds the number of days of history the resolver stopped before, until
+ * the user confirms or ignores them.
  */
 class ReliabilityPreferences(private val dataStore: DataStore<Preferences>) : ResolverStateStore {
 
@@ -51,6 +55,7 @@ class ReliabilityPreferences(private val dataStore: DataStore<Preferences>) : Re
         private val DATABASE_RECOVERED = booleanPreferencesKey("database_recovered")
         private val AWAY_SKIPPED = intPreferencesKey("away_summary_skipped")
         private val AWAY_TAKEN = intPreferencesKey("away_summary_taken")
+        private val BACKFILL_PENDING_DAYS = intPreferencesKey("backfill_pending_days")
     }
 
     /**
@@ -77,6 +82,17 @@ class ReliabilityPreferences(private val dataStore: DataStore<Preferences>) : Re
         val skipped = prefs[AWAY_SKIPPED] ?: 0
         val taken = prefs[AWAY_TAKEN] ?: 0
         if (skipped + taken > 0) AwaySummary(skipped, taken) else null
+    }
+
+    val backfillPending: Flow<BackfillPending?> = dataStore.data.map { prefs ->
+        prefs[BACKFILL_PENDING_DAYS]?.let { BackfillPending(it) }
+    }
+
+    override suspend fun setBackfillPendingDays(days: Int?) {
+        if (dataStore.data.first()[BACKFILL_PENDING_DAYS] == days) return
+        dataStore.edit {
+            if (days == null) it.remove(BACKFILL_PENDING_DAYS) else it[BACKFILL_PENDING_DAYS] = days
+        }
     }
 
     override suspend fun getWatermark(): Long? = dataStore.data.first()[AUTO_RESOLVE_WATERMARK]

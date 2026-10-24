@@ -206,7 +206,7 @@ class UnloggedDoseResolverTest {
         assertEquals(30, autoRows().size, "Second chunk rolled back entirely")
         val watermarkAfterFailure = state.watermark
 
-        resolver().resolve()
+        resolver().resolve(confirmed = true)
         assertEquals(60, autoRows().size)
         assertEquals(60, autoRows().map { it.scheduledTime }.toSet().size, "No duplicates")
         assertTrue(watermarkAfterFailure != null && watermarkAfterFailure <= state.watermark!!)
@@ -272,14 +272,14 @@ class UnloggedDoseResolverTest {
     }
 
     @Test
-    fun redefine_preResolvesOldDefinition_thenBumpsResolveFrom() = runTest {
+    fun redefine_settlesOldDosesButKeepsRecentOnesPending_thenBumpsResolveFrom() = runTest {
         scheduleDao.seed(daily())
         time.nowMs = day(5).toEpochMillis("10:00")
-        // Today's 08:00 dose is only 2h old, so it is not yet eligible on its own.
         val bumpedTo = resolver().redefine(listOf(1))
 
         assertEquals(time.nowMs, bumpedTo)
-        assertTrue(autoRows().any { it.scheduledTime == day(5).toEpochMillis("08:00") })
+        assertTrue(autoRows().any { it.scheduledTime == day(4).toEpochMillis("08:00") })
+        assertTrue(autoRows().none { it.scheduledTime == day(5).toEpochMillis("08:00") }, "2h old, still loggable")
         assertEquals(time.nowMs, scheduleDao.schedules.single().resolveFrom)
     }
 
@@ -297,6 +297,90 @@ class UnloggedDoseResolverTest {
         assertEquals(time.nowMs, local.resolveFrom)
         assertEquals(0L, fixed.resolveFrom)
         assertEquals(deviceZone.id, state.timeZoneId)
+    }
+
+    @Test
+    fun deviceTimeZoneChange_settlesTheBacklogInTheOldZone() = runTest {
+        val auckland = TimeZone.of("Pacific/Auckland")
+        val utc = TimeZone.of("UTC")
+        deviceZone = utc
+        state.timeZoneId = auckland.id
+        scheduleDao.seed(daily())
+        time.nowMs = day(10).toEpochMillis("12:00")
+
+        resolver().resolve()
+
+        val settled = historyDao.history.map { it.scheduledTime }.toSet()
+        (3..7).forEach { d ->
+            assertTrue(day(d).toEpochMillis("08:00", auckland) in settled, "Day $d in the old zone")
+            assertTrue(day(d).toEpochMillis("08:00", utc) !in settled, "Day $d not in the new zone")
+        }
+    }
+
+    @Test
+    fun refill_doesNotStopEarlierUnloggedDosesFromDeductingStock() = runTest {
+        medicationDao.medications.clear()
+        medicationDao.seed(
+            createMedication(id = 1, stockTrackingEnabled = true, trackingPrecision = TrackingPrecision.EXACT)
+                .copy(unloggedDoseAction = UnloggedDoseAction.TAKE),
+        )
+        stockDao.insert(
+            StockAdjustment(
+                medicationId = 1,
+                quantityChange = 30.0,
+                timestamp = day(1).toEpochMillis("00:00"),
+                adjustmentType = StockAdjustmentType.INITIAL_STOCK.value,
+            ),
+        )
+        stockDao.insert(
+            StockAdjustment(
+                medicationId = 1,
+                quantityChange = 30.0,
+                timestamp = day(3).toEpochMillis("10:00"),
+                adjustmentType = StockAdjustmentType.REFILL.value,
+            ),
+        )
+        scheduleDao.seed(daily())
+        time.nowMs = day(6).toEpochMillis("12:00")
+
+        resolver().resolve()
+
+        // Day 3's 08:00 dose came before the refill but still left the old stock.
+        assertEquals(60.0 - 5, stockDao.getCurrentStock(1))
+    }
+
+    @Test
+    fun longGap_waitsForConfirmationBeforeWriting() = runTest {
+        scheduleDao.seed(daily())
+        state.watermark = day(1).toEpochMillis("00:00")
+        time.nowMs = day(45).toEpochMillis("12:00")
+
+        val paused = resolver().resolve()
+
+        assertEquals(ResolveResult.EMPTY, paused)
+        assertTrue(historyDao.history.isEmpty())
+        assertEquals(44, state.backfillPendingDays)
+
+        resolver().resolve(confirmed = true)
+
+        assertEquals(44, autoRows().size)
+        assertEquals(null, state.backfillPendingDays)
+    }
+
+    @Test
+    fun discardingALongGap_hidesItWithoutWritingAnything() = runTest {
+        scheduleDao.seed(daily())
+        state.watermark = day(1).toEpochMillis("00:00")
+        time.nowMs = day(45).toEpochMillis("12:00")
+        resolver().resolve()
+
+        resolver().discardBackfill()
+        resolver().resolve()
+
+        assertTrue(historyDao.history.isEmpty())
+        assertEquals(null, state.backfillPendingDays)
+        assertEquals(time.nowMs, state.watermark)
+        assertEquals(time.nowMs, scheduleDao.schedules.single().resolveFrom)
     }
 
     @Test

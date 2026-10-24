@@ -116,6 +116,10 @@ interface MedicationHistoryDao {
     @Query("UPDATE medication_history SET status = :status, actualDose = :dose, takenTime = :takenTime WHERE id = :id")
     suspend fun updateStatusAndDose(id: Int, status: String, dose: Double, takenTime: Long)
 
+    /** Mark a record skipped, clearing the dose and time it was taken at. */
+    @Query("UPDATE medication_history SET status = :status, actualDose = NULL, takenTime = NULL WHERE id = :id")
+    suspend fun updateStatusToSkipped(id: Int, status: String)
+
     /**
      * Delete a history record (for undo/revert operations).
      */

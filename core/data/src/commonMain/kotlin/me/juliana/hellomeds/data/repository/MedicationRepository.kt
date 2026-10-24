@@ -79,13 +79,14 @@ class MedicationRepository(
      * Uses a transaction to ensure atomic operation
      */
     suspend fun unarchive(medicationId: Int) = withContext(NonCancellable) {
-        val unarchived = transactionRunner.run {
-            medicationDao.unarchive(medicationId)
-            val schedules = scheduleDao.getByMedicationId(medicationId).first()
-            schedules.filter { it.isArchived }.onEach { scheduleDao.unarchive(it.id) }.map { it.id }
-        }
         // The archived span was never reminded about, so it must not resolve as unlogged.
-        resolver.startFresh(unarchived)
+        resolver.startFreshAfter {
+            transactionRunner.run {
+                medicationDao.unarchive(medicationId)
+                val schedules = scheduleDao.getByMedicationId(medicationId).first()
+                schedules.filter { it.isArchived }.onEach { scheduleDao.unarchive(it.id) }.map { it.id }
+            }
+        }
         // Refresh alarms to reschedule alarms for unarchived schedules
         reconciler.reconcile()
     }

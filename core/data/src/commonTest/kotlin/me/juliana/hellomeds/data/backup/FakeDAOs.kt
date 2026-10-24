@@ -332,6 +332,11 @@ class FakeHistoryDao : MedicationHistoryDao {
         }
     }
 
+    override suspend fun updateStatusToSkipped(id: Int, status: String) {
+        val idx = history.indexOfFirst { it.id == id }
+        if (idx >= 0) history[idx] = history[idx].copy(status = status, actualDose = null, takenTime = null)
+    }
+
     override suspend fun deleteById(id: Int) {
         history.removeAll { it.id == id }
     }
@@ -536,6 +541,11 @@ class SnapshotTransactionRunner(
 class FakeResolverState : me.juliana.hellomeds.data.preferences.ResolverStateStore {
     var watermark: Long? = null
     var timeZoneId: String? = null
+    var backfillPendingDays: Int? = null
+
+    override suspend fun setBackfillPendingDays(days: Int?) {
+        backfillPendingDays = days
+    }
 
     override suspend fun getWatermark() = watermark
     override suspend fun setWatermark(value: Long) {

@@ -52,7 +52,8 @@ class AutoBackupService(
             val encrypted = BackupEncryption.encrypt(json, passphrase)
 
             val now = Clock.System.now()
-            val dt = now.toLocalDateTime(TimeZone.currentSystemDefault())
+            // UTC keeps names in order when the user travels or changes time zone.
+            val dt = now.toLocalDateTime(TimeZone.UTC)
 
             // Prepend unencrypted metadata (hint, date, count) so the import
             // screen can show backup info before the user enters their passphrase
@@ -86,7 +87,7 @@ class AutoBackupService(
      * Runs retention cleanup: keeps only the N most recent backups.
      */
     suspend fun cleanupOldBackups(storageProvider: AutoBackupStorageProvider) {
-        val retentionCount = preferences.backupRetentionCount.first()
+        val retentionCount = preferences.backupRetentionCount.first().coerceAtLeast(1)
         val existing = storageProvider.listBackups()
         if (existing.size > retentionCount) {
             // Files are sorted newest-first by the provider

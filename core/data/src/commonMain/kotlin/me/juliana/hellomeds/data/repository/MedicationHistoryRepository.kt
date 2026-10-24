@@ -154,12 +154,7 @@ class MedicationHistoryRepository(
             )
 
             if (existingId != null) {
-                historyDao.updateStatusAndDose(
-                    existingId,
-                    MedicationHistory.STATUS_SKIPPED,
-                    0.0,
-                    0L,
-                )
+                historyDao.updateStatusToSkipped(existingId, MedicationHistory.STATUS_SKIPPED)
                 // Reverse any stock adjustment from a previous TAKEN status
                 try {
                     stockTrackingRepository.reverseStockAdjustment(existingId)

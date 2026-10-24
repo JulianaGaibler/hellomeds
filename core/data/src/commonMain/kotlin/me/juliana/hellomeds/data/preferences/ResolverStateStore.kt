@@ -16,6 +16,9 @@ interface ResolverStateStore {
     suspend fun getLastSeenTimeZoneId(): String?
     suspend fun setLastSeenTimeZoneId(id: String)
 
+    /** Days of history waiting for the user's confirmation, or null when nothing is waiting. */
+    suspend fun setBackfillPendingDays(days: Int?)
+
     /** Adds to the counts shown in the "while you were away" banner until the user dismisses it. */
     suspend fun addAwaySummary(skipped: Int, taken: Int)
 }

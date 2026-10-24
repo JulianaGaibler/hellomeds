@@ -21,6 +21,7 @@ package me.juliana.hellomeds.data.util
  *     acknowledgement via [ReliabilityStateProvider.dismissDatabaseRecoveryWarning].
  *   - [Degraded.awaySummary]: doses logged automatically after a long absence. Cleared by
  *     [ReliabilityStateProvider.dismissAwaySummary].
+ *   - [Degraded.backfillPending]: a long gap the resolver will only settle once the user confirms.
  */
 sealed class ReliabilityState {
 
@@ -37,6 +38,7 @@ sealed class ReliabilityState {
         val iosNotificationBudgetExhausted: Boolean,
         val databaseRecovered: Boolean = false,
         val awaySummary: AwaySummary? = null,
+        val backfillPending: BackfillPending? = null,
     ) : ReliabilityState() {
         init {
             require(
@@ -44,7 +46,8 @@ sealed class ReliabilityState {
                     exactAlarmsDisabled ||
                     iosNotificationBudgetExhausted ||
                     databaseRecovered ||
-                    awaySummary != null,
+                    awaySummary != null ||
+                    backfillPending != null,
             ) {
                 "Degraded must carry at least one issue — use Healthy when no issues are present"
             }
@@ -56,3 +59,6 @@ sealed class ReliabilityState {
 data class AwaySummary(val skipped: Int, val taken: Int) {
     val total: Int get() = skipped + taken
 }
+
+/** History the resolver paused on because the gap since its last run was unusually long. */
+data class BackfillPending(val days: Int)

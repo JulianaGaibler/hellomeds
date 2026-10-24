@@ -8,6 +8,9 @@ unreleased:
   - Shows a confirmation with a Show in Files button after saving a backup
   - HelloMeds is now only offered for HelloMeds backup files
   - Time zone and dosing cycle settings moved to their own pages when editing a medication
+  - Changing a schedule or traveling to a new time zone no longer marks recent doses as taken or skipped, and missed doses from before a time zone change are settled in the time zone you were in
+  - Refilling no longer stops older unlogged doses from reducing your stock
+  - After more than 30 days without an update, HelloMeds asks before marking unlogged doses as skipped or taken
 releases:
 - version: 0.1.7
   versionCode: 16
