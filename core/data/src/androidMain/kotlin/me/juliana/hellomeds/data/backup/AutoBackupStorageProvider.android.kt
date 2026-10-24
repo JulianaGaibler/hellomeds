@@ -31,15 +31,24 @@ actual class AutoBackupStorageProvider(
                 ?: return@withContext WriteBackupResult.PermissionRevoked.also {
                     preferences.setBackupDestinationUri(null)
                 }
-            val file = treeDoc.createFile("application/octet-stream", fileName)
+            // Leftovers from an interrupted write would otherwise count as backups.
+            treeDoc.listFiles().filter { it.name?.startsWith(PARTIAL_PREFIX) == true }.forEach { it.delete() }
+            // The final name only appears once the whole file is written.
+            val file = treeDoc.createFile("application/octet-stream", PARTIAL_PREFIX + fileName)
                 ?: return@withContext WriteBackupResult.WriteFailed(
                     "Could not create file in backup folder",
                 )
-            context.contentResolver.openOutputStream(file.uri)?.use { stream ->
-                stream.write(data)
-            } ?: return@withContext WriteBackupResult.WriteFailed(
-                "Could not open output stream",
-            )
+            try {
+                val stream = context.contentResolver.openOutputStream(file.uri, "wt")
+                    ?: return@withContext WriteBackupResult.WriteFailed("Could not open output stream")
+                stream.use { it.write(data) }
+                if (!file.renameTo(fileName)) {
+                    return@withContext WriteBackupResult.WriteFailed("Could not rename the finished backup")
+                }
+            } catch (e: Exception) {
+                file.delete()
+                throw e
+            }
             WriteBackupResult.Success
         } catch (e: SecurityException) {
             preferences.setBackupDestinationUri(null)
@@ -84,6 +93,10 @@ actual class AutoBackupStorageProvider(
             return@withContext DestinationAvailability.PermissionRevoked
         }
         DestinationAvailability.Available
+    }
+
+    private companion object {
+        const val PARTIAL_PREFIX = "partial-"
     }
 
     private suspend fun getValidatedUri(): Uri? {

@@ -1151,6 +1151,7 @@
     <string name="import_warning_newer_version">This backup was created by a newer version of HelloMeds. Some data may not import correctly.</string>
     <string name="import_warning_unknown_med_type">Unknown medication type '%1$s', will use Tablet</string>
     <string name="import_warning_unknown_strength_unit">Unknown strength unit '%1$s', will be cleared</string>
+    <string name="import_warning_invalid_schedule_time">Schedule %1$d: invalid time '%2$s', it will be skipped</string>
     <string name="import_warning_unknown_frequency_type">Schedule %1$d: unknown frequency type '%2$s', will use Interval</string>
     <string name="import_warning_unknown_tracking_precision">Unknown tracking precision '%1$s', will be cleared</string>
     <string name="import_warning_unknown_container">Unknown container type '%1$s', will be cleared</string>

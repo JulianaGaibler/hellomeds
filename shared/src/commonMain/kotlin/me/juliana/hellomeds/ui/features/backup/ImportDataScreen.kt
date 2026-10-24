@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -73,6 +74,7 @@ import me.juliana.hellomeds.shared.backup_import_summary_medications_imported
 import me.juliana.hellomeds.shared.backup_import_summary_medications_replaced
 import me.juliana.hellomeds.shared.backup_import_summary_medications_skipped
 import me.juliana.hellomeds.shared.backup_import_summary_schedules_imported
+import me.juliana.hellomeds.shared.backup_import_summary_schedules_skipped
 import me.juliana.hellomeds.shared.backup_import_summary_stock_adjustments_imported
 import me.juliana.hellomeds.shared.backup_import_title
 import me.juliana.hellomeds.shared.backup_importing
@@ -91,6 +93,7 @@ import me.juliana.hellomeds.shared.backup_wrong_passphrase
 import me.juliana.hellomeds.shared.import_warning_label_not_found
 import me.juliana.hellomeds.shared.import_warning_newer_version
 import me.juliana.hellomeds.shared.import_warning_unknown_container
+import me.juliana.hellomeds.shared.import_warning_invalid_schedule_time
 import me.juliana.hellomeds.shared.import_warning_unknown_frequency_type
 import me.juliana.hellomeds.shared.import_warning_unknown_med_type
 import me.juliana.hellomeds.shared.import_warning_unknown_strength_unit
@@ -188,6 +191,7 @@ fun ImportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
             is ImportUiState.NeedsPassphrase -> {
                 PassphrasePhase(
                     wrongPassphrase = currentState.wrongPassphrase,
+                    isDecrypting = currentState.isDecrypting,
                     passphraseHint = currentState.passphraseHint,
                     paddingValues = paddingValues,
                     onDecrypt = { passphrase -> viewModel.decryptAndParse(passphrase) },
@@ -533,6 +537,7 @@ private fun MedicationImportItem(
 @Composable
 private fun PassphrasePhase(
     wrongPassphrase: Boolean,
+    isDecrypting: Boolean,
     passphraseHint: String? = null,
     paddingValues: PaddingValues,
     onDecrypt: (String) -> Unit,
@@ -583,6 +588,7 @@ private fun PassphrasePhase(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
+            enabled = !isDecrypting,
             isError = wrongPassphrase,
             supportingText = if (wrongPassphrase) {
                 { Text(stringResource(Res.string.backup_wrong_passphrase)) }
@@ -595,15 +601,19 @@ private fun PassphrasePhase(
 
         Button(
             onClick = { onDecrypt(passphrase) },
-            enabled = passphrase.isNotEmpty(),
+            enabled = passphrase.isNotEmpty() && !isDecrypting,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp),
         ) {
-            Text(
-                stringResource(Res.string.backup_decrypt),
-                style = MaterialTheme.typography.titleMedium,
-            )
+            if (isDecrypting) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+            } else {
+                Text(
+                    stringResource(Res.string.backup_decrypt),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -673,6 +683,15 @@ private fun SuccessPhase(result: ImportResult, paddingValues: PaddingValues, onD
         } else {
             null
         }
+        val schedulesSkippedLine = if (result.schedulesSkipped > 0) {
+            pluralStringResource(
+                Res.plurals.backup_import_summary_schedules_skipped,
+                result.schedulesSkipped,
+                result.schedulesSkipped,
+            )
+        } else {
+            null
+        }
         val labelsCreatedLine = if (result.labelsCreated > 0) {
             pluralStringResource(
                 Res.plurals.backup_import_summary_labels_created,
@@ -705,6 +724,7 @@ private fun SuccessPhase(result: ImportResult, paddingValues: PaddingValues, onD
             medicationsReplacedLine,
             medicationsSkippedLine,
             schedulesImportedLine,
+            schedulesSkippedLine,
             labelsCreatedLine,
             historyImportedLine,
             stockAdjustmentsImportedLine,
@@ -793,6 +813,11 @@ private fun resolveImportWarning(warning: ImportWarning): String = when (warning
     is ImportWarning.UnknownStrengthUnit -> stringResource(
         Res.string.import_warning_unknown_strength_unit,
         warning.unit,
+    )
+    is ImportWarning.InvalidScheduleTime -> stringResource(
+        Res.string.import_warning_invalid_schedule_time,
+        warning.scheduleIndex,
+        warning.time,
     )
     is ImportWarning.UnknownFrequencyType -> stringResource(
         Res.string.import_warning_unknown_frequency_type,

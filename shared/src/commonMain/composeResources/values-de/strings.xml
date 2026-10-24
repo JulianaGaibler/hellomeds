@@ -1114,6 +1114,7 @@
 	<string name="import_warning_newer_version">Diese Sicherung wurde mit einer neueren Version von HelloMeds erstellt. Einige Daten werden möglicherweise nicht korrekt importiert.</string>
 	<string name="import_warning_unknown_med_type">Unbekannter Medikamententyp '%1$s', es wird Tablette verwendet</string>
 	<string name="import_warning_unknown_strength_unit">Unbekannte Stärkeeinheit '%1$s', wird gelöscht</string>
+	<string name="import_warning_invalid_schedule_time">Zeitplan %1$d: ungültige Uhrzeit '%2$s', er wird übersprungen</string>
 	<string name="import_warning_unknown_frequency_type">Zeitplan %1$d: unbekannter Häufigkeitstyp '%2$s', es wird Intervall verwendet</string>
 	<string name="import_warning_unknown_tracking_precision">Unbekannte Verfolgungsgenauigkeit '%1$s', wird gelöscht</string>
 	<string name="import_warning_unknown_container">Unbekannter Behältertyp '%1$s', wird gelöscht</string>

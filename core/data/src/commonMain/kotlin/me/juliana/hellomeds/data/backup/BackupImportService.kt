@@ -3,8 +3,11 @@
 
 package me.juliana.hellomeds.data.backup
 
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import me.juliana.hellomeds.data.backup.model.BackupData
@@ -24,7 +27,6 @@ import me.juliana.hellomeds.data.dao.MedicationDao
 import me.juliana.hellomeds.data.dao.MedicationHistoryDao
 import me.juliana.hellomeds.data.dao.ScheduleDao
 import me.juliana.hellomeds.data.dao.StockAdjustmentDao
-import me.juliana.hellomeds.data.database.AppDatabase
 import me.juliana.hellomeds.data.database.entities.ImportanceLabel
 import me.juliana.hellomeds.data.database.entities.Medication
 import me.juliana.hellomeds.data.database.entities.MedicationHistory
@@ -36,13 +38,15 @@ import me.juliana.hellomeds.data.model.enums.FrequencyType
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
 import me.juliana.hellomeds.data.model.enums.MedicationStrengthUnit
 import me.juliana.hellomeds.data.model.enums.MedicationType
+import me.juliana.hellomeds.data.model.enums.StockAdjustmentType
 import me.juliana.hellomeds.data.model.enums.TimeZoneMode
 import me.juliana.hellomeds.data.model.enums.TrackingPrecision
 import me.juliana.hellomeds.data.model.enums.UnloggedDoseAction
+import me.juliana.hellomeds.data.util.TransactionRunner
 import kotlin.time.Instant
 
 class BackupImportService(
-    private val database: AppDatabase,
+    private val transactionRunner: TransactionRunner,
     private val medicationDao: MedicationDao,
     private val importanceLabelDao: ImportanceLabelDao,
     private val scheduleDao: ScheduleDao,
@@ -112,6 +116,9 @@ class BackupImportService(
                 if (parseFrequencyType(schedule.frequencyType) == null) {
                     medWarnings.add(ImportWarning.UnknownFrequencyType(schedIndex + 1, schedule.frequencyType))
                 }
+                if (!schedule.hasValidTimeOfDay()) {
+                    medWarnings.add(ImportWarning.InvalidScheduleTime(schedIndex + 1, schedule.timeOfDay))
+                }
             }
             val stock = backupMed.stock
             if (stock != null) {
@@ -165,11 +172,20 @@ class BackupImportService(
         )
     }
 
-    suspend fun executeImport(backup: BackupData, decisions: Map<Int, ImportDecision>): ImportResult {
+    suspend fun executeImport(backup: BackupData, decisions: Map<Int, ImportDecision>): ImportResult =
+        withContext(NonCancellable) {
+            // One transaction, so a failure or a closed screen never leaves a half imported medication.
+            val result = transactionRunner.run { importAll(backup, decisions) }
+            reconciler.reconcile()
+            result
+        }
+
+    private suspend fun importAll(backup: BackupData, decisions: Map<Int, ImportDecision>): ImportResult {
         var medicationsImported = 0
         var medicationsReplaced = 0
         var medicationsSkipped = 0
         var schedulesImported = 0
+        var schedulesSkipped = 0
         var labelsCreated = 0
         var historyImported = 0
         var stockAdjustmentsImported = 0
@@ -207,8 +223,7 @@ class BackupImportService(
 
         val existingMedications = medicationDao.getAll().first()
 
-        for (backupMed in backup.medications) {
-            val index = backup.medications.indexOf(backupMed)
+        for ((index, backupMed) in backup.medications.withIndex()) {
             val decision = decisions[index] ?: ImportDecision.IMPORT_AS_NEW
 
             if (decision == ImportDecision.SKIP) {
@@ -229,6 +244,8 @@ class BackupImportService(
             val medication = backupMed.toEntity(labelId)
 
             val medicationId: Int
+            // Replaced schedules that keep their rows, so the local history stays linked to them.
+            val reusableSchedules = mutableListOf<Schedule>()
             if (decision == ImportDecision.REPLACE) {
                 val duplicate = existingMedications.find { existing ->
                     existing.name.equals(backupMed.name, ignoreCase = true) &&
@@ -236,15 +253,33 @@ class BackupImportService(
                 }
                 if (duplicate != null) {
                     // Update existing, preserving its ID
-                    medicationDao.update(medication.copy(id = duplicate.id))
-                    medicationId = duplicate.id
-                    // Delete old schedules, history, and stock adjustments for this medication.
-                    // History first: StockAdjustment FK cascades from MedicationHistory deletion.
-                    scheduleDao.getByMedicationId(duplicate.id).first().forEach {
-                        scheduleDao.delete(it)
+                    val replacement = if (backupMed.stock == null) {
+                        medication.withStockSettingsOf(duplicate)
+                    } else {
+                        medication
                     }
-                    historyDao.deleteByMedicationId(duplicate.id)
-                    stockAdjustmentDao.deleteByMedicationId(duplicate.id)
+                    medicationDao.update(replacement.copy(id = duplicate.id))
+                    medicationId = duplicate.id
+                    // Only categories the backup contains are replaced. A backup exported without
+                    // history, schedules or stock leaves the local data alone.
+                    if (backupMed.schedules.isNotEmpty()) {
+                        val localSchedules = scheduleDao.getByMedicationId(duplicate.id).first()
+                        if (backupMed.history.isEmpty()) {
+                            reusableSchedules.addAll(localSchedules)
+                        } else {
+                            localSchedules.forEach { scheduleDao.delete(it) }
+                        }
+                    }
+                    if (backupMed.history.isNotEmpty()) {
+                        // Deleting history cascades to the stock rows linked to it.
+                        if (backupMed.stockAdjustments.isEmpty()) {
+                            stockAdjustmentDao.detachFromHistoryOlderThan(duplicate.id, Long.MAX_VALUE)
+                        }
+                        historyDao.deleteByMedicationId(duplicate.id)
+                    }
+                    if (backupMed.stockAdjustments.isNotEmpty()) {
+                        stockAdjustmentDao.deleteByMedicationId(duplicate.id)
+                    }
                     medicationsReplaced++
                 } else {
                     // Duplicate no longer exists — import as new
@@ -260,18 +295,40 @@ class BackupImportService(
             // Import schedules and build oldId -> newId map
             val oldToNewScheduleId = mutableMapOf<Int, Int>()
             for (backupSchedule in backupMed.schedules) {
-                val newScheduleId = scheduleDao.insert(backupSchedule.toEntity(medicationId)).toInt()
+                if (!backupSchedule.hasValidTimeOfDay()) {
+                    schedulesSkipped++
+                    continue
+                }
+                val entity = backupSchedule.toEntity(medicationId)
+                val unchanged = reusableSchedules.firstOrNull { it.hasSameDefinitionAs(entity) }
+                val newScheduleId = if (unchanged != null) {
+                    reusableSchedules.remove(unchanged)
+                    unchanged.id
+                } else {
+                    scheduleDao.insert(entity).toInt()
+                }
                 oldToNewScheduleId[backupSchedule.id] = newScheduleId
                 schedulesImported++
             }
+            reusableSchedules.forEach { scheduleDao.delete(it) }
 
             // Import history, linking to schedules via the ID map and building history ID map
             val oldToNewHistoryId = mutableMapOf<Int, Int>()
             for (backupHistoryEntry in backupMed.history) {
                 val mappedScheduleId = backupHistoryEntry.scheduleId?.let { oldToNewScheduleId[it] }
-                val newId = historyDao.insert(backupHistoryEntry.toEntity(medicationId, mappedScheduleId)).toInt()
+                val entity = backupHistoryEntry.toEntity(medicationId, mappedScheduleId)
+                val inserted = historyDao.insert(entity).toInt()
+                val newId = if (inserted != -1) {
+                    historyImported++
+                    inserted
+                } else {
+                    // The unique index rejected a duplicate dose, so linked stock rows attach to the existing one.
+                    val scheduleId = entity.scheduleId
+                    val scheduledTime = entity.scheduledTime
+                    if (scheduleId == null || scheduledTime == null) continue
+                    historyDao.findByCompositeKey(medicationId, scheduleId, scheduledTime) ?: continue
+                }
                 backupHistoryEntry.localId?.let { oldToNewHistoryId[it] = newId }
-                historyImported++
             }
 
             // Import stock adjustments, remapping historyId via the history ID map
@@ -281,12 +338,30 @@ class BackupImportService(
                 stockAdjustmentsImported++
             }
 
-            // Reconcile cached stock with actual ledger.
-            // Only when adjustments were imported — if the backup omitted history,
-            // currentStockQuantity on the entity is the authoritative value.
+            // Stock is the ledger sum. A backup without a ledger carries only the level, which
+            // opens an empty ledger or corrects a kept one.
+            val importedLevel = medication.currentStockQuantity
             if (backupMed.stockAdjustments.isNotEmpty()) {
                 val actualStock = stockAdjustmentDao.getCurrentStock(medicationId) ?: 0.0
                 medicationDao.updateCachedStockQuantity(medicationId, actualStock)
+            } else if (backupMed.stock != null && medication.stockTrackingEnabled && importedLevel != null) {
+                val hasLedger = stockAdjustmentDao.getByMedicationId(medicationId).first().isNotEmpty()
+                val change = importedLevel - (stockAdjustmentDao.getCurrentStock(medicationId) ?: 0.0)
+                if (!hasLedger || change != 0.0) {
+                    stockAdjustmentDao.insert(
+                        StockAdjustment(
+                            medicationId = medicationId,
+                            quantityChange = change,
+                            adjustmentType = if (hasLedger) {
+                                StockAdjustmentType.MANUAL_CORRECTION.value
+                            } else {
+                                StockAdjustmentType.INITIAL_STOCK.value
+                            },
+                            notes = "Imported stock level",
+                        ),
+                    )
+                }
+                medicationDao.updateCachedStockQuantity(medicationId, importedLevel)
             }
         }
 
@@ -298,14 +373,12 @@ class BackupImportService(
             }
         }
 
-        // Post-import: reconcile alarms
-        reconciler.reconcile()
-
         return ImportResult(
             medicationsImported = medicationsImported,
             medicationsReplaced = medicationsReplaced,
             medicationsSkipped = medicationsSkipped,
             schedulesImported = schedulesImported,
+            schedulesSkipped = schedulesSkipped,
             labelsCreated = labelsCreated,
             historyImported = historyImported,
             stockAdjustmentsImported = stockAdjustmentsImported,
@@ -358,6 +431,31 @@ private fun BackupMedication.toEntity(importanceLabelId: Int) = Medication(
     cycleStartDate = cycleStartDate?.let { parseLocalDate(it) },
     timeZoneMode = timeZoneMode?.let { parseTimeZoneMode(it) } ?: TimeZoneMode.LOCAL,
     unloggedDoseAction = unloggedDoseAction?.let { parseUnloggedDoseAction(it) } ?: UnloggedDoseAction.SKIP,
+)
+
+private fun Schedule.hasSameDefinitionAs(other: Schedule) = dose == other.dose &&
+    startDate == other.startDate &&
+    endDate == other.endDate &&
+    timeOfDay == other.timeOfDay &&
+    frequencyType == other.frequencyType &&
+    frequencyValue == other.frequencyValue &&
+    daysOfWeek == other.daysOfWeek &&
+    isArchived == other.isArchived &&
+    originTimeZone == other.originTimeZone
+
+private fun BackupSchedule.hasValidTimeOfDay() = runCatching { LocalTime.parse(timeOfDay) }.isSuccess
+
+private fun Medication.withStockSettingsOf(other: Medication) = copy(
+    stockTrackingEnabled = other.stockTrackingEnabled,
+    trackingPrecision = other.trackingPrecision,
+    currentStockQuantity = other.currentStockQuantity,
+    lowStockThreshold = other.lowStockThreshold,
+    lowStockAlertSent = other.lowStockAlertSent,
+    packagingQuantity = other.packagingQuantity,
+    medicationContainer = other.medicationContainer,
+    depletionReminderEnabled = other.depletionReminderEnabled,
+    depletionAlertSent = other.depletionAlertSent,
+    containerStartedAt = other.containerStartedAt,
 )
 
 private fun BackupSchedule.toEntity(medicationId: Int) = Schedule(

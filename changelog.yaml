@@ -1,5 +1,13 @@
 unreleased:
-  notes: []
+  notes:
+  - Clear a medication's logged doses and stock changes older than 24 hours, 7, 30 or 90 days
+  - Past days before an import or a schedule change no longer show doses as unlogged
+  - Fixed stock showing as zero after importing a backup without history
+  - Importing a backup is now all or nothing, replacing a medication only changes what the backup contains, and schedules with an invalid time are skipped
+  - Fixed exported backups sometimes being saved as empty files
+  - Shows a confirmation with a Show in Files button after saving a backup
+  - HelloMeds is now only offered for HelloMeds backup files
+  - Time zone and dosing cycle settings moved to their own pages when editing a medication
 releases:
 - version: 0.1.7
   versionCode: 16

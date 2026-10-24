@@ -42,7 +42,9 @@ actual fun rememberFileSaver(
             scope.launch {
                 val saved = withContext(Dispatchers.IO) {
                     try {
-                        context.contentResolver.openOutputStream(uri)?.use { it.write(data) }
+                        // Truncate, because a provider may otherwise keep the tail of a longer old file.
+                        val stream = context.contentResolver.openOutputStream(uri, "wt") ?: error("No output stream")
+                        stream.use { it.write(data) }
                         SavedFile(displayName(context, uri) ?: pendingName, uri.toString())
                     } catch (_: Exception) {
                         null

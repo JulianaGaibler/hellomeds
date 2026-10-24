@@ -45,8 +45,16 @@ class BackupImportServiceTest {
         historyDao = FakeHistoryDao()
         stockAdjDao = FakeStockAdjustmentDao()
         reconciler = NoOpReconciler()
-        val fakeDb = FakeAppDatabase(labelDao, medDao, scheduleDao, historyDao, stockAdjDao)
-        service = BackupImportService(fakeDb, medDao, labelDao, scheduleDao, historyDao, stockAdjDao, reconciler)
+        val transactionRunner = SnapshotTransactionRunner(historyDao, stockAdjDao, scheduleDao, medDao)
+        service = BackupImportService(
+            transactionRunner,
+            medDao,
+            labelDao,
+            scheduleDao,
+            historyDao,
+            stockAdjDao,
+            reconciler,
+        )
     }
 
     // --- Helper factories ---
@@ -624,10 +632,10 @@ class BackupImportServiceTest {
     }
 
     @Test
-    fun executeImport_replace_stockSettingsButNoAdjustments_preservesBackupCache() = runTest {
+    fun executeImport_replace_stockSettingsButNoAdjustments_setsLedgerToBackupLevel() = runTest {
         labelDao.seed(existingLabel(1, "Silent"))
         medDao.seed(existingMed(10, "Aspirin"))
-        // Pre-existing stock adjustment (will be deleted by REPLACE)
+        // Pre-existing ledger, which a backup without adjustments leaves in place
         stockAdjDao.adjustments.add(
             me.juliana.hellomeds.data.database.entities.StockAdjustment(
                 id = 1,
@@ -654,10 +662,157 @@ class BackupImportServiceTest {
             decisions = mapOf(0 to ImportDecision.REPLACE),
         )
 
-        // Old adjustments deleted, but backup has no new ones.
-        // Cache should preserve the backup's value, NOT be zeroed.
+        // Stock is computed from the ledger, so a correction brings it to the backup's level.
         assertEquals(50.0, medDao.medications[0].currentStockQuantity)
-        assertTrue(stockAdjDao.adjustments.isEmpty())
+        assertEquals(50.0, stockAdjDao.getCurrentStock(medDao.medications[0].id))
+    }
+
+    @Test
+    fun executeImport_replace_backupWithoutHistoryOrLedger_keepsLocalData() = runTest {
+        labelDao.seed(existingLabel(1, "Silent"))
+        medDao.seed(
+            existingMed(10, "Aspirin").copy(stockTrackingEnabled = true, currentStockQuantity = 20.0),
+        )
+        scheduleDao.seed(existingSchedule(5, 10))
+        val historyId = historyDao.insert(
+            me.juliana.hellomeds.data.createHistory(medicationId = 10, scheduleId = 5, scheduledTime = 1000L),
+        ).toInt()
+        stockAdjDao.insert(
+            me.juliana.hellomeds.data.database.entities.StockAdjustment(
+                medicationId = 10,
+                historyId = historyId,
+                quantityChange = 20.0,
+                adjustmentType = "INITIAL_STOCK",
+            ),
+        )
+
+        service.executeImport(
+            backup(labels = listOf(label("Silent")), medications = listOf(med("Aspirin"))),
+            decisions = mapOf(0 to ImportDecision.REPLACE),
+        )
+
+        assertEquals(1, scheduleDao.schedules.size)
+        assertEquals(1, historyDao.history.size)
+        assertEquals(20.0, stockAdjDao.getCurrentStock(10))
+        assertTrue(medDao.medications.single().stockTrackingEnabled)
+        assertEquals(20.0, medDao.medications.single().currentStockQuantity)
+    }
+
+    @Test
+    fun executeImport_replace_unchangedSchedulesWithoutHistory_keepLocalHistoryLinked() = runTest {
+        labelDao.seed(existingLabel(1, "Silent"))
+        medDao.seed(existingMed(10, "Aspirin"))
+        scheduleDao.seed(
+            existingSchedule(5, 10).copy(startDate = parseDateToMillis("2025-01-01")!!),
+        )
+        historyDao.insert(
+            me.juliana.hellomeds.data.createHistory(medicationId = 10, scheduleId = 5, scheduledTime = 1000L),
+        )
+
+        service.executeImport(
+            backup(
+                labels = listOf(label("Silent")),
+                medications = listOf(med("Aspirin", schedules = listOf(schedule(1)))),
+            ),
+            decisions = mapOf(0 to ImportDecision.REPLACE),
+        )
+
+        assertEquals(listOf(5), scheduleDao.schedules.map { it.id })
+        assertEquals(5, historyDao.history.single().scheduleId)
+    }
+
+    @Test
+    fun analyzeImport_scheduleWithInvalidTime_warns() = runTest {
+        labelDao.seed(existingLabel(1, "Silent"))
+
+        val analysis = service.analyzeImport(
+            backup(
+                labels = listOf(label("Silent")),
+                medications = listOf(med("Aspirin", schedules = listOf(schedule(1).copy(timeOfDay = "8:00")))),
+            ),
+        )
+
+        assertEquals(
+            listOf<ImportWarning>(ImportWarning.InvalidScheduleTime(1, "8:00")),
+            analysis.medications.single().validationWarnings,
+        )
+    }
+
+    @Test
+    fun executeImport_duplicateHistoryRows_linkStockToExistingRow() = runTest {
+        labelDao.seed(existingLabel(1, "Silent"))
+
+        service.executeImport(
+            backup(
+                labels = listOf(label("Silent")),
+                medications = listOf(
+                    med(
+                        "Aspirin",
+                        schedules = listOf(schedule(1)),
+                        history = listOf(
+                            historyEntry(1).copy(localId = 1),
+                            historyEntry(1).copy(localId = 2),
+                        ),
+                        stockAdjustments = listOf(
+                            BackupStockAdjustment(
+                                quantityChange = -1.0,
+                                adjustmentType = "INTAKE",
+                                historyLocalId = 2,
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            decisions = emptyMap(),
+        )
+
+        val row = historyDao.history.single()
+        assertEquals(row.id, stockAdjDao.adjustments.single().historyId)
+    }
+
+    @Test
+    fun executeImport_scheduleWithInvalidTime_isSkippedAndCounted() = runTest {
+        labelDao.seed(existingLabel(1, "Silent"))
+
+        val result = service.executeImport(
+            backup(
+                labels = listOf(label("Silent")),
+                medications = listOf(
+                    med("Aspirin", schedules = listOf(schedule(1), schedule(2).copy(timeOfDay = "25:00"))),
+                ),
+            ),
+            decisions = emptyMap(),
+        )
+
+        assertEquals(1, scheduleDao.schedules.size)
+        assertEquals(1, result.schedulesImported)
+        assertEquals(1, result.schedulesSkipped)
+    }
+
+    @Test
+    fun executeImport_failure_rollsBackEverything() = runTest {
+        labelDao.seed(existingLabel(1, "Silent"))
+        medDao.seed(existingMed(10, "Aspirin"))
+        scheduleDao.seed(existingSchedule(5, 10))
+        stockAdjDao.failOnInsert = true
+
+        val backupWithLedger = backup(
+            labels = listOf(label("Silent")),
+            medications = listOf(
+                med(
+                    "Aspirin",
+                    schedules = listOf(schedule(1)),
+                    stockAdjustments = listOf(BackupStockAdjustment(quantityChange = 5.0)),
+                ),
+            ),
+        )
+
+        val failed = runCatching {
+            service.executeImport(backupWithLedger, decisions = mapOf(0 to ImportDecision.REPLACE))
+        }.isFailure
+
+        assertTrue(failed)
+        assertEquals(listOf(5), scheduleDao.schedules.map { it.id })
     }
 
     @Test

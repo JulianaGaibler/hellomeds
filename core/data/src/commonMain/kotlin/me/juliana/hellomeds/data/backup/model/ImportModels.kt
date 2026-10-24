@@ -11,6 +11,8 @@ sealed class ImportWarning {
     data class UnknownMedicationType(val type: String) : ImportWarning()
     data class UnknownStrengthUnit(val unit: String) : ImportWarning()
     data class UnknownFrequencyType(val scheduleIndex: Int, val type: String) : ImportWarning()
+
+    data class InvalidScheduleTime(val scheduleIndex: Int, val time: String) : ImportWarning()
     data class UnknownTrackingPrecision(val precision: String) : ImportWarning()
     data class UnknownContainerType(val container: String) : ImportWarning()
     data class LabelNotFound(val labelName: String) : ImportWarning()
@@ -50,6 +52,7 @@ data class ImportResult(
     val medicationsReplaced: Int,
     val medicationsSkipped: Int,
     val schedulesImported: Int,
+    val schedulesSkipped: Int = 0,
     val labelsCreated: Int,
     val historyImported: Int,
     val stockAdjustmentsImported: Int,

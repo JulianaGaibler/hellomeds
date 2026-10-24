@@ -424,6 +424,10 @@
 		<item quantity="one">%1$d Zeitplan importiert</item>
 		<item quantity="other">%1$d Zeitpläne importiert</item>
 	</plurals>
+	<plurals name="backup_import_summary_schedules_skipped">
+		<item quantity="one">%1$d Zeitplan übersprungen, weil die Uhrzeit ungültig war</item>
+		<item quantity="other">%1$d Zeitpläne übersprungen, weil die Uhrzeiten ungültig waren</item>
+	</plurals>
 	<plurals name="backup_import_summary_labels_created">
 		<item quantity="one">%1$d Erinnerungstyp erstellt</item>
 		<item quantity="other">%1$d Erinnerungstypen erstellt</item>

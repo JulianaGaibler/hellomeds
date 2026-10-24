@@ -12,7 +12,15 @@ func presentShareSheet(fileURL: URL) {
         applicationActivities: nil
     )
 
-    guard let presenter = topViewControllerForSharing() else { return }
+    // The shared file can hold an unencrypted backup, so it goes away once the sheet closes.
+    activityVC.completionWithItemsHandler = { _, _, _, _ in
+        try? FileManager.default.removeItem(at: fileURL)
+    }
+
+    guard let presenter = topViewControllerForSharing() else {
+        try? FileManager.default.removeItem(at: fileURL)
+        return
+    }
 
     // iPad requires popover configuration
     if let popover = activityVC.popoverPresentationController {

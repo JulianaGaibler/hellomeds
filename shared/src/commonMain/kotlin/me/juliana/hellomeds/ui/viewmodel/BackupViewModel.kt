@@ -5,11 +5,13 @@ package me.juliana.hellomeds.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import me.juliana.hellomeds.data.backup.BackupEncryption
 import me.juliana.hellomeds.data.backup.BackupExportService
 import me.juliana.hellomeds.data.backup.BackupImportService
@@ -135,8 +137,9 @@ class BackupViewModel(
      * The caller (screen) handles writing to a file via the platform file picker.
      */
     fun performExport(onResult: (ExportResult, ByteArray?) -> Unit) {
+        if (_exportState.value.isExporting) return
+        _exportState.value = _exportState.value.copy(isExporting = true, exportResult = null)
         viewModelScope.launch {
-            _exportState.value = _exportState.value.copy(isExporting = true, exportResult = null)
             try {
                 val state = _exportState.value
                 val backup = exportService.generateBackup(
@@ -146,12 +149,14 @@ class BackupViewModel(
                     includeHistory = state.includeHistory,
                     appVersion = PlatformCapabilities.appVersionString(),
                 )
-                val json = exportService.serialize(backup)
-
-                val outputBytes = if (state.encryptBackup && state.passphrase.isNotEmpty()) {
-                    BackupEncryption.encrypt(json, state.passphrase)
-                } else {
-                    json.encodeToByteArray()
+                // Serializing and the key derivation are CPU heavy.
+                val outputBytes = withContext(Dispatchers.Default) {
+                    val json = exportService.serialize(backup)
+                    if (state.encryptBackup && state.passphrase.isNotEmpty()) {
+                        BackupEncryption.encrypt(json, state.passphrase)
+                    } else {
+                        json.encodeToByteArray()
+                    }
                 }
 
                 val result = ExportResult.Success
@@ -197,8 +202,9 @@ class BackupViewModel(
      * Parse import data from raw bytes (read by the platform file picker).
      */
     fun parseImportFile(rawBytes: ByteArray) {
+        if (_importState.value is ImportUiState.Parsing) return
+        _importState.value = ImportUiState.Parsing
         viewModelScope.launch {
-            _importState.value = ImportUiState.Parsing
             try {
                 // Extract metadata (hint, date, count) if present — shown before passphrase entry
                 val metadata = extractMetadata(rawBytes)
@@ -224,9 +230,14 @@ class BackupViewModel(
         val current = _importState.value
         if (current !is ImportUiState.NeedsPassphrase) return
 
+        if (current.isDecrypting) return
+        _importState.value = current.copy(isDecrypting = true, wrongPassphrase = false)
+
         viewModelScope.launch {
             try {
-                val jsonString = BackupEncryption.decrypt(current.rawBytes, passphrase)
+                val jsonString = withContext(Dispatchers.Default) {
+                    BackupEncryption.decrypt(current.rawBytes, passphrase)
+                }
                 proceedWithJson(jsonString)
             } catch (_: BadPassphraseException) {
                 _importState.value = current.copy(wrongPassphrase = true)
@@ -237,7 +248,7 @@ class BackupViewModel(
     }
 
     private suspend fun proceedWithJson(jsonString: String) {
-        val backupResult = importService.parseBackup(jsonString)
+        val backupResult = withContext(Dispatchers.Default) { importService.parseBackup(jsonString) }
         val backup = backupResult.getOrElse { e ->
             _importState.value = ImportUiState.Error("Invalid backup file: ${e.message}")
             return
@@ -270,8 +281,8 @@ class BackupViewModel(
         val current = _importState.value
         if (current !is ImportUiState.Preview) return
 
+        _importState.value = ImportUiState.Importing
         viewModelScope.launch {
-            _importState.value = ImportUiState.Importing
             try {
                 val result = importService.executeImport(
                     backup = current.backup,
@@ -329,6 +340,7 @@ sealed class ImportUiState {
         val rawBytes: ByteArray,
         val wrongPassphrase: Boolean = false,
         val passphraseHint: String? = null,
+        val isDecrypting: Boolean = false,
     ) : ImportUiState()
 
     data class Preview(

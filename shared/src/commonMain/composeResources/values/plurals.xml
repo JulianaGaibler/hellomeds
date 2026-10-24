@@ -426,6 +426,10 @@
         <item quantity="one">%1$d schedule imported</item>
         <item quantity="other">%1$d schedules imported</item>
     </plurals>
+    <plurals name="backup_import_summary_schedules_skipped">
+        <item quantity="one">%1$d schedule skipped because its time was invalid</item>
+        <item quantity="other">%1$d schedules skipped because their times were invalid</item>
+    </plurals>
     <plurals name="backup_import_summary_labels_created">
         <item quantity="one">%1$d reminder type created</item>
         <item quantity="other">%1$d reminder types created</item>

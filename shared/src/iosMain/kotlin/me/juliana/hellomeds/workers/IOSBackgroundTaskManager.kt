@@ -19,6 +19,8 @@ import platform.BackgroundTasks.BGTask
 import platform.BackgroundTasks.BGTaskScheduler
 import platform.Foundation.NSDate
 import platform.Foundation.dateByAddingTimeInterval
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
  * Schedules and handles iOS background tasks via BGTaskScheduler: a reconcile task
@@ -108,6 +110,7 @@ class IOSBackgroundTaskManager {
 
     private fun handleReconcileTask(task: BGTask) {
         AppLogger.i(TAG, "Reconcile task started")
+        val completion = TaskCompletion(task)
 
         // Queue the next occurrence first so it survives a failure here.
         scheduleReconcileTask()
@@ -118,10 +121,10 @@ class IOSBackgroundTaskManager {
                 // Commits per chunk, so a task that expires mid-backfill resumes on the next trigger.
                 resolver.resolve()
                 AppLogger.i(TAG, "Reconcile task completed successfully")
-                task.setTaskCompletedWithSuccess(true)
+                completion.complete(true)
             } catch (e: Exception) {
                 AppLogger.e(TAG, "Reconcile task failed: ${e.message}")
-                task.setTaskCompletedWithSuccess(false)
+                completion.complete(false)
             }
         }
         currentReconcileJob = job
@@ -129,12 +132,13 @@ class IOSBackgroundTaskManager {
         task.expirationHandler = {
             AppLogger.w(TAG, "Reconcile task expired, cancelling")
             job.cancel()
-            task.setTaskCompletedWithSuccess(false)
+            completion.complete(false)
         }
     }
 
     private fun handleCleanupTask(task: BGTask) {
         AppLogger.i(TAG, "Cleanup task started")
+        val completion = TaskCompletion(task)
 
         scheduleCleanupTask()
 
@@ -145,10 +149,10 @@ class IOSBackgroundTaskManager {
                 reconciler.reconcile()
 
                 AppLogger.i(TAG, "Cleanup task completed successfully")
-                task.setTaskCompletedWithSuccess(true)
+                completion.complete(true)
             } catch (e: Exception) {
                 AppLogger.e(TAG, "Cleanup task failed: ${e.message}")
-                task.setTaskCompletedWithSuccess(false)
+                completion.complete(false)
             }
         }
         currentCleanupJob = job
@@ -156,7 +160,7 @@ class IOSBackgroundTaskManager {
         task.expirationHandler = {
             AppLogger.w(TAG, "Cleanup task expired, cancelling")
             job.cancel()
-            task.setTaskCompletedWithSuccess(false)
+            completion.complete(false)
         }
     }
 
@@ -172,5 +176,15 @@ class IOSBackgroundTaskManager {
         private const val RECONCILE_INTERVAL_SECONDS = 4.0 * 60 * 60
 
         private const val CLEANUP_INTERVAL_SECONDS = 24.0 * 60 * 60
+    }
+}
+
+/** The expiration handler and the job both finish a task, and BGTask must be completed once. */
+@OptIn(ExperimentalAtomicApi::class)
+private class TaskCompletion(private val task: BGTask) {
+    private val done = AtomicBoolean(false)
+
+    fun complete(success: Boolean) {
+        if (done.compareAndSet(false, true)) task.setTaskCompletedWithSuccess(success)
     }
 }

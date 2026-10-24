@@ -12,6 +12,7 @@ import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import platform.Foundation.NSCharacterSet
 import platform.Foundation.NSData
+import platform.Foundation.NSFileManager
 import platform.Foundation.NSString
 import platform.Foundation.URLPathAllowedCharacterSet
 import platform.Foundation.create
@@ -57,12 +58,14 @@ actual fun rememberFileSaver(
                         didPickDocumentsAtURLs: List<*>,
                     ) {
                         activePickerDelegate = null
+                        deleteFile(tempPath)
                         val url = didPickDocumentsAtURLs.firstOrNull() as? NSURL
                         onResult(url?.let { SavedFile(it.lastPathComponent ?: fileName, it.absoluteString ?: "") })
                     }
 
                     override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) {
                         activePickerDelegate = null
+                        deleteFile(tempPath)
                         onResult(null)
                     }
                 }
@@ -70,6 +73,7 @@ actual fun rememberFileSaver(
                 picker.delegate = delegate
                 topViewController()?.presentViewController(picker, animated = true, completion = null)
             } else {
+                deleteFile(tempPath)
                 onResult(null)
             }
         }
@@ -108,11 +112,13 @@ actual fun rememberFileSharer(
         { fileName: String, _: String, data: ByteArray ->
             try {
                 val tempPath = NSTemporaryDirectory() + fileName
-                data.writeToFile(tempPath)
-                val tempUrl = NSURL.fileURLWithPath(tempPath)
-
-                presentShareSheet(tempUrl)
-                onResult(true)
+                if (data.writeToFile(tempPath)) {
+                    presentShareSheet(NSURL.fileURLWithPath(tempPath))
+                    onResult(true)
+                } else {
+                    deleteFile(tempPath)
+                    onResult(false)
+                }
             } catch (_: Exception) {
                 onResult(false)
             }
@@ -135,6 +141,7 @@ actual fun rememberFileLoader(onResult: (data: ByteArray?) -> Unit): () -> Unit 
                     controller: UIDocumentPickerViewController,
                     didPickDocumentsAtURLs: List<*>,
                 ) {
+                    activePickerDelegate = null
                     val url = didPickDocumentsAtURLs.firstOrNull() as? NSURL
                     if (url != null) {
                         val accessing = url.startAccessingSecurityScopedResource()
@@ -154,10 +161,12 @@ actual fun rememberFileLoader(onResult: (data: ByteArray?) -> Unit): () -> Unit 
                 }
 
                 override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) {
+                    activePickerDelegate = null
                     onResult(null)
                 }
             }
 
+            activePickerDelegate = delegate
             picker.delegate = delegate
             picker.allowsMultipleSelection = false
             topViewController()?.presentViewController(picker, animated = true, completion = null)
@@ -170,12 +179,14 @@ actual fun rememberFileLoader(onResult: (data: ByteArray?) -> Unit): () -> Unit 
 @OptIn(ExperimentalForeignApi::class)
 private fun ByteArray.writeToFile(path: String): Boolean {
     if (isEmpty()) return false
-    usePinned { pinned ->
-        val file = platform.posix.fopen(path, "wb") ?: return false
-        platform.posix.fwrite(pinned.addressOf(0), 1u, size.toULong(), file)
-        platform.posix.fclose(file)
-    }
-    return true
+    val file = platform.posix.fopen(path, "wb") ?: return false
+    val written = usePinned { pinned -> platform.posix.fwrite(pinned.addressOf(0), 1u, size.toULong(), file) }
+    val closed = platform.posix.fclose(file)
+    return written == size.toULong() && closed == 0
+}
+
+private fun deleteFile(path: String) {
+    NSFileManager.defaultManager.removeItemAtPath(path, error = null)
 }
 
 @OptIn(ExperimentalForeignApi::class)
