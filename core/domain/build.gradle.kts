@@ -15,7 +15,6 @@ kotlin {
         freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
     }
 
-    iosX64()
     iosArm64()
     iosSimulatorArm64()
 

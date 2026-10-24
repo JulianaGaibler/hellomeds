@@ -9,7 +9,7 @@ plugins {
 }
 
 composeCompiler {
-    stabilityConfigurationFile = rootProject.layout.projectDirectory.file("stability_config.conf")
+    stabilityConfigurationFiles.add(rootProject.layout.projectDirectory.file("stability_config.conf"))
 }
 
 kotlin {
@@ -31,7 +31,6 @@ kotlin {
 
     // iOS targets with shared framework
     listOf(
-        iosX64(),
         iosArm64(),
         iosSimulatorArm64(),
     ).forEach {
