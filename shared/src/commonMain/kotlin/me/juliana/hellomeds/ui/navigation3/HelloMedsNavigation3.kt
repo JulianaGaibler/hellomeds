@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -289,6 +290,9 @@ fun HelloMedsNavigation3(
                 ExportDataScreen(
                     viewModel = backupViewModel,
                     onNavigateBack = { navigator.closeOverlay() },
+                DisposableEffect(Unit) {
+                    onDispose { backupViewModel.resetExportState() }
+                }
                 )
             }
         }
@@ -299,6 +303,9 @@ fun HelloMedsNavigation3(
 
                 // Auto-parse if opened from an external backup file
                 val pendingImport = remember { IncomingBackupHandler.pendingImport.value }
+                DisposableEffect(Unit) {
+                    onDispose { backupViewModel.resetImportState() }
+                }
                 LaunchedEffect(pendingImport) {
                     val bytes = when (pendingImport) {
                         is PendingImport.Bytes -> pendingImport.data.takeIf { it.isNotEmpty() }

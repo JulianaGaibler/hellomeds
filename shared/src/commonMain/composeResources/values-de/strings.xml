@@ -568,6 +568,9 @@
 	<string name="backup_medications_section">Medikamente</string>
 	<string name="backup_select_all">Alle auswählen</string>
 	<string name="backup_deselect_all">Alle abwählen</string>
+	<string name="backup_action_show_in_files">In Dateien anzeigen</string>
+	<string name="backup_export_success_title">Backup gespeichert</string>
+	<string name="backup_export_success_body">%1$s wurde gespeichert.</string>
 	<string name="backup_exporting">Wird exportiert…</string>
 	<string name="backup_action_save_to_files">In Dateien speichern</string>
 	<string name="backup_action_share">Teilen…</string>

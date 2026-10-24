@@ -10,7 +10,12 @@ import androidx.compose.runtime.remember
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
+import platform.Foundation.NSCharacterSet
 import platform.Foundation.NSData
+import platform.Foundation.NSString
+import platform.Foundation.URLPathAllowedCharacterSet
+import platform.Foundation.create
+import platform.Foundation.stringByAddingPercentEncodingWithAllowedCharacters
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
 import platform.Foundation.dataWithContentsOfURL
@@ -29,27 +34,64 @@ private fun topViewController(): platform.UIKit.UIViewController? {
     return vc
 }
 
+/** The picker only holds its delegate weakly. */
+private var activePickerDelegate: NSObject? = null
+
 /**
  * Save to Files — uses UIDocumentPickerViewController in export/move mode.
  */
 @Composable
 actual fun rememberFileSaver(
-    onResult: (success: Boolean) -> Unit,
+    onResult: (SavedFile?) -> Unit,
 ): (fileName: String, mimeType: String, data: ByteArray) -> Unit {
     return remember {
         { fileName: String, _: String, data: ByteArray ->
-            try {
-                val tempPath = NSTemporaryDirectory() + fileName
-                data.writeToFile(tempPath)
-                val tempUrl = NSURL.fileURLWithPath(tempPath)
-
+            val tempPath = NSTemporaryDirectory() + fileName
+            if (data.writeToFile(tempPath)) {
                 val picker = UIDocumentPickerViewController(
-                    forExportingURLs = listOf(tempUrl),
+                    forExportingURLs = listOf(NSURL.fileURLWithPath(tempPath)),
                 )
+                val delegate = object : NSObject(), UIDocumentPickerDelegateProtocol {
+                    override fun documentPicker(
+                        controller: UIDocumentPickerViewController,
+                        didPickDocumentsAtURLs: List<*>,
+                    ) {
+                        activePickerDelegate = null
+                        val url = didPickDocumentsAtURLs.firstOrNull() as? NSURL
+                        onResult(url?.let { SavedFile(it.lastPathComponent ?: fileName, it.absoluteString ?: "") })
+                    }
+
+                    override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) {
+                        activePickerDelegate = null
+                        onResult(null)
+                    }
+                }
+                activePickerDelegate = delegate
+                picker.delegate = delegate
                 topViewController()?.presentViewController(picker, animated = true, completion = null)
-                onResult(true)
-            } catch (_: Exception) {
-                onResult(false)
+            } else {
+                onResult(null)
+            }
+        }
+    }
+}
+
+/**
+ * Opens the Files app at the folder of a saved file via the shareddocuments scheme.
+ */
+@Composable
+actual fun rememberFileLocationOpener(): (SavedFile) -> Unit {
+    return remember {
+        { file: SavedFile ->
+            val folderPath = NSURL.URLWithString(file.reference)?.URLByDeletingLastPathComponent?.path
+            val encoded = folderPath?.let {
+                NSString.create(string = it).stringByAddingPercentEncodingWithAllowedCharacters(
+                    NSCharacterSet.URLPathAllowedCharacterSet,
+                )
+            }
+            val target = NSURL.URLWithString("shareddocuments://" + (encoded ?: ""))
+            if (target != null) {
+                UIApplication.sharedApplication.openURL(target, emptyMap<Any?, Any>(), null)
             }
         }
     }

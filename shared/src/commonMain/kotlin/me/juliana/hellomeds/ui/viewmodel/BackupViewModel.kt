@@ -20,6 +20,7 @@ import me.juliana.hellomeds.data.backup.model.BackupData
 import me.juliana.hellomeds.data.backup.model.ImportAnalysis
 import me.juliana.hellomeds.data.backup.model.ImportDecision
 import me.juliana.hellomeds.data.backup.model.ImportResult
+import me.juliana.hellomeds.ui.util.SavedFile
 import me.juliana.hellomeds.data.backup.stripMetadata
 import me.juliana.hellomeds.data.dao.MedicationDao
 import me.juliana.hellomeds.ui.util.PlatformCapabilities
@@ -170,6 +171,14 @@ class BackupViewModel(
         }
     }
 
+    fun onFileSaved(file: SavedFile) {
+        _exportState.value = _exportState.value.copy(savedFile = file)
+    }
+
+    fun resetExportState() {
+        _exportState.value = ExportUiState()
+    }
+
     fun clearExportResult() {
         _exportState.value = _exportState.value.copy(exportResult = null)
     }
@@ -295,6 +304,7 @@ data class ExportUiState(
     val confirmPassphrase: String = "",
     val isExporting: Boolean = false,
     val exportResult: ExportResult? = null,
+    val savedFile: SavedFile? = null,
 ) {
     val passphraseValid: Boolean
         get() = !encryptBackup || (passphrase.isNotEmpty() && passphrase == confirmPassphrase)

@@ -68,16 +68,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Handle .hmbackup files opened from other apps -->
+            <!-- Handle .hmbackup files opened from other apps. The host is required for pathPattern to apply. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="content" />
-                <data android:mimeType="*/*" />
-                <data android:pathPattern=".*\\.hmbackup" />
+                <data android:mimeType="application/vnd.hellomeds.backup" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -85,9 +83,13 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
+                <data android:scheme="content" />
                 <data android:scheme="file" />
+                <data android:host="*" />
                 <data android:mimeType="*/*" />
                 <data android:pathPattern=".*\\.hmbackup" />
+                <data android:pathPattern=".*\\..*\\.hmbackup" />
+                <data android:pathPattern=".*\\..*\\..*\\.hmbackup" />
             </intent-filter>
         </activity>
 

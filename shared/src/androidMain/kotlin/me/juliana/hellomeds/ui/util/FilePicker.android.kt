@@ -3,6 +3,11 @@
 
 package me.juliana.hellomeds.ui.util
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,11 +27,12 @@ private const val MAX_IMPORT_FILE_BYTES = 50L * 1024L * 1024L // 50 MB
 
 @Composable
 actual fun rememberFileSaver(
-    onResult: (success: Boolean) -> Unit,
+    onResult: (SavedFile?) -> Unit,
 ): (fileName: String, mimeType: String, data: ByteArray) -> Unit {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var pendingData by remember { mutableStateOf<ByteArray?>(null) }
+    var pendingName by remember { mutableStateOf("") }
 
     val saveLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/octet-stream"),
@@ -34,27 +40,59 @@ actual fun rememberFileSaver(
         val data = pendingData
         if (uri != null && data != null) {
             scope.launch {
-                val success = withContext(Dispatchers.IO) {
+                val saved = withContext(Dispatchers.IO) {
                     try {
                         context.contentResolver.openOutputStream(uri)?.use { it.write(data) }
-                        true
+                        SavedFile(displayName(context, uri) ?: pendingName, uri.toString())
                     } catch (_: Exception) {
-                        false
+                        null
                     }
                 }
-                onResult(success)
+                onResult(saved)
                 pendingData = null
             }
         } else {
-            onResult(false)
+            onResult(null)
             pendingData = null
         }
     }
 
     return { fileName, _, data ->
         pendingData = data
+        pendingName = fileName
         saveLauncher.launch(fileName)
     }
+}
+
+private fun displayName(context: Context, uri: Uri): String? = context.contentResolver
+    .query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+    ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
+
+@Composable
+actual fun rememberFileLocationOpener(): (SavedFile) -> Unit {
+    val context = LocalContext.current
+    return { file ->
+        val uri = Uri.parse(file.reference)
+        val folder = parentFolderUri(uri)
+        val intent = if (folder != null) {
+            Intent(Intent.ACTION_VIEW).setDataAndType(folder, DocumentsContract.Document.MIME_TYPE_DIR)
+        } else {
+            Intent(Intent.ACTION_VIEW).setDataAndType(uri, "*/*")
+        }
+        try {
+            context.startActivity(intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION))
+        } catch (_: ActivityNotFoundException) {
+        }
+    }
+}
+
+/** Only the external storage provider has document ids that encode a folder path. */
+private fun parentFolderUri(uri: Uri): Uri? {
+    if (uri.authority != "com.android.externalstorage.documents") return null
+    val documentId = DocumentsContract.getDocumentId(uri)
+    val parentId = documentId.substringBeforeLast('/', missingDelimiterValue = "")
+        .ifEmpty { documentId.substringBefore(':') + ":" }
+    return DocumentsContract.buildDocumentUri(uri.authority, parentId)
 }
 
 @Composable

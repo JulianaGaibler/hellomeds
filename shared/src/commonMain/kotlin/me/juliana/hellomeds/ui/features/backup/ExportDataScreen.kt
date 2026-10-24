@@ -4,6 +4,7 @@
 package me.juliana.hellomeds.ui.features.backup
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -41,6 +42,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -50,8 +52,10 @@ import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_back
 import me.juliana.hellomeds.shared.backup_action_save_to_files
 import me.juliana.hellomeds.shared.backup_action_share
+import me.juliana.hellomeds.shared.backup_action_show_in_files
 import me.juliana.hellomeds.shared.backup_confirm_passphrase
 import me.juliana.hellomeds.shared.backup_deselect_all
+import me.juliana.hellomeds.shared.backup_done
 import me.juliana.hellomeds.shared.backup_encrypt
 import me.juliana.hellomeds.shared.backup_encrypt_description
 import me.juliana.hellomeds.shared.backup_encryption_info_description
@@ -60,6 +64,8 @@ import me.juliana.hellomeds.shared.backup_encryption_title
 import me.juliana.hellomeds.shared.backup_export_all
 import me.juliana.hellomeds.shared.backup_export_all_description
 import me.juliana.hellomeds.shared.backup_export_options
+import me.juliana.hellomeds.shared.backup_export_success_body
+import me.juliana.hellomeds.shared.backup_export_success_title
 import me.juliana.hellomeds.shared.backup_export_title
 import me.juliana.hellomeds.shared.backup_exporting
 import me.juliana.hellomeds.shared.backup_include_archived
@@ -84,6 +90,8 @@ import me.juliana.hellomeds.ui.components.list.SmartListSwitchItem
 import me.juliana.hellomeds.ui.components.list.SmartListTextItem
 import me.juliana.hellomeds.ui.features.settings.SettingsHeader
 import me.juliana.hellomeds.ui.features.settings.settingsContentPadding
+import me.juliana.hellomeds.ui.util.SavedFile
+import me.juliana.hellomeds.ui.util.rememberFileLocationOpener
 import me.juliana.hellomeds.ui.util.rememberFileSaver
 import me.juliana.hellomeds.ui.util.rememberFileSharer
 import me.juliana.hellomeds.ui.viewmodel.BackupViewModel
@@ -113,12 +121,10 @@ fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
         "hellomeds-backup-$dateStr.hmbackup"
     }
 
-    val fileSaver = rememberFileSaver { success ->
-        if (success) {
-            viewModel.clearExportResult()
-            onNavigateBack()
-        }
+    val fileSaver = rememberFileSaver { saved ->
+        if (saved != null) viewModel.onFileSaved(saved)
     }
+    val openFileLocation = rememberFileLocationOpener()
 
     val fileSharer = rememberFileSharer { shared ->
         if (shared) {
@@ -130,10 +136,7 @@ fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
     // Handle export result
     LaunchedEffect(state.exportResult) {
         when (val result = state.exportResult) {
-            is ExportResult.Success -> {
-                viewModel.clearExportResult()
-                onNavigateBack()
-            }
+            is ExportResult.Success -> viewModel.clearExportResult()
 
             is ExportResult.Error -> {
                 snackbarHostState.showSnackbar(result.message)
@@ -170,6 +173,16 @@ fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
         },
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
     ) { paddingValues ->
+        val savedFile = state.savedFile
+        if (savedFile != null) {
+            SavedPhase(
+                file = savedFile,
+                paddingValues = paddingValues,
+                onShowInFiles = { openFileLocation(savedFile) },
+                onDone = onNavigateBack,
+            )
+            return@AppScaffold
+        }
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -411,6 +424,61 @@ fun ExportDataScreen(viewModel: BackupViewModel, onNavigateBack: () -> Unit, mod
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
+        }
+    }
+}
+
+@Composable
+private fun SavedPhase(file: SavedFile, paddingValues: PaddingValues, onShowInFiles: () -> Unit, onDone: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = stringResource(Res.string.backup_export_success_title),
+            style = MaterialTheme.typography.headlineMedium,
+            textAlign = TextAlign.Center,
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = stringResource(Res.string.backup_export_success_body, file.name),
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        OutlinedButton(
+            onClick = onShowInFiles,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(72.dp),
+        ) {
+            Text(
+                stringResource(Res.string.backup_action_show_in_files),
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Button(
+            onClick = onDone,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(72.dp),
+        ) {
+            Text(
+                stringResource(Res.string.backup_done),
+                style = MaterialTheme.typography.titleMedium,
+            )
         }
     }
 }
