@@ -30,8 +30,8 @@ actual fun ToggleButton(
         onCheckedChange = onCheckedChange,
         modifier = modifier,
         enabled = enabled,
-        shapes = shapes ?: M3ToggleButtonDefaults.shapes(),
-        colors = colors ?: M3ToggleButtonDefaults.toggleButtonColors(),
+        shapes = shapes ?: M3ToggleButtonDefaults.shapesFor(M3ToggleButtonDefaults.size),
+        colors = colors ?: M3ToggleButtonDefaults.colors(),
         contentPadding = contentPadding ?: ButtonDefaults.ContentPadding,
         content = content,
     )

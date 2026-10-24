@@ -13,10 +13,10 @@ actual object ToggleButtonDefaults {
     @Composable
     actual fun toggleButtonColors(containerColor: Color): ToggleButtonColors =
         if (containerColor != Color.Unspecified) {
-            androidx.compose.material3.ToggleButtonDefaults.toggleButtonColors(
+            androidx.compose.material3.ToggleButtonDefaults.colors(
                 containerColor = containerColor,
             )
         } else {
-            androidx.compose.material3.ToggleButtonDefaults.toggleButtonColors()
+            androidx.compose.material3.ToggleButtonDefaults.colors()
         }
 }

@@ -3,6 +3,8 @@ agp = "9.4.1"
 kotlin = "2.4.21"
 ksp = "2.3.6"
 compileSdk = "37"
+# Compose 1.13 libraries require API 37.1.
+compileSdkMinor = "1"
 targetSdk = "36"
 minSdk = "31"
 
@@ -16,10 +18,14 @@ activityCompose = "1.13.0"
 composeBom = "2026.09.00"
 
 # Compose Multiplatform
-composeMultiplatform = "1.10.0-beta02"
+composeMultiplatform = "1.13.0-beta01"
 
 # Material 3
-material3Expressive = "1.5.0-alpha19"
+# cmpMaterial3 is what shared code compiles against (Android and iOS). material3Android
+# pins androidx on Android and may be newer. Gradle then resolves the higher version.
+cmpMaterial3 = "1.13.0-beta01"
+materialIconsExtended = "1.7.3"
+material3Android = "1.5.0-beta02"
 material3Adaptive = "1.3.0"
 graphicsShapes = "1.1.0"
 
@@ -86,8 +92,18 @@ androidx-compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 
+# Compose Multiplatform (JetBrains, shared code on Android + iOS)
+cmp-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
+cmp-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }
+cmp-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
+cmp-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "composeMultiplatform" }
+cmp-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
+cmp-components-ui-tooling-preview = { module = "org.jetbrains.compose.components:components-ui-tooling-preview", version.ref = "composeMultiplatform" }
+cmp-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "cmpMaterial3" }
+cmp-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
+
 # Material 3
-androidx-material3-expressive = { module = "androidx.compose.material3:material3", version.ref = "material3Expressive" }
+androidx-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3Android" }
 androidx-material3-adaptive = { module = "androidx.compose.material3.adaptive:adaptive", version.ref = "material3Adaptive" }
 androidx-graphics-shapes = { module = "androidx.graphics:graphics-shapes", version.ref = "graphicsShapes" }
 androidx-material-icons-core = { module = "androidx.compose.material:material-icons-core" }

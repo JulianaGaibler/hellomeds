@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.rememberSliderState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -25,11 +26,15 @@ actual fun StockLevelSlider(
     steps: Int,
     modifier: Modifier,
 ) {
-    Slider(
+    val sliderState = rememberSliderState(
         value = value,
-        onValueChange = onValueChange,
-        valueRange = valueRange,
         steps = steps,
+        trackRange = valueRange,
+    )
+    sliderState.value = value
+    Slider(
+        state = sliderState,
+        onValueChange = onValueChange,
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp),

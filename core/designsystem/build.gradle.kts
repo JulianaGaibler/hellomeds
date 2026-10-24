@@ -6,9 +6,13 @@ plugins {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "me.juliana.hellomeds.core.designsystem"
-        compileSdk = libs.versions.compileSdk.get().toInt()
+        compileSdk {
+            version = release(libs.versions.compileSdk.get().toInt()) {
+                minorApiLevel = libs.versions.compileSdkMinor.get().toInt()
+            }
+        }
         minSdk = libs.versions.minSdk.get().toInt()
     }
 
@@ -23,11 +27,11 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
+            implementation(libs.cmp.runtime)
+            implementation(libs.cmp.foundation)
+            implementation(libs.cmp.material3)
+            implementation(libs.cmp.ui)
+            implementation(libs.cmp.components.resources)
             implementation(libs.koin.core)
             implementation(libs.kotlinx.datetime)
         }
