@@ -7,6 +7,7 @@ import android.content.Context
 import me.juliana.hellomeds.data.backup.AutoBackupStorageProvider
 import me.juliana.hellomeds.data.crypto.DatabaseKeyManager
 import me.juliana.hellomeds.data.crypto.PassphraseManager
+import me.juliana.hellomeds.data.database.DatabaseSchemaGuard
 import me.juliana.hellomeds.data.database.getDatabaseBuilder
 import me.juliana.hellomeds.data.preferences.AppearancePreferences
 import me.juliana.hellomeds.data.preferences.CameraPreferences
@@ -27,6 +28,7 @@ import org.koin.dsl.module
 actual val platformDataModule: Module = module {
     single { getDatabaseBuilder(get<Context>()) }
     single { DatabaseKeyManager(get<Context>()) }
+    single { DatabaseSchemaGuard(get<Context>()) }
 
     // Preferences — each wraps a platform-specific DataStore instance
     single { NotificationPreferences(createNotificationDataStore(get<Context>())) }

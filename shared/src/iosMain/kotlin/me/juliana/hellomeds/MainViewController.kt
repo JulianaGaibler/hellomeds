@@ -17,6 +17,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import me.juliana.hellomeds.data.database.DatabaseSchemaGuard
+import me.juliana.hellomeds.data.database.isDowngrade
 import me.juliana.hellomeds.data.di.dataModule
 import me.juliana.hellomeds.data.interfaces.ScheduleReconciler
 import me.juliana.hellomeds.data.repository.MedicationHistoryRepository
@@ -44,6 +46,7 @@ import me.juliana.hellomeds.ui.di.iosPlatformModule
 import me.juliana.hellomeds.ui.di.sharedUiModule
 import me.juliana.hellomeds.ui.features.alarm.ReminderAlarmScreen
 import me.juliana.hellomeds.ui.features.camera.IOSCameraDetectionScreen
+import me.juliana.hellomeds.ui.features.error.DowngradeDetectedScreen
 import me.juliana.hellomeds.ui.features.onboarding.IOSAlarmKitPermissionScreen
 import me.juliana.hellomeds.ui.features.onboarding.IOSCriticalAlertsPermissionScreen
 import me.juliana.hellomeds.ui.features.onboarding.IOSNotificationPermissionScreen
@@ -72,6 +75,15 @@ private var koinInitialized = false
 @OptIn(kotlinx.cinterop.ExperimentalForeignApi::class, kotlin.experimental.ExperimentalNativeApi::class)
 @Suppress("unused", "FunctionName")
 fun MainViewController(): UIViewController {
+    val schemaGuard = DatabaseSchemaGuard()
+    if (schemaGuard.isDowngrade()) {
+        return ComposeUIViewController {
+            HelloMedsTheme {
+                DowngradeDetectedScreen(onErase = schemaGuard::wipeDatabase)
+            }
+        }
+    }
+
     if (!koinInitialized) {
         // Enable file-backed diagnostic log persistence (before any service code runs)
         val cachesDir = NSFileManager.defaultManager.URLForDirectory(

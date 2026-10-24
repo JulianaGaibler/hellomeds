@@ -7,6 +7,7 @@ import me.juliana.hellomeds.data.service.MedicationDataClearer
 import me.juliana.hellomeds.data.service.ClearRange
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -38,7 +39,11 @@ import me.juliana.hellomeds.data.model.enums.TrackingPrecision
 import me.juliana.hellomeds.data.repository.MedicationRepository
 import me.juliana.hellomeds.data.repository.ScheduleRepository
 import me.juliana.hellomeds.data.repository.StockTrackingRepository
+import me.juliana.hellomeds.data.util.AppLogger
 import me.juliana.hellomeds.domain.validation.MedicationValidation
+import me.juliana.hellomeds.shared.Res
+import me.juliana.hellomeds.shared.medication_error_save
+import org.jetbrains.compose.resources.getString
 import me.juliana.hellomeds.ui.theme.MedicationColor
 
 /**
@@ -127,8 +132,21 @@ class MedicationViewModel(
         }.flowOn(Dispatchers.Default)
     }
 
-    fun insertMedication(medication: Medication, onInserted: (Long) -> Unit = {}) {
+    private fun launchGuarded(block: suspend () -> Unit) {
         viewModelScope.launch {
+            try {
+                block()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                AppLogger.e("MedicationViewModel", "Medication action failed: ${e.message}", e)
+                _errorEvents.emit(getString(Res.string.medication_error_save))
+            }
+        }
+    }
+
+    fun insertMedication(medication: Medication, onInserted: (Long) -> Unit = {}) {
+        launchGuarded {
             val id = medicationRepository.insert(medication)
             onInserted(id)
         }
@@ -139,7 +157,7 @@ class MedicationViewModel(
     }
 
     fun deleteMedication(medication: Medication) {
-        viewModelScope.launch {
+        launchGuarded {
             medicationRepository.delete(medication)
         }
     }
@@ -153,39 +171,39 @@ class MedicationViewModel(
         range: ClearRange,
         onDone: () -> Unit,
     ) {
-        viewModelScope.launch {
+        launchGuarded {
             dataClearer.clear(medicationId, clearHistory, clearStock, range)
             onDone()
         }
     }
 
     fun archiveMedication(medicationId: Int) {
-        viewModelScope.launch {
+        launchGuarded {
             medicationRepository.archive(medicationId)
         }
     }
 
     fun unarchiveMedication(medicationId: Int) {
-        viewModelScope.launch {
+        launchGuarded {
             medicationRepository.unarchive(medicationId)
         }
     }
 
     /** Applies [edit] to the stored medication, not to a snapshot that may be out of date. */
     fun editMedication(medicationId: Int, edit: (Medication) -> Medication) {
-        viewModelScope.launch {
+        launchGuarded {
             medicationRepository.edit(medicationId, edit)
         }
     }
 
     fun updateMedication(medication: Medication) {
-        viewModelScope.launch {
+        launchGuarded {
             medicationRepository.update(medication)
         }
     }
 
     fun updateMedicationNotes(medicationId: Int, notes: String) {
-        viewModelScope.launch {
+        launchGuarded {
             val medication = medicationRepository.getById(medicationId).first()
             medication?.let {
                 val updated = it.copy(notes = notes.trim().ifEmpty { null })
@@ -195,7 +213,7 @@ class MedicationViewModel(
     }
 
     fun updateMedicationLabel(medicationId: Int, importanceLabelId: Int) {
-        viewModelScope.launch {
+        launchGuarded {
             val medication = medicationRepository.getById(medicationId).first()
             medication?.let {
                 val updated = it.copy(importanceLabelId = importanceLabelId)
@@ -215,7 +233,7 @@ class MedicationViewModel(
         depletionReminderEnabled: Boolean = false,
         containerStartedAt: Long? = null,
     ) {
-        viewModelScope.launch {
+        launchGuarded {
             stockTrackingRepository.enableStockTracking(
                 medication = medication,
                 trackingPrecision = trackingPrecision,
@@ -238,8 +256,8 @@ class MedicationViewModel(
         hasPlacebos: Boolean,
         startDate: kotlinx.datetime.LocalDate?,
     ) {
-        viewModelScope.launch {
-            val medication = medicationRepository.getById(medicationId).first() ?: return@launch
+        launchGuarded {
+            val medication = medicationRepository.getById(medicationId).first() ?: return@launchGuarded
             val updated = medication.copy(
                 cycleType = cycleType,
                 cycleDaysActive = daysActive,
@@ -252,16 +270,16 @@ class MedicationViewModel(
     }
 
     fun updateTimeZoneMode(medicationId: Int, timeZoneMode: TimeZoneMode) {
-        viewModelScope.launch {
-            val medication = medicationRepository.getById(medicationId).first() ?: return@launch
+        launchGuarded {
+            val medication = medicationRepository.getById(medicationId).first() ?: return@launchGuarded
             val updated = medication.copy(timeZoneMode = timeZoneMode)
             medicationRepository.update(updated)
         }
     }
 
     fun startNewPack(medicationId: Int) {
-        viewModelScope.launch {
-            val medication = medicationRepository.getById(medicationId).first() ?: return@launch
+        launchGuarded {
+            val medication = medicationRepository.getById(medicationId).first() ?: return@launchGuarded
             val today = kotlin.time.Clock.System.now()
                 .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
             val updated = medication.copy(cycleStartDate = today)
@@ -270,8 +288,8 @@ class MedicationViewModel(
     }
 
     fun setCycleDay(medicationId: Int, dayInCycle: Int) {
-        viewModelScope.launch {
-            val medication = medicationRepository.getById(medicationId).first() ?: return@launch
+        launchGuarded {
+            val medication = medicationRepository.getById(medicationId).first() ?: return@launchGuarded
             val today = kotlin.time.Clock.System.now()
                 .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
             val updated = medication.copy(

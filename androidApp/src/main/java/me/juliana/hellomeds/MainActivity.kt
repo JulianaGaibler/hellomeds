@@ -22,8 +22,11 @@ import me.juliana.hellomeds.data.util.AppLogger
 import me.juliana.hellomeds.data.preferences.AppearancePreferences
 import me.juliana.hellomeds.data.preferences.NotificationPreferences
 import me.juliana.hellomeds.data.preferences.OnboardingPreferences
+import me.juliana.hellomeds.data.database.DatabaseSchemaGuard
+import me.juliana.hellomeds.data.database.isDowngrade
 import me.juliana.hellomeds.flavor.CameraFeature
 import me.juliana.hellomeds.ui.HelloMedsApp
+import me.juliana.hellomeds.ui.features.error.DowngradeDetectedScreen
 import me.juliana.hellomeds.ui.features.onboarding.OnboardingUtils
 import me.juliana.hellomeds.ui.features.onboarding.PermissionRevokedDialog
 import me.juliana.hellomeds.ui.features.onboarding.RevokedPermission
@@ -53,6 +56,16 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val schemaGuard = DatabaseSchemaGuard(applicationContext)
+        if (schemaGuard.isDowngrade()) {
+            setContent {
+                HelloMedsTheme {
+                    DowngradeDetectedScreen(onErase = schemaGuard::wipeDatabase)
+                }
+            }
+            return
+        }
 
         // Check for notification intent
         handleNotificationIntent(intent)

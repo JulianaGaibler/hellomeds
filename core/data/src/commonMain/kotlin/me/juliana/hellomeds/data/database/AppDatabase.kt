@@ -30,7 +30,7 @@ import me.juliana.hellomeds.data.database.entities.StockAdjustment
         StockAdjustment::class,
         NotificationSessionEntity::class,
     ],
-    version = 7,
+    version = DATABASE_SCHEMA_VERSION,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)

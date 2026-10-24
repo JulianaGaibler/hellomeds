@@ -150,6 +150,7 @@ fun MedicationDetailScreenEntry(
             },
             autoBackupEnabled = autoBackupEnabled,
             onOpenBackups = onOpenBackups,
+            errorMessages = medicationViewModel.errorEvents,
         )
     }
 }

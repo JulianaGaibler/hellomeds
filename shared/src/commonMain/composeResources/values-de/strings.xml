@@ -1224,4 +1224,14 @@
 	<string name="clear_data_continue">Fortfahren</string>
 	<string name="clear_data_confirm">Löschen</string>
 	<string name="clear_data_done">Daten gelöscht</string>
+
+	<!-- Database downgrade -->
+	<string name="downgrade_title">Neuere Daten gefunden</string>
+	<string name="downgrade_message">Deine Daten wurden von einer neueren Version von HelloMeds gespeichert, und diese Version kann sie nicht öffnen. Installiere die neueste Version, um deine Daten zu behalten. Beim Löschen startet die App leer.</string>
+	<string name="downgrade_erase">Daten löschen und neu beginnen</string>
+	<string name="downgrade_confirm_title">Alle Daten löschen?</string>
+	<string name="downgrade_confirm_message">Dadurch werden deine Medikamente und der Verlauf auf diesem Gerät dauerhaft gelöscht. Stelle danach ein Backup wieder her, falls du eines hast.</string>
+	<string name="downgrade_erased">Deine Daten wurden gelöscht. Schließe HelloMeds und öffne es erneut.</string>
+
+	<string name="medication_error_save">Deine Änderungen konnten nicht gespeichert werden</string>
 </resources>

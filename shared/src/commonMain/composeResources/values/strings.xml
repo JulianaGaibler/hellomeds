@@ -1280,4 +1280,14 @@
     <string name="clear_data_continue">Continue</string>
     <string name="clear_data_confirm">Clear</string>
     <string name="clear_data_done">Data cleared</string>
+
+    <!-- Database downgrade -->
+    <string name="downgrade_title">Newer data found</string>
+    <string name="downgrade_message">Your data was saved by a newer version of HelloMeds and this version cannot open it. Install the latest version to keep your data. Erasing starts over with an empty app.</string>
+    <string name="downgrade_erase">Erase data and start over</string>
+    <string name="downgrade_confirm_title">Erase all data?</string>
+    <string name="downgrade_confirm_message">This permanently deletes your medications and history on this device. Restore a backup afterward if you have one.</string>
+    <string name="downgrade_erased">Your data was erased. Close HelloMeds and open it again.</string>
+
+    <string name="medication_error_save">Couldn't save your changes</string>
 </resources>

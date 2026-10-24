@@ -36,6 +36,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SnackbarHostState
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -43,6 +45,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -133,6 +136,7 @@ fun MedicationDetailScreen(
     onClearData: (clearHistory: Boolean, clearStock: Boolean, range: ClearRange, onDone: () -> Unit) -> Unit =
         { _, _, _, _ -> },
     onOpenBackups: () -> Unit = {},
+    errorMessages: Flow<String> = emptyFlow(),
     modifier: Modifier = Modifier,
 ) {
     var notes by remember(medication) { mutableStateOf(medication.notes ?: "") }
@@ -143,6 +147,9 @@ fun MedicationDetailScreen(
     var showNoBackupDialog by remember { mutableStateOf(false) }
     var showClearDataDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(errorMessages) {
+        errorMessages.collect { snackbarHostState.showSnackbar(it) }
+    }
     val scope = rememberCoroutineScope()
     val dataClearedMessage = stringResource(Res.string.clear_data_done)
     var initialNotes by remember(medication) { mutableStateOf(medication.notes ?: "") }

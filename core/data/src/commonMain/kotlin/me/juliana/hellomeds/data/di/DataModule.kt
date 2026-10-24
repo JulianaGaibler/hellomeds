@@ -28,6 +28,10 @@ import me.juliana.hellomeds.data.service.StockPredictionEngine
 import me.juliana.hellomeds.data.service.UnloggedDoseResolver
 import me.juliana.hellomeds.data.util.MissedDoseDetector
 import me.juliana.hellomeds.data.util.ReliabilityStateProvider
+import me.juliana.hellomeds.data.database.DATABASE_SCHEMA_VERSION
+import me.juliana.hellomeds.data.database.DatabaseDowngradeException
+import me.juliana.hellomeds.data.database.DatabaseSchemaGuard
+import me.juliana.hellomeds.data.database.isDowngrade
 import me.juliana.hellomeds.data.util.RoomTransactionRunner
 import me.juliana.hellomeds.data.util.SystemTimeProvider
 import me.juliana.hellomeds.data.util.TimeProvider
@@ -47,17 +51,19 @@ val dataModule = module {
     // Database (encrypted via SQLCipher).
     // Migrations are registered via .addMigrations(...). There is intentionally no
     // fallbackToDestructiveMigration(), so a missing migration throws at startup rather
-    // than silently wiping user health data. Downgrades still wipe because they would
-    // otherwise crash on schema mismatch.
+    // than silently wiping user health data. A downgrade throws as well. The UI checks
+    // DatabaseSchemaGuard first and offers to wipe on the user's request.
     single<AppDatabase> {
+        val guard = get<DatabaseSchemaGuard>()
+        if (guard.isDowngrade()) throw DatabaseDowngradeException()
         val builder = get<RoomDatabase.Builder<AppDatabase>>()
-            .fallbackToDestructiveMigrationOnDowngrade(true)
             .addMigrations(MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
         configureEncryptedDriver(builder, get<DatabaseKeyManager>())
             .build()
             .also { db ->
                 CoroutineScope(Dispatchers.Default).launch {
                     seedDefaultImportanceLabels(db.importanceLabelDao())
+                    guard.recordVersion(DATABASE_SCHEMA_VERSION)
                 }
             }
     } bind RoomDatabase::class
