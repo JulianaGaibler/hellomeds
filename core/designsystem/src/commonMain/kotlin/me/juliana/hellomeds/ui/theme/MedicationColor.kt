@@ -142,23 +142,26 @@ sealed class MedicationColor(
 
     companion object {
         /**
-         * All available medication colors
+         * All available medication colors. Lazy because the subclass objects are still null while the
+         * companion initializes when one of them is touched first.
          */
-        val all: List<MedicationColor> = listOf(
-            Rose,
-            Pink,
-            Red,
-            Orange,
-            Yellow,
-            Chartreuse,
-            Green,
-            Teal,
-            Cyan,
-            Blue,
-            Indigo,
-            Purple,
-            Monochrome,
-        )
+        val all: List<MedicationColor> by lazy {
+            listOf(
+                Rose,
+                Pink,
+                Red,
+                Orange,
+                Yellow,
+                Chartreuse,
+                Green,
+                Teal,
+                Cyan,
+                Blue,
+                Indigo,
+                Purple,
+                Monochrome,
+            )
+        }
 
         /**
          * Get color by name (case-insensitive)

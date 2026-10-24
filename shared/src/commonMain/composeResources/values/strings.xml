@@ -223,8 +223,6 @@
     <string name="medication_strength_value">Strength value</string>
     <string name="medication_strength_unit">Strength unit</string>
     <string name="medication_type_label">Type</string>
-    <string name="medication_type_section">Type</string>
-    <string name="medication_strength_section">Strength</string>
     <string name="medication_icon_label">Icon</string>
     <string name="medication_notes_label">Notes</string>
     <string name="medication_edit_title_format">Edit %1$s</string>
@@ -576,11 +574,11 @@
     <string name="backup_medications_section">Medications</string>
     <string name="backup_select_all">Select all</string>
     <string name="backup_deselect_all">Deselect all</string>
+    <string name="backup_exporting">Exporting…</string>
+    <string name="backup_action_save_to_files">Save to Files</string>
     <string name="backup_action_show_in_files">Show in Files</string>
     <string name="backup_export_success_title">Backup saved</string>
     <string name="backup_export_success_body">%1$s was saved.</string>
-    <string name="backup_exporting">Exporting…</string>
-    <string name="backup_action_save_to_files">Save to Files</string>
     <string name="backup_action_share">Share…</string>
 
     <!-- Import Screen -->
@@ -1193,6 +1191,9 @@
     <string name="tracking_placebo_badge">Placebo</string>
     <string name="tracking_active_badge">Active</string>
     <string name="cycle_section_title">Dosing Cycle</string>
+    <string name="edit_medication_timezone_label">Time zone</string>
+    <string name="cycle_summary_off">Off</string>
+    <string name="cycle_summary_format">%1$d days active, %2$d days break</string>
     <string name="cycle_info_calendar_days">The cycle advances by one each calendar day from your start date — it does not pause for missed doses or non-scheduled days.</string>
     <string name="schedule_cycle_info_title">Cycle and Schedule</string>
     <string name="schedule_cycle_info_body_1">Your schedule sets the specific times and days for your medication. Your cycle acts as an overall filter for those reminders.</string>
@@ -1243,7 +1244,6 @@
     </plurals>
     <string name="reliability_banner_away_action">Dismiss</string>
     <string name="unlogged_dose_section_title">Unlogged doses</string>
-    <string name="unlogged_dose_action_label">After 24 hours without logging</string>
     <string name="unlogged_dose_action_skip">Mark as skipped</string>
     <string name="unlogged_dose_action_take">Mark as taken</string>
     <string name="unlogged_dose_take_hint">Only choose this if you reliably take this medication. Automatically taken doses are deducted from your stock, and you can correct any of them in your history.</string>

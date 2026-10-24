@@ -37,6 +37,13 @@ class DiagnosticLogPersistenceTest {
     /** Wait for async file I/O to flush. */
     private fun awaitFlush() = runBlocking { delay(200) }
 
+    /** Other test classes share the [DiagnosticLog] singleton and can log while these tests run. */
+    private val ownTags = setOf("Tag", "Tag1", "Tag2", "Tag3", "OldTag", "ValidTag", "Sched")
+
+    private fun ownEntries() = DiagnosticLog.getEntries().filter { it.tag in ownTags }
+
+    private fun ownFileLines() = logFile.readLines().filter { line -> ownTags.any { "|$it|" in line } }
+
     @Test
     fun `entries are persisted to file after add`() {
         DiagnosticLog.configure(logFile.absolutePath)
@@ -46,7 +53,7 @@ class DiagnosticLogPersistenceTest {
         DiagnosticLog.e("Tag2", "error one")
         awaitFlush()
 
-        val lines = logFile.readText().trim().lines().filter { it.isNotBlank() }
+        val lines = ownFileLines()
         assertEquals(2, lines.size)
         assertTrue(lines[0].contains("|W|Tag1|warning one"))
         assertTrue(lines[1].contains("|E|Tag2|error one"))
@@ -82,13 +89,13 @@ class DiagnosticLogPersistenceTest {
             // Clear in-memory state
             DiagnosticLog.clear()
             awaitFlush()
-            assertTrue(DiagnosticLog.getEntries().isEmpty())
+            assertTrue(ownEntries().isEmpty())
 
             // Reconfigure from the saved file (simulates app restart)
             DiagnosticLog.configure(tempFile2.absolutePath)
             awaitFlush()
 
-            val restored = DiagnosticLog.getEntries()
+            val restored = ownEntries()
             assertTrue(restored.isNotEmpty())
             assertTrue(restored.any { it.message == "persistent entry" })
         } finally {
@@ -108,7 +115,7 @@ class DiagnosticLogPersistenceTest {
         DiagnosticLog.configure(logFile.absolutePath)
         awaitFlush()
 
-        val entries = DiagnosticLog.getEntries()
+        val entries = ownEntries()
         assertEquals(2, entries.size)
         assertEquals("loaded from file", entries[0].message)
         assertEquals("error from file", entries[1].message)
@@ -131,7 +138,7 @@ class DiagnosticLogPersistenceTest {
         DiagnosticLog.configure(logFile.absolutePath)
         awaitFlush()
 
-        val entries = DiagnosticLog.getEntries()
+        val entries = ownEntries()
         assertEquals(1, entries.size)
         assertEquals("fresh entry", entries[0].message)
     }
@@ -152,7 +159,7 @@ class DiagnosticLogPersistenceTest {
         DiagnosticLog.configure(logFile.absolutePath)
         awaitFlush()
 
-        val entries = DiagnosticLog.getEntries()
+        val entries = ownEntries()
         assertEquals(2, entries.size)
         assertEquals("valid entry", entries[0].message)
         assertEquals("another valid entry", entries[1].message)
@@ -165,7 +172,7 @@ class DiagnosticLogPersistenceTest {
         DiagnosticLog.configure(logFile.absolutePath)
         awaitFlush()
 
-        assertTrue(DiagnosticLog.getEntries().isEmpty())
+        assertTrue(ownEntries().isEmpty())
     }
 
     @Test
@@ -202,7 +209,7 @@ class DiagnosticLogPersistenceTest {
             DiagnosticLog.configure(tempFile.absolutePath)
             awaitFlush()
 
-            val entries = DiagnosticLog.getEntries()
+            val entries = ownEntries()
             assertEquals(1, entries.size)
             assertEquals("pipes | in | message\nand newlines", entries[0].message)
         } finally {
@@ -223,7 +230,7 @@ class DiagnosticLogPersistenceTest {
         DiagnosticLog.w("Tag3", "warning message")
         awaitFlush()
 
-        val entries = DiagnosticLog.getEntries()
+        val entries = ownEntries()
         assertEquals(3, entries.size)
         assertEquals(DiagnosticLog.LogLevel.DEBUG, entries[0].level)
         assertEquals(DiagnosticLog.LogLevel.INFO, entries[1].level)
@@ -246,7 +253,7 @@ class DiagnosticLogPersistenceTest {
         DiagnosticLog.w("Tag3", "warning message")
         awaitFlush()
 
-        val entries = DiagnosticLog.getEntries()
+        val entries = ownEntries()
         assertEquals(1, entries.size)
         assertEquals(DiagnosticLog.LogLevel.WARN, entries[0].level)
     }
@@ -267,12 +274,12 @@ class DiagnosticLogPersistenceTest {
             logFile.copyTo(tempFile, overwrite = true)
             DiagnosticLog.clear()
             awaitFlush()
-            assertTrue(DiagnosticLog.getEntries().isEmpty())
+            assertTrue(ownEntries().isEmpty())
 
             DiagnosticLog.configure(tempFile.absolutePath)
             awaitFlush()
 
-            val restored = DiagnosticLog.getEntries()
+            val restored = ownEntries()
             assertEquals(2, restored.size)
             assertEquals(DiagnosticLog.LogLevel.DEBUG, restored[0].level)
             assertEquals("alarm set at 1234", restored[0].message)

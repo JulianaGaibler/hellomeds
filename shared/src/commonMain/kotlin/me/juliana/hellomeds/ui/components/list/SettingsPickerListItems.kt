@@ -66,7 +66,7 @@ fun SmartListTimePickerItem(
     SmartListItem(
         headlineContent = { Text(label) },
         trailingContent = {
-            TextButton(onClick = { showTimePicker = true }) {
+            TextButton(onClick = { showTimePicker = true }, modifier = Modifier.alignTrailingButton()) {
                 Text(formatTime(time))
             }
         },
@@ -138,6 +138,7 @@ fun SmartListDatePickerItem(
         trailingContent = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.alignTrailingButton(),
             ) {
                 TextButton(onClick = { showDatePicker = true }) {
                     Text(date?.let { formatShortDate(it) } ?: unsetLabel)

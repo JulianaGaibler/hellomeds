@@ -22,11 +22,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -79,6 +81,7 @@ import me.juliana.hellomeds.shared.cycle_set_day_title
 import me.juliana.hellomeds.shared.medication_action_label
 import me.juliana.hellomeds.shared.medication_action_schedule
 import me.juliana.hellomeds.shared.medication_dialog_archive_message
+import me.juliana.hellomeds.shared.menu_content_description
 import me.juliana.hellomeds.shared.medication_dialog_archive_title
 import me.juliana.hellomeds.shared.medication_dialog_delete_message
 import me.juliana.hellomeds.shared.medication_dialog_delete_title
@@ -91,9 +94,7 @@ import me.juliana.hellomeds.shared.schedule_action_unarchive
 import me.juliana.hellomeds.shared.screen_medication_details
 import me.juliana.hellomeds.shared.screen_stock
 import me.juliana.hellomeds.ui.compat.platformContext
-import me.juliana.hellomeds.ui.components.list.SmartList
-import me.juliana.hellomeds.ui.components.list.SmartListItem
-import me.juliana.hellomeds.ui.components.list.smartListSegmentedShapes
+import me.juliana.hellomeds.ui.compat.GroupedOverflowDropdown
 import me.juliana.hellomeds.ui.components.medication.CycleDayPicker
 import me.juliana.hellomeds.ui.components.medication.MedicationActionIconButton
 import me.juliana.hellomeds.ui.components.medication.MedicationShapeIcon
@@ -258,6 +259,45 @@ fun MedicationDetailScreen(
                             contentDescription = stringResource(Res.string.content_description_back),
                         )
                     }
+                },
+                actions = {
+                    var menuExpanded by remember { mutableStateOf(false) }
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = stringResource(Res.string.menu_content_description),
+                        )
+                    }
+                    GroupedOverflowDropdown(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                        groups = listOf { dismiss ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        stringResource(
+                                            if (isArchived) {
+                                                Res.string.schedule_action_unarchive
+                                            } else {
+                                                Res.string.schedule_action_archive
+                                            },
+                                        ),
+                                    )
+                                },
+                                onClick = {
+                                    dismiss()
+                                    showArchiveDialog = true
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(Res.string.action_delete)) },
+                                onClick = {
+                                    dismiss()
+                                    showDeleteDialog = true
+                                },
+                            )
+                        },
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -497,31 +537,6 @@ fun MedicationDetailScreen(
                     .defaultMinSize(minHeight = 120.dp),
                 maxLines = Int.MAX_VALUE,
             )
-
-            // Actions
-            SmartList(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                SmartListItem(
-                    headlineContent = { Text(stringResource(Res.string.action_delete)) },
-                    shapes = smartListSegmentedShapes(index = 0, count = 2),
-                    onClick = { showDeleteDialog = true },
-                )
-
-                SmartListItem(
-                    headlineContent = {
-                        Text(
-                            if (isArchived) {
-                                stringResource(Res.string.schedule_action_unarchive)
-                            } else {
-                                stringResource(Res.string.schedule_action_archive)
-                            },
-                        )
-                    },
-                    shapes = smartListSegmentedShapes(index = 1, count = 2),
-                    onClick = { showArchiveDialog = true },
-                )
-            }
         }
     }
 }

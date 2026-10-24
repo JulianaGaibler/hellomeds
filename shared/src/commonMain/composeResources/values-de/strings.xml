@@ -223,8 +223,6 @@
 	<string name="medication_strength_value">Stärkewert</string>
 	<string name="medication_strength_unit">Stärkeeinheit</string>
 	<string name="medication_type_label">Typ</string>
-	<string name="medication_type_section">Typ</string>
-	<string name="medication_strength_section">Stärke</string>
 	<string name="medication_icon_label">Symbol</string>
 	<string name="medication_notes_label">Notizen</string>
 	<string name="medication_edit_title_format">%1$s bearbeiten</string>
@@ -568,11 +566,11 @@
 	<string name="backup_medications_section">Medikamente</string>
 	<string name="backup_select_all">Alle auswählen</string>
 	<string name="backup_deselect_all">Alle abwählen</string>
+	<string name="backup_exporting">Wird exportiert…</string>
+	<string name="backup_action_save_to_files">In Dateien speichern</string>
 	<string name="backup_action_show_in_files">In Dateien anzeigen</string>
 	<string name="backup_export_success_title">Backup gespeichert</string>
 	<string name="backup_export_success_body">%1$s wurde gespeichert.</string>
-	<string name="backup_exporting">Wird exportiert…</string>
-	<string name="backup_action_save_to_files">In Dateien speichern</string>
 	<string name="backup_action_share">Teilen…</string>
 
 	<!-- Import Screen -->
@@ -653,7 +651,6 @@
 	</plurals>
 	<string name="reliability_banner_away_action">Schließen</string>
 	<string name="unlogged_dose_section_title">Nicht protokollierte Einnahmen</string>
-	<string name="unlogged_dose_action_label">Nach 24 Stunden ohne Protokollierung</string>
 	<string name="unlogged_dose_action_skip">Als übersprungen markieren</string>
 	<string name="unlogged_dose_action_take">Als eingenommen markieren</string>
 	<string name="unlogged_dose_take_hint">Wähle dies nur, wenn du dieses Medikament zuverlässig einnimmst. Automatisch eingenommene Einnahmen werden vom Vorrat abgezogen, und du kannst sie im Verlauf jederzeit korrigieren.</string>
@@ -1157,6 +1154,9 @@
 	<string name="tracking_placebo_badge">Placebo</string>
 	<string name="tracking_active_badge">Aktiv</string>
 	<string name="cycle_section_title">Dosierungszyklus</string>
+	<string name="edit_medication_timezone_label">Zeitzone</string>
+	<string name="cycle_summary_off">Aus</string>
+	<string name="cycle_summary_format">%1$d Tage aktiv, %2$d Tage Pause</string>
 	<string name="cycle_info_calendar_days">Der Zyklus wird ab Startdatum jeden Kalendertag um eins weitergezählt. Er pausiert nicht bei verpassten Dosen oder nicht geplanten Tagen.</string>
 	<string name="schedule_cycle_info_title">Zyklus und Zeitplan</string>
 	<string name="schedule_cycle_info_body_1">Der Zeitplan legt konkrete Zeiten und Tage für die Einnahme fest. Der Zyklus wirkt als übergeordneter Filter für diese Erinnerungen.</string>

@@ -55,7 +55,9 @@ import me.juliana.hellomeds.ui.features.settings.SupportScreen
 import me.juliana.hellomeds.ui.navigation3.entries.AddMedicationScreenEntry
 import me.juliana.hellomeds.ui.navigation3.entries.AddStockTrackingFlowScreenEntry
 import me.juliana.hellomeds.ui.navigation3.entries.EditLabelScreenEntry
+import me.juliana.hellomeds.ui.navigation3.entries.EditMedicationCycleScreenEntry
 import me.juliana.hellomeds.ui.navigation3.entries.EditMedicationScreenEntry
+import me.juliana.hellomeds.ui.navigation3.entries.EditMedicationTimeZoneScreenEntry
 import me.juliana.hellomeds.ui.navigation3.entries.EditScheduleScreenEntry
 import me.juliana.hellomeds.ui.navigation3.entries.ImportanceLabelsScreenEntry
 import me.juliana.hellomeds.ui.navigation3.entries.MedicationDetailScreenEntry
@@ -69,6 +71,7 @@ import me.juliana.hellomeds.ui.util.rememberFolderPicker
 import me.juliana.hellomeds.ui.util.suggestedAutoBackupInitialUri
 import me.juliana.hellomeds.ui.viewmodel.AutoBackupViewModel
 import me.juliana.hellomeds.ui.viewmodel.BackupViewModel
+import me.juliana.hellomeds.ui.viewmodel.EditMedicationViewModel
 import me.juliana.hellomeds.ui.viewmodel.SupportViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -287,12 +290,12 @@ fun HelloMedsNavigation3(
         entry<ExportDataRoute> {
             OverlayScreenWrapper {
                 val backupViewModel: BackupViewModel = koinViewModel()
-                ExportDataScreen(
-                    viewModel = backupViewModel,
-                    onNavigateBack = { navigator.closeOverlay() },
                 DisposableEffect(Unit) {
                     onDispose { backupViewModel.resetExportState() }
                 }
+                ExportDataScreen(
+                    viewModel = backupViewModel,
+                    onNavigateBack = { navigator.closeOverlay() },
                 )
             }
         }
@@ -300,12 +303,12 @@ fun HelloMedsNavigation3(
         entry<ImportDataRoute> {
             OverlayScreenWrapper {
                 val backupViewModel: BackupViewModel = koinViewModel()
-
-                // Auto-parse if opened from an external backup file
-                val pendingImport = remember { IncomingBackupHandler.pendingImport.value }
                 DisposableEffect(Unit) {
                     onDispose { backupViewModel.resetImportState() }
                 }
+
+                // Auto-parse if opened from an external backup file
+                val pendingImport = remember { IncomingBackupHandler.pendingImport.value }
                 LaunchedEffect(pendingImport) {
                     val bytes = when (pendingImport) {
                         is PendingImport.Bytes -> pendingImport.data.takeIf { it.isNotEmpty() }
@@ -370,7 +373,34 @@ fun HelloMedsNavigation3(
 
         entry<EditMedicationRoute> { key ->
             OverlayScreenWrapper {
+                val editViewModel: EditMedicationViewModel = koinViewModel()
+                DisposableEffect(Unit) {
+                    onDispose {
+                        // Covered by a subpage route keeps the draft, leaving the edit flow drops it.
+                        if (key !in navigator.state.rootBackStack) editViewModel.clear()
+                    }
+                }
                 EditMedicationScreenEntry(
+                    medicationId = key.medicationId,
+                    onNavigateBack = { navigator.closeOverlay() },
+                    onOpenTimeZone = { navigator.openOverlay(EditMedicationTimeZoneRoute(key.medicationId)) },
+                    onOpenCycle = { navigator.openOverlay(EditMedicationCycleRoute(key.medicationId)) },
+                )
+            }
+        }
+
+        entry<EditMedicationTimeZoneRoute> { key ->
+            OverlayScreenWrapper {
+                EditMedicationTimeZoneScreenEntry(
+                    medicationId = key.medicationId,
+                    onNavigateBack = { navigator.closeOverlay() },
+                )
+            }
+        }
+
+        entry<EditMedicationCycleRoute> { key ->
+            OverlayScreenWrapper {
+                EditMedicationCycleScreenEntry(
                     medicationId = key.medicationId,
                     onNavigateBack = { navigator.closeOverlay() },
                 )

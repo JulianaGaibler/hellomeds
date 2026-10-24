@@ -3,16 +3,18 @@
 
 package me.juliana.hellomeds.ui.features.medication
 
+import me.juliana.hellomeds.shared.timezone_mode_detail_local
+import me.juliana.hellomeds.shared.timezone_mode_detail_fixed
+import me.juliana.hellomeds.shared.cycle_summary_off
+import me.juliana.hellomeds.shared.cycle_summary_format
+import me.juliana.hellomeds.shared.edit_medication_timezone_label
 import me.juliana.hellomeds.shared.unlogged_dose_take_hint
-import me.juliana.hellomeds.shared.unlogged_dose_action_label
 import me.juliana.hellomeds.shared.unlogged_dose_action_skip
 import me.juliana.hellomeds.shared.unlogged_dose_action_take
 import me.juliana.hellomeds.shared.unlogged_dose_section_title
 import me.juliana.hellomeds.data.model.enums.UnloggedDoseAction
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,26 +36,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
-import kotlinx.datetime.toLocalDateTime
 import me.juliana.hellomeds.data.database.entities.Medication
-import me.juliana.hellomeds.data.model.enums.CycleType
-import me.juliana.hellomeds.data.model.enums.MedicationBackgroundShape
-import me.juliana.hellomeds.data.model.enums.MedicationForegroundShape
 import me.juliana.hellomeds.data.model.enums.MedicationStrengthUnit
 import me.juliana.hellomeds.data.model.enums.MedicationType
 import me.juliana.hellomeds.data.model.enums.TimeZoneMode
-import me.juliana.hellomeds.data.model.getCycleDay
 import me.juliana.hellomeds.domain.validation.MedicationValidation
 import me.juliana.hellomeds.shared.Res
 import me.juliana.hellomeds.shared.action_save
@@ -68,16 +58,9 @@ import me.juliana.hellomeds.shared.medication_icon_label
 import me.juliana.hellomeds.shared.medication_name_description
 import me.juliana.hellomeds.shared.medication_name_label
 import me.juliana.hellomeds.shared.medication_name_section
-import me.juliana.hellomeds.shared.medication_strength_section
 import me.juliana.hellomeds.shared.medication_strength_unit
 import me.juliana.hellomeds.shared.medication_strength_value
 import me.juliana.hellomeds.shared.medication_type_label
-import me.juliana.hellomeds.shared.medication_type_section
-import me.juliana.hellomeds.shared.timezone_anchor_description
-import me.juliana.hellomeds.shared.timezone_mode_fixed_description
-import me.juliana.hellomeds.shared.timezone_mode_fixed_hint
-import me.juliana.hellomeds.shared.timezone_mode_label
-import me.juliana.hellomeds.shared.timezone_mode_local_description
 import me.juliana.hellomeds.ui.components.common.AppScaffold
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.DecimalInputTransformation
@@ -85,136 +68,29 @@ import me.juliana.hellomeds.ui.components.list.SmartListDropdownItem
 import me.juliana.hellomeds.ui.components.list.SmartListInfoCard
 import me.juliana.hellomeds.ui.components.list.SmartListItem
 import me.juliana.hellomeds.ui.components.list.SmartListItemConfig
-import me.juliana.hellomeds.ui.components.list.SmartListSwitchItem
 import me.juliana.hellomeds.ui.components.list.SmartListTextItem
 import me.juliana.hellomeds.ui.components.medication.MedicationIconCustomizer
 import me.juliana.hellomeds.ui.components.medication.MedicationIconStickyPreview
-import me.juliana.hellomeds.ui.components.pickers.TimeZonePickerDialog
 import me.juliana.hellomeds.ui.components.pickers.formatTimeZoneForDisplay
 import me.juliana.hellomeds.ui.features.settings.SettingsHeader
 import me.juliana.hellomeds.ui.features.settings.settingsContentPadding
-import me.juliana.hellomeds.ui.theme.MedicationColor
 import me.juliana.hellomeds.ui.util.displayNameRes
-import me.juliana.hellomeds.ui.util.formatDecimalPlain
 import org.jetbrains.compose.resources.stringResource
-import kotlin.time.Clock
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun EditMedicationScreen(
-    medication: Medication,
+    draft: EditMedicationDraft,
     onNavigateBack: () -> Unit,
     onSave: (Medication) -> Unit,
+    onOpenTimeZone: () -> Unit,
+    onOpenCycle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Key edit state by medication.id (stable), NOT the medication object. Room's Flow re-emits
-    // a new Medication instance on any row change — including background writes like stock cache
-    // updates, low-stock/depletion alert flags, and alarm reconciliation touches — which would
-    // otherwise clobber in-flight edits (most visibly: a freshly picked color reverting on save).
-    val medicationId = medication.id
-    var name by remember(medicationId) { mutableStateOf(medication.name) }
-    var type by remember(medicationId) { mutableStateOf(medication.type) }
-    var hasStrength by remember(medicationId) { mutableStateOf(medication.strengthValue != null) }
-    var strengthValue by remember(medicationId) {
-        mutableStateOf(medication.strengthValue?.let { formatDecimalPlain(it) } ?: "")
-    }
-    var strengthUnit by remember(medicationId) {
-        mutableStateOf(medication.strengthUnit ?: MedicationStrengthUnit.MG)
-    }
-
-    val nameError = MedicationValidation.validateMedicationName(name)
-    val strengthError = MedicationValidation.validateStrengthValue(strengthValue, hasStrength)
-
-    var displayName by remember(medicationId) {
-        mutableStateOf(medication.displayName ?: "")
-    }
-
-    // Parse current shapes and colors from medication
-    var foregroundShape by remember(medicationId) {
-        mutableStateOf(
-            MedicationForegroundShape.fromNameOrDefault(
-                medication.foregroundShape,
-                MedicationForegroundShape.CAPSULE_PILL,
-            ),
-        )
-    }
-
-    var backgroundShape by remember(medicationId) {
-        mutableStateOf(
-            MedicationBackgroundShape.fromNameOrDefault(medication.backgroundShape),
-        )
-    }
-
-    var color1 by remember(medicationId) {
-        mutableStateOf(
-            medication.shapeColor?.let {
-                MedicationColor.fromName(it)
-            },
-        )
-    }
-
-    // Timezone mode state
-    var timeZoneMode by remember(medicationId) { mutableStateOf(medication.timeZoneMode) }
-    var anchorTimeZone by remember(medicationId) { mutableStateOf(medication.anchorTimeZone) }
-    var showTimeZonePicker by remember { mutableStateOf(false) }
-
-    var unloggedDoseAction by remember(medicationId) { mutableStateOf(medication.unloggedDoseAction) }
-
-    // Cycle state
-    val isCyclic = medication.cycleType == CycleType.CYCLIC
-    var cycleEnabled by remember(medicationId) { mutableStateOf(isCyclic) }
-    var cycleDaysActive by remember(medicationId) { mutableIntStateOf(medication.cycleDaysActive ?: 21) }
-    var cycleDaysBreak by remember(medicationId) { mutableIntStateOf(medication.cycleDaysBreak ?: 7) }
-    var cycleHasPlacebos by remember(medicationId) { mutableStateOf(medication.cycleHasPlacebos) }
-
-    val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-    val initialDay = if (isCyclic) {
-        getCycleDay(medication, today)?.let { it.dayInCycle + 1 } ?: 1
-    } else {
-        1
-    }
-    var cycleDayInCycle by remember(medicationId) { mutableIntStateOf(initialDay) }
-    val cycleLength = cycleDaysActive + cycleDaysBreak
-
-    fun buildUpdatedMedication(): Medication {
-        val cycleStartDate = if (cycleEnabled) {
-            today.minus(cycleDayInCycle - 1, DateTimeUnit.DAY)
-        } else {
-            null
-        }
-
-        return medication.copy(
-            name = name.trim(),
-            type = type,
-            strengthValue = if (hasStrength) strengthValue.toDoubleOrNull() else null,
-            strengthUnit = if (hasStrength) strengthUnit else null,
-            displayName = displayName.trim().ifBlank { null },
-            foregroundShape = foregroundShape.name,
-            backgroundShape = backgroundShape.name,
-            shapeColor = color1?.name,
-            cycleType = if (cycleEnabled) CycleType.CYCLIC else CycleType.NONE,
-            cycleDaysActive = if (cycleEnabled) cycleDaysActive else null,
-            cycleDaysBreak = if (cycleEnabled) cycleDaysBreak else null,
-            cycleHasPlacebos = cycleEnabled && cycleHasPlacebos,
-            cycleStartDate = cycleStartDate,
-            timeZoneMode = timeZoneMode,
-            anchorTimeZone = if (timeZoneMode == TimeZoneMode.FIXED) anchorTimeZone else null,
-            unloggedDoseAction = unloggedDoseAction,
-        )
-    }
-
-    if (showTimeZonePicker) {
-        TimeZonePickerDialog(
-            selectedTimeZone = anchorTimeZone,
-            onSelect = { anchorTimeZone = it },
-            onDismiss = { showTimeZonePicker = false },
-        )
-    }
-
     AppScaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(Res.string.medication_edit_title_format, name)) },
+                title = { Text(stringResource(Res.string.medication_edit_title_format, draft.name)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -224,15 +100,12 @@ fun EditMedicationScreen(
                     }
                 },
                 actions = {
-                    val cycleValid = !cycleEnabled ||
-                        (cycleDaysActive > 0 && cycleDayInCycle in 1..cycleLength && cycleLength <= 365)
-                    val canSave = cycleValid && nameError == null && strengthError == null
                     Button(
                         onClick = {
-                            onSave(buildUpdatedMedication())
+                            onSave(draft.toMedication())
                             onNavigateBack()
                         },
-                        enabled = canSave,
+                        enabled = draft.canSave,
                     ) {
                         Text(stringResource(Res.string.action_save))
                     }
@@ -267,16 +140,16 @@ fun EditMedicationScreen(
             // Editable medication name
             item {
                 OutlinedTextField(
-                    value = name,
+                    value = draft.name,
                     onValueChange = {
                         if (it.length <= MedicationValidation.MAX_NAME_LENGTH) {
-                            name = it
+                            draft.name = it
                         }
                     },
                     label = { Text(stringResource(Res.string.medication_name_label)) },
-                    isError = nameError != null,
+                    isError = draft.nameError != null,
                     supportingText = {
-                        Text(nameError ?: stringResource(Res.string.medication_name_description))
+                        Text(draft.nameError ?: stringResource(Res.string.medication_name_description))
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -285,10 +158,10 @@ fun EditMedicationScreen(
             // Display name field
             item {
                 OutlinedTextField(
-                    value = displayName,
+                    value = draft.displayName,
                     onValueChange = {
                         if (it.length <= MedicationValidation.MAX_DISPLAY_NAME_LENGTH) {
-                            displayName = it
+                            draft.displayName = it
                         }
                     },
                     label = { Text(stringResource(Res.string.medication_display_name_label)) },
@@ -296,8 +169,8 @@ fun EditMedicationScreen(
                         Text(stringResource(Res.string.medication_display_name_description))
                     },
                     trailingIcon = {
-                        if (displayName.isNotEmpty()) {
-                            IconButton(onClick = { displayName = "" }) {
+                        if (draft.displayName.isNotEmpty()) {
+                            IconButton(onClick = { draft.displayName = "" }) {
                                 Icon(
                                     imageVector = Icons.Default.Clear,
                                     contentDescription = stringResource(
@@ -311,136 +184,60 @@ fun EditMedicationScreen(
                 )
             }
 
-            // ── Timezone mode section ──
             item {
-                SettingsHeader(
-                    text = stringResource(Res.string.timezone_mode_label),
-                    topPadding = 24.dp,
-                    bottomPadding = 0.dp,
-                )
-            }
-
-            item {
-                AutoSmartList(
-                    items = listOf(
-                        SmartListItemConfig(visible = true) { shapes, visible ->
-                            SmartListSwitchItem(
-                                label = stringResource(Res.string.timezone_mode_label),
-                                checked = timeZoneMode == TimeZoneMode.FIXED,
-                                onCheckedChange = {
-                                    val newMode = if (it) TimeZoneMode.FIXED else TimeZoneMode.LOCAL
-                                    timeZoneMode = newMode
-                                    if (newMode == TimeZoneMode.FIXED && anchorTimeZone == null) {
-                                        anchorTimeZone = TimeZone.currentSystemDefault().id
-                                    }
-                                },
-                                shapes = shapes,
-                                visible = visible,
-                                supportingText = if (timeZoneMode == TimeZoneMode.FIXED) {
-                                    stringResource(Res.string.timezone_mode_fixed_description)
-                                } else {
-                                    stringResource(Res.string.timezone_mode_local_description)
-                                },
-                            )
-                        },
-                        SmartListItemConfig(
-                            visible = timeZoneMode == TimeZoneMode.FIXED && anchorTimeZone != null,
-                        ) { shapes, visible ->
-                            val (city, region) = formatTimeZoneForDisplay(anchorTimeZone ?: "")
-                            val label = if (region.isNotEmpty()) "$city, $region" else city
-                            SmartListItem(
-                                headlineContent = { Text(label) },
-                                supportingContent = { Text(stringResource(Res.string.timezone_anchor_description)) },
-                                shapes = shapes,
-                                visible = visible,
-                                onClick = { showTimeZonePicker = true },
-                            )
-                        },
-                        SmartListItemConfig(visible = timeZoneMode == TimeZoneMode.FIXED) { shapes, visible ->
-                            SmartListInfoCard(
-                                headlineContent = {
-                                    Text(
-                                        stringResource(Res.string.timezone_mode_fixed_hint),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
-                                },
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                shapes = shapes,
-                                visible = visible,
-                            )
-                        },
-                    ),
-                )
-            }
-
-            // ── Dosing Cycle section ──
-            item {
-                SettingsHeader(
-                    text = stringResource(Res.string.cycle_section_title),
-                    topPadding = 24.dp,
-                    bottomPadding = 0.dp,
-                )
-            }
-
-            // Enable toggle with explanation
-            item {
-                me.juliana.hellomeds.ui.features.medication.steps.CycleEnableToggle(
-                    cycleEnabled = cycleEnabled,
-                    onCycleEnabledChange = { cycleEnabled = it },
-                )
-            }
-
-            // Cycle config (when enabled) — reuses shared CycleConfigFields
-            item {
-                AnimatedVisibility(
-                    visible = cycleEnabled,
-                    enter = androidx.compose.animation.expandVertically(
-                        expandFrom = androidx.compose.ui.Alignment.CenterVertically,
-                    ) + androidx.compose.animation.fadeIn(),
-                    exit = androidx.compose.animation.shrinkVertically(
-                        shrinkTowards = androidx.compose.ui.Alignment.CenterVertically,
-                    ) + androidx.compose.animation.fadeOut(),
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        me.juliana.hellomeds.ui.features.medication.steps.CycleConfigFields(
-                            cycleDaysActive = cycleDaysActive,
-                            cycleDaysBreak = cycleDaysBreak,
-                            cycleHasPlacebos = cycleHasPlacebos,
-                            cycleDayInCycle = cycleDayInCycle,
-                            onDaysActiveChange = { cycleDaysActive = it },
-                            onDaysBreakChange = { cycleDaysBreak = it },
-                            onHasPlacebosChange = { cycleHasPlacebos = it },
-                            onDayInCycleChange = { cycleDayInCycle = it },
-                        )
-                    }
-                }
-            }
-
-            // ── Unlogged doses section ──
-            item {
-                SettingsHeader(
-                    text = stringResource(Res.string.unlogged_dose_section_title),
-                    topPadding = 24.dp,
-                    bottomPadding = 0.dp,
-                )
-            }
-
-            item {
-                val takeUnlogged = unloggedDoseAction == UnloggedDoseAction.TAKE
+                val typeEntries = remember { MedicationType.entries }
+                val typeDisplayNames = typeEntries.map { stringResource(it.displayNameRes) }
+                val selectedTypeDisplay = stringResource(draft.type.displayNameRes)
+                val takeUnlogged = draft.unloggedDoseAction == UnloggedDoseAction.TAKE
                 val skipLabel = stringResource(Res.string.unlogged_dose_action_skip)
                 val takeLabel = stringResource(Res.string.unlogged_dose_action_take)
+
+                val timeZoneDescription = if (draft.timeZoneMode == TimeZoneMode.FIXED) {
+                    val (city, region) = formatTimeZoneForDisplay(draft.anchorTimeZone ?: "")
+                    stringResource(
+                        Res.string.timezone_mode_detail_fixed,
+                        if (region.isNotEmpty()) "$city, $region" else city,
+                    )
+                } else {
+                    stringResource(Res.string.timezone_mode_detail_local)
+                }
+                val cycleDescription = if (draft.cycleEnabled) {
+                    stringResource(Res.string.cycle_summary_format, draft.cycleDaysActive, draft.cycleDaysBreak)
+                } else {
+                    stringResource(Res.string.cycle_summary_off)
+                }
+
                 AutoSmartList(
                     items = listOf(
                         SmartListItemConfig(visible = true) { shapes, visible ->
+                            SmartListItem(
+                                headlineContent = {
+                                    Text(
+                                        stringResource(Res.string.edit_medication_timezone_label),
+                                    )
+                                },
+                                supportingContent = { Text(timeZoneDescription) },
+                                shapes = shapes,
+                                visible = visible,
+                                onClick = onOpenTimeZone,
+                            )
+                        },
+                        SmartListItemConfig(visible = true) { shapes, visible ->
+                            SmartListItem(
+                                headlineContent = { Text(stringResource(Res.string.cycle_section_title)) },
+                                supportingContent = { Text(cycleDescription) },
+                                shapes = shapes,
+                                visible = visible,
+                                onClick = onOpenCycle,
+                            )
+                        },
+                        SmartListItemConfig(visible = true) { shapes, visible ->
                             SmartListDropdownItem(
-                                label = stringResource(Res.string.unlogged_dose_action_label),
+                                label = stringResource(Res.string.unlogged_dose_section_title),
                                 selectedValue = if (takeUnlogged) takeLabel else skipLabel,
                                 options = listOf(skipLabel, takeLabel),
                                 onValueChange = {
-                                    unloggedDoseAction =
+                                    draft.unloggedDoseAction =
                                         if (it == takeLabel) UnloggedDoseAction.TAKE else UnloggedDoseAction.SKIP
                                 },
                                 shapes = shapes,
@@ -461,26 +258,6 @@ fun EditMedicationScreen(
                                 visible = visible,
                             )
                         },
-                    ),
-                )
-            }
-
-            // ── Type section ──
-            item {
-                SettingsHeader(
-                    text = stringResource(Res.string.medication_type_section),
-                    topPadding = 24.dp,
-                    bottomPadding = 0.dp,
-                )
-            }
-
-            item {
-                val typeEntries = remember { MedicationType.entries }
-                val typeDisplayNames = typeEntries.map { stringResource(it.displayNameRes) }
-                val selectedTypeDisplay = stringResource(type.displayNameRes)
-
-                AutoSmartList(
-                    items = listOf(
                         SmartListItemConfig(visible = true) { shapes, visible ->
                             SmartListDropdownItem(
                                 label = stringResource(Res.string.medication_type_label),
@@ -488,46 +265,30 @@ fun EditMedicationScreen(
                                 options = typeDisplayNames,
                                 onValueChange = { picked ->
                                     val idx = typeDisplayNames.indexOf(picked)
-                                    if (idx >= 0) type = typeEntries[idx]
+                                    if (idx >= 0) draft.type = typeEntries[idx]
                                 },
                                 shapes = shapes,
                                 visible = visible,
                             )
                         },
-                    ),
-                )
-            }
-
-            // ── Strength section ──
-            item {
-                SettingsHeader(
-                    text = stringResource(Res.string.medication_strength_section),
-                    topPadding = 24.dp,
-                    bottomPadding = 0.dp,
-                )
-            }
-
-            item {
-                AutoSmartList(
-                    items = listOf(
                         SmartListItemConfig(visible = true) { shapes, visible ->
                             SmartListItem(
                                 headlineContent = { Text(stringResource(Res.string.medication_has_strength)) },
                                 trailingContent = {
                                     Switch(
-                                        checked = hasStrength,
-                                        onCheckedChange = { hasStrength = it },
+                                        checked = draft.hasStrength,
+                                        onCheckedChange = { draft.hasStrength = it },
                                     )
                                 },
                                 shapes = shapes,
                                 visible = visible,
                             )
                         },
-                        SmartListItemConfig(visible = hasStrength) { shapes, visible ->
+                        SmartListItemConfig(visible = draft.hasStrength) { shapes, visible ->
                             SmartListTextItem(
                                 label = stringResource(Res.string.medication_strength_value),
-                                value = strengthValue,
-                                onValueChange = { strengthValue = it },
+                                value = draft.strengthValue,
+                                onValueChange = { draft.strengthValue = it },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                 shapes = shapes,
                                 visible = visible,
@@ -537,13 +298,13 @@ fun EditMedicationScreen(
                                 inputTransformation = DecimalInputTransformation(),
                             )
                         },
-                        SmartListItemConfig(visible = hasStrength) { shapes, visible ->
+                        SmartListItemConfig(visible = draft.hasStrength) { shapes, visible ->
                             SmartListDropdownItem(
                                 label = stringResource(Res.string.medication_strength_unit),
-                                selectedValue = strengthUnit.value,
+                                selectedValue = draft.strengthUnit.value,
                                 options = MedicationStrengthUnit.allDisplayValues(),
                                 onValueChange = {
-                                    strengthUnit =
+                                    draft.strengthUnit =
                                         MedicationStrengthUnit.fromValue(it) ?: MedicationStrengthUnit.MG
                                 },
                                 shapes = shapes,
@@ -551,10 +312,12 @@ fun EditMedicationScreen(
                             )
                         },
                     ),
+                    modifier = Modifier.padding(top = 16.dp),
                 )
             }
 
-            if (hasStrength && strengthError != null) {
+            val strengthError = draft.strengthError
+            if (draft.hasStrength && strengthError != null) {
                 item {
                     Text(
                         text = strengthError,
@@ -576,20 +339,20 @@ fun EditMedicationScreen(
 
             stickyHeader {
                 MedicationIconStickyPreview(
-                    foregroundShape = foregroundShape,
-                    backgroundShape = backgroundShape,
-                    color1 = color1,
+                    foregroundShape = draft.foregroundShape,
+                    backgroundShape = draft.backgroundShape,
+                    color1 = draft.color1,
                 )
             }
 
             item {
                 MedicationIconCustomizer(
-                    foregroundShape = foregroundShape,
-                    backgroundShape = backgroundShape,
-                    color1 = color1,
-                    onForegroundShapeChange = { foregroundShape = it },
-                    onBackgroundShapeChange = { backgroundShape = it },
-                    onColor1Change = { color1 = it },
+                    foregroundShape = draft.foregroundShape,
+                    backgroundShape = draft.backgroundShape,
+                    color1 = draft.color1,
+                    onForegroundShapeChange = { draft.foregroundShape = it },
+                    onBackgroundShapeChange = { draft.backgroundShape = it },
+                    onColor1Change = { draft.color1 = it },
                     showPreview = false,
                 )
             }

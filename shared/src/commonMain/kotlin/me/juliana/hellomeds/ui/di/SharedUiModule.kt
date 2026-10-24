@@ -6,6 +6,7 @@ package me.juliana.hellomeds.ui.di
 import me.juliana.hellomeds.ui.util.StockGraphBuilder
 import me.juliana.hellomeds.ui.viewmodel.AutoBackupViewModel
 import me.juliana.hellomeds.ui.viewmodel.BackupViewModel
+import me.juliana.hellomeds.ui.viewmodel.EditMedicationViewModel
 import me.juliana.hellomeds.ui.viewmodel.ImportanceLabelViewModel
 import me.juliana.hellomeds.ui.viewmodel.MedicationViewModel
 import me.juliana.hellomeds.ui.viewmodel.ScheduleViewModel
@@ -23,6 +24,7 @@ val sharedUiModule = module {
     single { StockGraphBuilder(get(), get(), get()) }
 
     viewModelOf(::MedicationViewModel)
+    viewModelOf(::EditMedicationViewModel)
     viewModelOf(::ScheduleViewModel)
     viewModelOf(::TrackingViewModel)
     viewModelOf(::ImportanceLabelViewModel)

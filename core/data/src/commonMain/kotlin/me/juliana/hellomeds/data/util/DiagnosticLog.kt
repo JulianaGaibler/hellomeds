@@ -9,6 +9,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.concurrent.Volatile
+import kotlin.concurrent.atomics.AtomicReference
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.Clock
 
 /**
@@ -18,13 +20,14 @@ import kotlin.time.Clock
  * Always captures W and E levels. D and I levels are only captured when [verbose] is true
  * (intended for debug builds — scheduling decisions, alarm API choices, time deltas).
  *
- * In-memory updates are synchronous (@Volatile + copy-on-write) for immediate reads.
+ * In-memory updates are synchronous (atomic copy-on-write) for immediate lock-free reads.
  * File I/O is deferred to a background coroutine to avoid main-thread jank.
  * No PII should be logged (use tags and generic messages).
  *
  * Call [configure] at app startup with a platform-specific file path to enable persistence.
  * Without it, the log is in-memory only (entries lost on restart).
  */
+@OptIn(ExperimentalAtomicApi::class)
 object DiagnosticLog {
     private const val MAX_ENTRIES = 200
     private const val VERBOSE_MAX_ENTRIES = 2000
@@ -37,10 +40,16 @@ object DiagnosticLog {
     private val effectiveMaxEntries: Int get() = if (verbose) VERBOSE_MAX_ENTRIES else MAX_ENTRIES
     private val effectivePruneThreshold: Int get() = (effectiveMaxEntries * 1.2).toInt()
 
-    // In-memory: @Volatile + copy-on-write for fast lock-free reads.
-    // Tiny race window on concurrent add() is acceptable for a diagnostic log.
-    @Volatile
-    private var entries: List<LogEntry> = emptyList()
+    private val entriesRef = AtomicReference<List<LogEntry>>(emptyList())
+    private val entries: List<LogEntry> get() = entriesRef.load()
+
+    private inline fun updateEntries(transform: (List<LogEntry>) -> List<LogEntry>): List<LogEntry> {
+        while (true) {
+            val current = entriesRef.load()
+            val updated = transform(current)
+            if (entriesRef.compareAndSet(current, updated)) return updated
+        }
+    }
 
     // File I/O runs on background scope with Mutex to avoid main-thread jank
     private val ioScope = CoroutineScope(Dispatchers.Default)
@@ -89,7 +98,7 @@ object DiagnosticLog {
     }
 
     fun clear() {
-        entries = emptyList()
+        entriesRef.store(emptyList())
         val path = filePath ?: return
         ioScope.launch {
             ioMutex.withLock {
@@ -110,14 +119,15 @@ object DiagnosticLog {
             message = message,
         )
 
-        // Synchronous in-memory update (immediate for readers)
         val maxEntries = effectiveMaxEntries
-        val current = entries.toMutableList()
-        while (current.size >= maxEntries) {
-            current.removeAt(0)
+        val current = updateEntries { existing ->
+            val next = existing.toMutableList()
+            while (next.size >= maxEntries) {
+                next.removeAt(0)
+            }
+            next.add(entry)
+            next
         }
-        current.add(entry)
-        entries = current
 
         // Async file persistence
         val path = filePath ?: return
@@ -158,28 +168,18 @@ object DiagnosticLog {
 
         // Merge: file entries first (older), then any in-memory entries added before configure()
         val existingTimestamps = loaded.map { it.timestamp }.toSet()
-        val newInMemory = entries.filter { it.timestamp !in existingTimestamps }
-        loaded.addAll(newInMemory)
-        loaded.sortBy { it.timestamp }
-
-        // Trim to effective max
         val maxEntries = effectiveMaxEntries
-        while (loaded.size > maxEntries) {
-            loaded.removeAt(0)
+        updateEntries { inMemory ->
+            val merged = (loaded + inMemory.filter { it.timestamp !in existingTimestamps })
+                .sortedBy { it.timestamp }
+            merged.takeLast(maxEntries)
         }
-
-        entries = loaded
     }
 
     private fun pruneOldEntries(path: String) {
         val cutoff = Clock.System.now().toEpochMilliseconds() - RETENTION_MS
-        val pruned = entries.filter { it.timestamp >= cutoff }.toMutableList()
-
-        while (pruned.size > effectiveMaxEntries) {
-            pruned.removeAt(0)
-        }
-
-        entries = pruned
+        val maxEntries = effectiveMaxEntries
+        updateEntries { current -> current.filter { it.timestamp >= cutoff }.takeLast(maxEntries) }
         rewriteFile(path)
     }
 

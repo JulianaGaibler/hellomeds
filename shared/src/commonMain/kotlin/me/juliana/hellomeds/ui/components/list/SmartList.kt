@@ -33,6 +33,10 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -534,7 +538,7 @@ fun SmartListDropdownItem(
                 )
             },
             trailingContent = {
-                Box {
+                Box(modifier = Modifier.alignTrailingButton()) {
                     TextButton(
                         onClick = { expanded = true },
                     ) {
@@ -576,6 +580,13 @@ fun SmartListDropdownItem(
         )
     }
 }
+
+/**
+ * Shifts trailing text buttons by their own end padding so their label lines up with the row's end
+ * edge like switches and icons do.
+ */
+internal fun Modifier.alignTrailingButton(): Modifier =
+    offset(x = ButtonDefaults.TextButtonContentPadding.calculateEndPadding(LayoutDirection.Ltr))
 
 /** Invisible spacer between SmartList items. */
 @Composable

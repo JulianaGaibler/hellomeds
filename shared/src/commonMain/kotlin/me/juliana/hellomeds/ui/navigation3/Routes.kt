@@ -35,6 +35,12 @@ data object AddMedicationRoute : ModalFlowNavKey
 data class EditMedicationRoute(val medicationId: Int) : ModalFlowNavKey
 
 @Serializable
+data class EditMedicationTimeZoneRoute(val medicationId: Int) : ModalFlowNavKey
+
+@Serializable
+data class EditMedicationCycleRoute(val medicationId: Int) : ModalFlowNavKey
+
+@Serializable
 data class EditScheduleRoute(val medicationId: Int) : ModalFlowNavKey
 
 @Serializable

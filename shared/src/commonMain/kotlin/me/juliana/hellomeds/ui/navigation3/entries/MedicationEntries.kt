@@ -24,7 +24,10 @@ import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.graph.models.StockLine
 import me.juliana.hellomeds.ui.features.medication.AddMedicationFlowScreen
+import me.juliana.hellomeds.ui.features.medication.EditMedicationCycleScreen
 import me.juliana.hellomeds.ui.features.medication.EditMedicationScreen
+import me.juliana.hellomeds.ui.features.medication.EditMedicationTimeZoneScreen
+import me.juliana.hellomeds.ui.viewmodel.EditMedicationViewModel
 import me.juliana.hellomeds.ui.features.medication.MedicationDetailScreen
 import me.juliana.hellomeds.ui.features.medication.MedicationListScreen
 import me.juliana.hellomeds.ui.features.medication.toAddMedicationState
@@ -175,8 +178,14 @@ fun AddMedicationScreenEntry(
  * Allows editing name, type, strength, display name, timezone, cycle, and visual appearance.
  */
 @Composable
-fun EditMedicationScreenEntry(medicationId: Int, onNavigateBack: () -> Unit) {
+fun EditMedicationScreenEntry(
+    medicationId: Int,
+    onNavigateBack: () -> Unit,
+    onOpenTimeZone: () -> Unit,
+    onOpenCycle: () -> Unit,
+) {
     val medicationViewModel: MedicationViewModel = koinViewModel()
+    val editViewModel: EditMedicationViewModel = koinViewModel()
     val medication by medicationViewModel.getMedicationById(medicationId)
         .collectAsStateWithLifecycle(initial = null)
 
@@ -192,14 +201,38 @@ fun EditMedicationScreenEntry(medicationId: Int, onNavigateBack: () -> Unit) {
 
     medication?.let { med ->
         EditMedicationScreen(
-            medication = med,
+            draft = editViewModel.draftFor(med),
             modifier = Modifier.fillMaxSize(),
             onNavigateBack = onNavigateBack,
             onSave = { updatedMedication ->
                 medicationViewModel.updateMedication(updatedMedication)
             },
+            onOpenTimeZone = onOpenTimeZone,
+            onOpenCycle = onOpenCycle,
         )
     }
+}
+
+@Composable
+fun EditMedicationTimeZoneScreenEntry(medicationId: Int, onNavigateBack: () -> Unit) {
+    val editViewModel: EditMedicationViewModel = koinViewModel()
+    val draft = editViewModel.existingDraft(medicationId)
+    if (draft == null) {
+        LaunchedEffect(Unit) { onNavigateBack() }
+        return
+    }
+    EditMedicationTimeZoneScreen(draft = draft, onNavigateBack = onNavigateBack, modifier = Modifier.fillMaxSize())
+}
+
+@Composable
+fun EditMedicationCycleScreenEntry(medicationId: Int, onNavigateBack: () -> Unit) {
+    val editViewModel: EditMedicationViewModel = koinViewModel()
+    val draft = editViewModel.existingDraft(medicationId)
+    if (draft == null) {
+        LaunchedEffect(Unit) { onNavigateBack() }
+        return
+    }
+    EditMedicationCycleScreen(draft = draft, onNavigateBack = onNavigateBack, modifier = Modifier.fillMaxSize())
 }
 
 /**
