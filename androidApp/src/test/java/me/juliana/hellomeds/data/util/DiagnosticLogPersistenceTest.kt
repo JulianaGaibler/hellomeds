@@ -18,15 +18,19 @@ class DiagnosticLogPersistenceTest {
 
     @Before
     fun setup() {
+        awaitFlush()
         DiagnosticLog.clear()
+        awaitFlush()
         logFile = File.createTempFile("diagnostic_test_", ".log")
         logFile.writeText("") // start empty
     }
 
     @After
     fun teardown() {
+        awaitFlush()
         DiagnosticLog.verbose = false
         DiagnosticLog.clear()
+        awaitFlush()
         logFile.delete()
     }
 
@@ -171,8 +175,12 @@ class DiagnosticLogPersistenceTest {
         DiagnosticLog.configure(missing.absolutePath)
         awaitFlush()
 
-        assertTrue(DiagnosticLog.getEntries().isEmpty())
-        missing.delete() // cleanup in case it was created
+        DiagnosticLog.w("MissingFile", "logged after configure")
+        awaitFlush()
+
+        assertEquals(1, DiagnosticLog.getEntries().count { it.tag == "MissingFile" })
+        assertTrue(missing.readText().contains("|W|MissingFile|logged after configure"))
+        missing.delete()
     }
 
     @Test
