@@ -36,6 +36,7 @@ fun createSchedule(
     isArchived: Boolean = false,
     originTimeZone: String? = null,
     createdAt: Long = 0L,
+    resolveFrom: Long = 0L,
 ): Schedule = Schedule(
     id = id,
     medicationId = medicationId,
@@ -49,6 +50,7 @@ fun createSchedule(
     isArchived = isArchived,
     originTimeZone = originTimeZone,
     createdAt = createdAt,
+    resolveFrom = resolveFrom,
 )
 
 fun createHistory(

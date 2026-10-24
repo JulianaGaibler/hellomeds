@@ -103,10 +103,10 @@ import me.juliana.hellomeds.shared.stock_rationale_separator
 import me.juliana.hellomeds.shared.stock_summary_discrete_current
 import me.juliana.hellomeds.shared.stock_summary_total
 import me.juliana.hellomeds.shared.stock_summary_units_remaining
-import me.juliana.hellomeds.ui.compat.ButtonGroupDefaults
+import androidx.compose.material3.ButtonGroupDefaults
 import me.juliana.hellomeds.ui.compat.LoadingIndicator
-import me.juliana.hellomeds.ui.compat.ToggleButton
-import me.juliana.hellomeds.ui.compat.ToggleButtonDefaults
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import me.juliana.hellomeds.ui.components.common.EmptyState
 import me.juliana.hellomeds.ui.components.graph.StockLevelGraph
 import me.juliana.hellomeds.ui.components.graph.models.GraphConfig
@@ -571,7 +571,7 @@ private fun ZoomLevelSelector(
             ToggleButton(
                 checked = selectedLevel == level,
                 onCheckedChange = { onLevelSelected(level) },
-                colors = ToggleButtonDefaults.toggleButtonColors(
+                colors = ToggleButtonDefaults.colors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                 ),
                 shapes = when (index) {

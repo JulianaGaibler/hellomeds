@@ -67,6 +67,7 @@ import me.juliana.hellomeds.data.util.TimeProvider
 import me.juliana.hellomeds.designsystem.component.AppSnackbarHost
 import me.juliana.hellomeds.designsystem.testing.ScreenshotTestTags
 import me.juliana.hellomeds.shared.Res
+import me.juliana.hellomeds.shared.tracking_auto_logged_label
 import me.juliana.hellomeds.shared.accessibility_close_menu
 import me.juliana.hellomeds.shared.accessibility_collapsed
 import me.juliana.hellomeds.shared.accessibility_expanded
@@ -892,7 +893,13 @@ private fun MedicationLogListItem(
                 Text(displayName)
             }
         },
-        supportingContent = { Text(typeAndStrength) },
+        supportingContent = {
+            if (event.isAutoResolved) {
+                Text("$typeAndStrength · ${stringResource(Res.string.tracking_auto_logged_label)}")
+            } else {
+                Text(typeAndStrength)
+            }
+        },
         leadingContent = {
             MedicationShapeIcon(
                 foregroundShape = foregroundShape,

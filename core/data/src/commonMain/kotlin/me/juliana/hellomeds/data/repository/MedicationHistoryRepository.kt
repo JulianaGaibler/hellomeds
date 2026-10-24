@@ -29,8 +29,8 @@ import kotlin.time.Clock
  * Repository for medication history (taken/skipped/auto-skipped actions).
  * Combines ScheduleProjector output with history records for the tracking UI.
  *
- * Replaces the old LogEventRepository. Future events are never stored —
- * they come from ScheduleProjector. Only past actions are persisted here.
+ * Future events are never stored. They come from ScheduleProjector, and only past
+ * actions are persisted here.
  */
 class MedicationHistoryRepository(
     private val historyDao: MedicationHistoryDao,
@@ -92,7 +92,7 @@ class MedicationHistoryRepository(
                 id
             }
 
-            // Record or update stock consumption. takenTime — not "now" — must drive the
+            // Record or update stock consumption. takenTime, not "now", must drive the
             // ledger timestamp so backdated logs stay on the correct calendar day in the graph.
             try {
                 if (existingId != null) {
@@ -337,7 +337,7 @@ class MedicationHistoryRepository(
      * Delete the history record(s) for a projected event (revert to pending).
      *
      * For scheduled events, deletes by composite key `(medicationId, scheduleId,
-     * scheduledTime)` — this is robust against stale `event.historyRecord?.id`
+     * scheduledTime)`, which is robust against a stale `event.historyRecord?.id`
      * captured by a long-lived dialog. For PRN events (`scheduleId == 0`),
      * falls back to id-based delete.
      */
@@ -446,35 +446,6 @@ class MedicationHistoryRepository(
     }
 
     /**
-     * Auto-skip events whose next occurrence has already passed.
-     */
-    suspend fun autoSkipMissedEvents() {
-        val now = clock.now().toEpochMilliseconds()
-        // Look at events from 48 hours ago to now
-        val windowStart = now - (48 * 60 * 60 * 1000L)
-
-        val events = projector.projectEvents(windowStart, now)
-        val pendingPastEvents = events.filter { it.isPending && it.scheduledTime < now }
-
-        for (event in pendingPastEvents) {
-            if (projector.shouldAutoSkip(event.scheduleId, event.scheduledTime, now)) {
-                val history = MedicationHistory(
-                    medicationId = event.medicationId,
-                    scheduleId = event.scheduleId,
-                    scheduledTime = event.scheduledTime,
-                    scheduledDose = event.dose,
-                    status = MedicationHistory.STATUS_AUTO_SKIPPED,
-                )
-                historyDao.insert(history)
-                AppLogger.d(
-                    TAG,
-                    "Auto-skipped event: schedule=${event.scheduleId}, time=${event.scheduledTime}",
-                )
-            }
-        }
-    }
-
-    /**
      * Get projected events for a specific date with medication information,
      * split into pending/taken/skipped/overdue lists for the tracking UI.
      *
@@ -493,7 +464,8 @@ class MedicationHistoryRepository(
         return combine(
             historyDao.getInTimeRange(overdueWindowStart, endOfDay),
             medicationDao.getActive(),
-            scheduleDao.getActive(),
+            // Include ended courses: their past days had real doses (generation stops at endDate).
+            scheduleDao.observeNonArchived(),
         ) { history, medications, schedules ->
             val medicationMap = medications.associateBy { it.id }
 

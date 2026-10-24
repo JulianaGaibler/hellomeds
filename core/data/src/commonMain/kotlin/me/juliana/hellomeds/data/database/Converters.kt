@@ -10,6 +10,7 @@ import me.juliana.hellomeds.data.model.enums.BubbleFlowDirection
 import me.juliana.hellomeds.data.model.enums.CycleType
 import me.juliana.hellomeds.data.model.enums.FrequencyType
 import me.juliana.hellomeds.data.model.enums.MedicationContainer
+import me.juliana.hellomeds.data.model.enums.UnloggedDoseAction
 import me.juliana.hellomeds.data.model.enums.MedicationStrengthUnit
 import me.juliana.hellomeds.data.model.enums.MedicationType
 import me.juliana.hellomeds.data.model.enums.StockAdjustmentType
@@ -154,6 +155,20 @@ class Converters {
             BubbleFlowDirection.valueOf(value)
         } catch (e: IllegalArgumentException) {
             BubbleFlowDirection.LTR_TOP_BOTTOM
+        }
+    }
+
+    @TypeConverter
+    fun fromUnloggedDoseAction(value: UnloggedDoseAction): String {
+        return value.name
+    }
+
+    @TypeConverter
+    fun toUnloggedDoseAction(value: String): UnloggedDoseAction {
+        return try {
+            UnloggedDoseAction.valueOf(value)
+        } catch (e: IllegalArgumentException) {
+            UnloggedDoseAction.SKIP
         }
     }
 }

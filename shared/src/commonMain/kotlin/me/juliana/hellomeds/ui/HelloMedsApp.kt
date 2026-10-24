@@ -3,7 +3,11 @@
 
 package me.juliana.hellomeds.ui
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -19,6 +23,7 @@ import me.juliana.hellomeds.data.util.ReliabilityState
 import me.juliana.hellomeds.data.util.ReliabilityStateProvider
 import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.components.reliability.ReliabilityBanner
+import me.juliana.hellomeds.ui.components.reliability.showsBanner
 import me.juliana.hellomeds.ui.navigation3.HelloMedsNavigation
 import me.juliana.hellomeds.ui.navigation3.MainAppRoute
 import me.juliana.hellomeds.ui.navigation3.NavigationScreenProviders
@@ -93,16 +98,32 @@ fun HelloMedsApp(
                     onDismissDatabaseRecovered = {
                         reliabilityScope.launch { reliabilityProvider.dismissDatabaseRecoveryWarning() }
                     },
+                    onDismissAwaySummary = {
+                        reliabilityScope.launch { reliabilityProvider.dismissAwaySummary() }
+                    },
                 )
-                HelloMedsNavigation(
-                    initialRoute = MainAppRoute,
-                    notificationEventIds = notificationEventIds,
-                    notificationGroupingMode = notificationGroupingMode,
-                    onNotificationHandled = onNotificationHandled,
-                    stockDetailMedicationId = stockDetailMedicationId,
-                    onStockDetailHandled = onStockDetailHandled,
-                    screenProviders = screenProviders,
-                )
+                // The banner already pads for the status bar, so screens must not pad for it again.
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .then(
+                            if (reliabilityState.showsBanner()) {
+                                Modifier.consumeWindowInsets(WindowInsets.statusBars)
+                            } else {
+                                Modifier
+                            },
+                        ),
+                ) {
+                    HelloMedsNavigation(
+                        initialRoute = MainAppRoute,
+                        notificationEventIds = notificationEventIds,
+                        notificationGroupingMode = notificationGroupingMode,
+                        onNotificationHandled = onNotificationHandled,
+                        stockDetailMedicationId = stockDetailMedicationId,
+                        onStockDetailHandled = onStockDetailHandled,
+                        screenProviders = screenProviders,
+                    )
+                }
             }
         }
     }

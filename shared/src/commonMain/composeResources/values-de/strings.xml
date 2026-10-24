@@ -309,7 +309,7 @@
 	<string name="importance_label_alarm_after">Alarm ab</string>
 	<string name="importance_label_alarm_after_suffix">Erinnerung</string>
 	<string name="importance_label_escalation_range_hint">Zwischen 1 und %1$d</string>
-	<string name="importance_label_alarm_after_critical_hint">Muss nach Kritisch liegen (Folgeerinnerung %1$d)</string>
+	<string name="importance_label_alarm_after_critical_hint">Muss nach Erinnerung %1$d liegen</string>
 
 	<!-- Importance Label FSI Permission Dialog -->
 	<string name="importance_label_fsi_dialog_title">Berechtigung erforderlich</string>
@@ -642,6 +642,20 @@
 	<string name="notification_action_snooze">Snooze</string>
 	<string name="notification_action_all_taken">Alle eingenommen</string>
 	<string name="notification_action_all_skipped">Alle übersprungen</string>
+	<string name="notification_reopen_app_title">Erinnerungen pausiert</string>
+	<string name="notification_reopen_app_body">Öffne HelloMeds, um weiterhin Medikamentenerinnerungen zu erhalten.</string>
+	<plurals name="reliability_banner_away_message">
+		<item quantity="one">Während deiner Abwesenheit wurde %1$d nicht protokollierte Einnahme automatisch erfasst.</item>
+		<item quantity="other">Während deiner Abwesenheit wurden %1$d nicht protokollierte Einnahmen automatisch erfasst.</item>
+	</plurals>
+	<string name="reliability_banner_away_action">Schließen</string>
+	<string name="unlogged_dose_section_title">Nicht protokollierte Einnahmen</string>
+	<string name="unlogged_dose_action_label">Nach 24 Stunden ohne Protokollierung</string>
+	<string name="unlogged_dose_action_skip">Als übersprungen markieren</string>
+	<string name="unlogged_dose_action_take">Als eingenommen markieren</string>
+	<string name="unlogged_dose_take_hint">Wähle dies nur, wenn du dieses Medikament zuverlässig einnimmst. Automatisch eingenommene Einnahmen werden vom Vorrat abgezogen, und du kannst sie im Verlauf jederzeit korrigieren.</string>
+	<string name="tracking_auto_logged_label">Automatisch erfasst</string>
+	<string name="tracking_auto_logged_hint">Diese Einnahme wurde automatisch erfasst, weil sie nicht innerhalb von 24 Stunden protokolliert wurde. Beim Speichern wird sie durch deinen Eintrag ersetzt.</string>
 
 	<!-- Notification Settings -->
 	<string name="settings_notification_title">Benachrichtigungseinstellungen</string>

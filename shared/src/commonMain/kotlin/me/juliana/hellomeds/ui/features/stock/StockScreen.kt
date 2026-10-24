@@ -45,10 +45,10 @@ import me.juliana.hellomeds.shared.stock_days_left_exact
 import me.juliana.hellomeds.shared.stock_days_left_range
 import me.juliana.hellomeds.shared.stock_empty_description
 import me.juliana.hellomeds.shared.stock_empty_title
-import me.juliana.hellomeds.ui.compat.ButtonGroupDefaults
+import androidx.compose.material3.ButtonGroupDefaults
 import me.juliana.hellomeds.ui.compat.LoadingIndicator
-import me.juliana.hellomeds.ui.compat.ToggleButton
-import me.juliana.hellomeds.ui.compat.ToggleButtonDefaults
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.common.AppScaffold
@@ -288,7 +288,7 @@ private fun OverviewZoomLevelSelector(
             ToggleButton(
                 checked = selectedLevel == level,
                 onCheckedChange = { onLevelSelected(level) },
-                colors = ToggleButtonDefaults.toggleButtonColors(
+                colors = ToggleButtonDefaults.colors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                 ),
                 shapes = when (index) {

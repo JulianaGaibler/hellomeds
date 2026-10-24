@@ -9,9 +9,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import me.juliana.hellomeds.data.dao.MedicationHistoryDao
 import me.juliana.hellomeds.data.interfaces.ScheduleReconciler
-import me.juliana.hellomeds.data.repository.MedicationHistoryRepository
+import me.juliana.hellomeds.data.service.UnloggedDoseResolver
 import me.juliana.hellomeds.data.util.AppLogger
 import org.koin.mp.KoinPlatform
 import platform.BackgroundTasks.BGAppRefreshTaskRequest
@@ -20,24 +19,20 @@ import platform.BackgroundTasks.BGTask
 import platform.BackgroundTasks.BGTaskScheduler
 import platform.Foundation.NSDate
 import platform.Foundation.dateByAddingTimeInterval
-import kotlin.time.Clock
 
 /**
  * Schedules and handles iOS background tasks via BGTaskScheduler: a reconcile task
- * (BGAppRefreshTask, ~4h) and a history-cleanup task (BGProcessingTask, ~24h).
+ * (BGAppRefreshTask, ~4h) and a daily reconcile task (BGProcessingTask, ~24h).
  *
  * Task identifiers must be listed in Info.plist under BGTaskSchedulerPermittedIdentifiers,
  * and [registerTasks] must run before the app finishes launching.
  */
-class IOSBackgroundTaskManager(
-    private val clock: Clock = Clock.System,
-) {
+class IOSBackgroundTaskManager {
 
     // Lazy: handlers fire post-first-unlock, so deferred DI avoids a Keychain crash
     // if eager resolution ran during a pre-unlock launch.
     private val reconciler: ScheduleReconciler by lazy { KoinPlatform.getKoin().get() }
-    private val historyRepository: MedicationHistoryRepository by lazy { KoinPlatform.getKoin().get() }
-    private val historyDao: MedicationHistoryDao by lazy { KoinPlatform.getKoin().get() }
+    private val resolver: UnloggedDoseResolver by lazy { KoinPlatform.getKoin().get() }
 
     private val scope = CoroutineScope(Dispatchers.Main)
     private var currentReconcileJob: Job? = null
@@ -80,7 +75,7 @@ class IOSBackgroundTaskManager(
         }
     }
 
-    /** Safe to call multiple times — a new request for an already-queued identifier replaces the previous one. */
+    /** Safe to call multiple times because a new request for an already-queued identifier replaces the previous one. */
     fun scheduleReconcileTask() {
         val request = BGAppRefreshTaskRequest(identifier = RECONCILE_TASK_ID)
         request.earliestBeginDate = NSDate().dateByAddingTimeInterval(RECONCILE_INTERVAL_SECONDS)
@@ -120,7 +115,8 @@ class IOSBackgroundTaskManager(
         val job = scope.launch {
             try {
                 reconciler.reconcile()
-                historyRepository.autoSkipMissedEvents()
+                // Commits per chunk, so a task that expires mid-backfill resumes on the next trigger.
+                resolver.resolve()
                 AppLogger.i(TAG, "Reconcile task completed successfully")
                 task.setTaskCompletedWithSuccess(true)
             } catch (e: Exception) {
@@ -144,13 +140,8 @@ class IOSBackgroundTaskManager(
 
         val job = scope.launch {
             try {
-                val cutoff = clock.now().toEpochMilliseconds() - HISTORY_RETENTION_MS
-                val deletedCount = historyDao.deleteOlderThan(cutoff)
-                if (deletedCount > 0) {
-                    AppLogger.i(TAG, "Cleanup: deleted $deletedCount old history records")
-                }
-
-                // Re-reconcile to keep notification schedule fresh
+                // History is never deleted because removing rows makes the projector show
+                // those doses as unlogged again.
                 reconciler.reconcile()
 
                 AppLogger.i(TAG, "Cleanup task completed successfully")
@@ -175,16 +166,11 @@ class IOSBackgroundTaskManager(
         /** BGAppRefreshTask identifier for periodic reconciliation. */
         const val RECONCILE_TASK_ID = "me.juliana.hellomeds.reconcile"
 
-        /** BGProcessingTask identifier for daily cleanup. */
+        /** BGProcessingTask identifier for the daily reconcile. */
         const val CLEANUP_TASK_ID = "me.juliana.hellomeds.cleanup"
 
-        /** Reconcile interval: 4 hours in seconds. */
         private const val RECONCILE_INTERVAL_SECONDS = 4.0 * 60 * 60
 
-        /** Cleanup interval: 24 hours in seconds. */
         private const val CLEANUP_INTERVAL_SECONDS = 24.0 * 60 * 60
-
-        /** History retention period: 90 days in milliseconds. */
-        private const val HISTORY_RETENTION_MS = 90L * 24 * 60 * 60 * 1000
     }
 }

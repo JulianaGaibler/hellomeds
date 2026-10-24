@@ -88,11 +88,11 @@ fun handleAlarmTaken(slotTimeMs: Long, scheduleIds: String) {
         val sessionManager = koin.get<IOSNotificationSessionManager>()
         val reconciler = koin.get<ScheduleReconciler>()
 
-        val events = projector.getPendingEventsAtTime(slotTimeMs)
+        val events = projector.getActionableEventsAtTime(slotTimeMs)
         val now = Clock.System.now().toEpochMilliseconds()
 
         for (event in events) {
-            if (event.scheduleId in ids && event.isPending) {
+            if (event.scheduleId in ids) {
                 historyRepo.markAsTaken(event, event.dose, now)
                 AppLogger.d(TAG, "Marked schedule=${event.scheduleId} as taken")
             }
@@ -208,10 +208,10 @@ fun handleAlarmSkipped(slotTimeMs: Long, scheduleIds: String) {
         val sessionManager = koin.get<IOSNotificationSessionManager>()
         val reconciler = koin.get<ScheduleReconciler>()
 
-        val events = projector.getPendingEventsAtTime(slotTimeMs)
+        val events = projector.getActionableEventsAtTime(slotTimeMs)
 
         for (event in events) {
-            if (event.scheduleId in ids && event.isPending) {
+            if (event.scheduleId in ids) {
                 historyRepo.markAsSkipped(event)
                 AppLogger.d(TAG, "Marked schedule=${event.scheduleId} as skipped")
             }

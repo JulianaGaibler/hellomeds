@@ -19,6 +19,8 @@ package me.juliana.hellomeds.data.util
  *   - [Degraded.databaseRecovered]: cross-platform — fires after a destructive key
  *     wipe forced by Keychain/MasterKey invalidation. Cleared by user
  *     acknowledgement via [ReliabilityStateProvider.dismissDatabaseRecoveryWarning].
+ *   - [Degraded.awaySummary]: doses logged automatically after a long absence. Cleared by
+ *     [ReliabilityStateProvider.dismissAwaySummary].
  */
 sealed class ReliabilityState {
 
@@ -34,16 +36,23 @@ sealed class ReliabilityState {
         val exactAlarmsDisabled: Boolean,
         val iosNotificationBudgetExhausted: Boolean,
         val databaseRecovered: Boolean = false,
+        val awaySummary: AwaySummary? = null,
     ) : ReliabilityState() {
         init {
             require(
                 missedDoses.isNotEmpty() ||
                     exactAlarmsDisabled ||
                     iosNotificationBudgetExhausted ||
-                    databaseRecovered,
+                    databaseRecovered ||
+                    awaySummary != null,
             ) {
                 "Degraded must carry at least one issue — use Healthy when no issues are present"
             }
         }
     }
+}
+
+/** Doses `UnloggedDoseResolver` logged on the user's behalf after a long absence. */
+data class AwaySummary(val skipped: Int, val taken: Int) {
+    val total: Int get() = skipped + taken
 }

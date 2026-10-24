@@ -17,8 +17,8 @@ interface MedicationHistoryDao {
      * Insert a history row. Returns the new rowId, or -1 if the row was ignored due to
      * the unique (medicationId, scheduleId, scheduledTime) index. Callers that already
      * checked `findByCompositeKey` inside a transaction will never observe -1; the
-     * IGNORE strategy is structural defense-in-depth for paths like `autoSkipMissedEvents`
-     * that insert without a prior lookup.
+     * IGNORE means a dose logged concurrently always wins over paths that insert without a
+     * prior lookup, such as `UnloggedDoseResolver`.
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(history: MedicationHistory): Long
@@ -134,14 +134,14 @@ interface MedicationHistoryDao {
     suspend fun deleteByCompositeKey(medId: Int, scheduleId: Int, scheduledTime: Long)
 
     /**
-     * Count TAKEN history records for a medication since a given timestamp.
+     * Count TAKEN and AUTO_TAKEN history records for a medication since a given timestamp.
      * Used for depletion reminder calculation.
      */
     @Query(
         """
     SELECT COUNT(*) FROM medication_history
     WHERE medicationId = :medicationId
-      AND status = 'TAKEN'
+      AND status IN ('TAKEN', 'AUTO_TAKEN')
       AND COALESCE(takenTime, scheduledTime) >= :sinceTimestamp
   """,
     )

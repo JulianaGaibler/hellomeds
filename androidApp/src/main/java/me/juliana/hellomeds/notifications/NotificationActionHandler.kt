@@ -114,7 +114,7 @@ class NotificationActionHandler(
     private suspend fun handleTaken(events: List<ProjectedEvent>) {
         val now = timeProvider.nowMillis()
         events.forEach { event ->
-            if (event.isPending) {
+            if (event.isActionable) {
                 historyRepo.markAsTaken(event, event.dose, now)
                 Log.d(TAG, "Marked event schedule=${event.scheduleId} as taken")
             }
@@ -123,7 +123,7 @@ class NotificationActionHandler(
 
     private suspend fun handleSkipped(events: List<ProjectedEvent>) {
         events.forEach { event ->
-            if (event.isPending) {
+            if (event.isActionable) {
                 historyRepo.markAsSkipped(event)
                 Log.d(TAG, "Marked event schedule=${event.scheduleId} as skipped")
             }

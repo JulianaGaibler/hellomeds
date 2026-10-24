@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * Android: M3 Expressive [VerticalSlider] with reverseDirection (bottom=0, top=max)
+ * Android: M3 Expressive [VerticalSlider] with `topToBottom = false` (bottom=0, top=max)
  * and a wide track for easy thumb targeting.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -27,16 +27,17 @@ actual fun StockLevelSlider(
     modifier: Modifier,
 ) {
     val sliderState = rememberSliderState(
+        value = value,
         steps = steps,
-        valueRange = valueRange,
+        trackRange = valueRange,
     )
     sliderState.value = value
-    sliderState.onValueChange = onValueChange
 
     VerticalSlider(
         state = sliderState,
+        onValueChange = onValueChange,
         modifier = modifier.height(280.dp),
-        reverseDirection = true,
+        topToBottom = false,
         track = { state ->
             SliderDefaults.Track(
                 sliderState = state,

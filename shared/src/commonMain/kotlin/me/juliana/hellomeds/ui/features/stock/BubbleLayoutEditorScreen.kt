@@ -71,9 +71,9 @@ import me.juliana.hellomeds.shared.stock_layout_editor_title
 import me.juliana.hellomeds.shared.stock_layout_flow_direction
 import me.juliana.hellomeds.shared.stock_layout_mode_auto
 import me.juliana.hellomeds.shared.stock_layout_mode_manual
-import me.juliana.hellomeds.ui.compat.ButtonGroupDefaults
-import me.juliana.hellomeds.ui.compat.ToggleButton
-import me.juliana.hellomeds.ui.compat.ToggleButtonDefaults
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import me.juliana.hellomeds.ui.components.stock.preview.BubbleLayoutCodec
 import me.juliana.hellomeds.ui.components.stock.preview.BubbleStockPreview
 import me.juliana.hellomeds.ui.components.stock.preview.GridLayout
@@ -305,7 +305,7 @@ private fun ModeToggle(mode: LayoutMode, onModeChange: (LayoutMode) -> Unit) {
             ToggleButton(
                 checked = mode == value,
                 onCheckedChange = { onModeChange(value) },
-                colors = ToggleButtonDefaults.toggleButtonColors(
+                colors = ToggleButtonDefaults.colors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                 ),
                 shapes = when (index) {
@@ -344,7 +344,7 @@ private fun FlowDirectionToggle(flow: BubbleFlowDirection, onFlowChange: (Bubble
                 ToggleButton(
                     checked = flow == direction,
                     onCheckedChange = { onFlowChange(direction) },
-                    colors = ToggleButtonDefaults.toggleButtonColors(
+                    colors = ToggleButtonDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                     ),
                     shapes = when (index) {

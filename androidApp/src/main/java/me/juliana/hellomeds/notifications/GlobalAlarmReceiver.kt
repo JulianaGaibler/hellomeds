@@ -11,12 +11,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import me.juliana.hellomeds.data.dao.MedicationDao
 import me.juliana.hellomeds.data.model.NotificationSession
 import me.juliana.hellomeds.data.model.SessionType
 import me.juliana.hellomeds.data.model.enums.LockScreenVisibility
 import me.juliana.hellomeds.data.preferences.NotificationPreferences
 import me.juliana.hellomeds.data.service.ScheduleProjector
+import me.juliana.hellomeds.data.service.UnloggedDoseResolver
 import me.juliana.hellomeds.data.util.AppLogger
 import me.juliana.hellomeds.data.util.TimeProvider
 import org.koin.core.component.KoinComponent
@@ -150,6 +152,13 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
 
         // 4. Chain next alarm
         reconciler.reconcile()
+
+        // 5. Resolve unlogged doses. Exact alarms are exempt from App Standby buckets and
+        //    WorkManager is not, so this is the trigger that runs for users who never open
+        //    the app. It goes last so it cannot delay a reminder, and the timeout keeps it
+        //    inside the goAsync() window.
+        val resolved = withTimeoutOrNull(RESOLVE_TIMEOUT_MS) { get<UnloggedDoseResolver>().resolve() }
+        if (resolved == null) AppLogger.w(TAG, "Unlogged-dose resolution timed out; will resume next trigger")
     }
 
     // --- Follow-up handling ---
@@ -540,5 +549,6 @@ class GlobalAlarmReceiver : BroadcastReceiver(), KoinComponent {
 
     companion object {
         private const val TAG = "GlobalAlarmReceiver"
+        private const val RESOLVE_TIMEOUT_MS = 5_000L
     }
 }

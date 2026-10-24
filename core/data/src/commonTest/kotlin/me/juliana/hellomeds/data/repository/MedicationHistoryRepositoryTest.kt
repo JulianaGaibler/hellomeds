@@ -101,8 +101,8 @@ class MedicationHistoryRepositoryTest {
         val medication = createMedication(id = 1, stockTrackingEnabled = true)
         medicationDao.insert(medication)
 
-        // Manually insert 3 duplicate records (simulating old corrupt data)
-        val id1 = historyDao.insert(
+        // Manually insert 3 duplicate records (simulating corrupt data)
+        val id1 = historyDao.insertRaw(
             MedicationHistory(
                 medicationId = 1,
                 scheduleId = 10,
@@ -113,7 +113,7 @@ class MedicationHistoryRepositoryTest {
                 takenTime = 2_000_000L,
             ),
         ).toInt()
-        val id2 = historyDao.insert(
+        val id2 = historyDao.insertRaw(
             MedicationHistory(
                 medicationId = 1,
                 scheduleId = 10,
@@ -124,7 +124,7 @@ class MedicationHistoryRepositoryTest {
                 takenTime = 2_000_000L,
             ),
         ).toInt()
-        val id3 = historyDao.insert(
+        val id3 = historyDao.insertRaw(
             MedicationHistory(
                 medicationId = 1,
                 scheduleId = 10,

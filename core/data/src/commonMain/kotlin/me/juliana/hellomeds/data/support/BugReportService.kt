@@ -286,6 +286,7 @@ class BugReportService(
                         MedicationHistory.STATUS_TAKEN -> "TAKEN"
                         MedicationHistory.STATUS_SKIPPED -> "SKIPPED"
                         MedicationHistory.STATUS_AUTO_SKIPPED -> "AUTO_SKIPPED"
+                        MedicationHistory.STATUS_AUTO_TAKEN -> "AUTO_TAKEN"
                         else -> "UNKNOWN(${record.status})"
                     }
                     sb.appendLine("  $time [$medAlias] $status")

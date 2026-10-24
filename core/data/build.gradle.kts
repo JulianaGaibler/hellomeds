@@ -7,9 +7,13 @@ plugins {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "me.juliana.hellomeds.core.data"
-        compileSdk = libs.versions.compileSdk.get().toInt()
+        compileSdk {
+            version = release(libs.versions.compileSdk.get().toInt()) {
+                minorApiLevel = libs.versions.compileSdkMinor.get().toInt()
+            }
+        }
         minSdk = libs.versions.minSdk.get().toInt()
     }
 
@@ -19,7 +23,6 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
-    iosX64()
     iosArm64()
     iosSimulatorArm64()
 
@@ -59,6 +62,5 @@ room {
 dependencies {
     add("kspAndroid", libs.androidx.room.compiler)
     add("kspIosSimulatorArm64", libs.androidx.room.compiler)
-    add("kspIosX64", libs.androidx.room.compiler)
     add("kspIosArm64", libs.androidx.room.compiler)
 }

@@ -9,13 +9,17 @@ plugins {
 }
 
 composeCompiler {
-    stabilityConfigurationFile = rootProject.layout.projectDirectory.file("stability_config.conf")
+    stabilityConfigurationFiles.add(rootProject.layout.projectDirectory.file("stability_config.conf"))
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "me.juliana.hellomeds.shared"
-        compileSdk = libs.versions.compileSdk.get().toInt()
+        compileSdk {
+            version = release(libs.versions.compileSdk.get().toInt()) {
+                minorApiLevel = libs.versions.compileSdkMinor.get().toInt()
+            }
+        }
         minSdk = libs.versions.minSdk.get().toInt()
         androidResources.enable = true
     }
@@ -31,7 +35,6 @@ kotlin {
 
     // iOS targets with shared framework
     listOf(
-        iosX64(),
         iosArm64(),
         iosSimulatorArm64(),
     ).forEach {
@@ -53,13 +56,13 @@ kotlin {
             implementation(libs.koin.compose.viewmodel)
 
             // Compose Multiplatform
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            api(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
-            implementation(compose.materialIconsExtended)
+            implementation(libs.cmp.runtime)
+            implementation(libs.cmp.foundation)
+            implementation(libs.cmp.material3)
+            implementation(libs.cmp.ui)
+            api(libs.cmp.components.resources)
+            implementation(libs.cmp.components.ui.tooling.preview)
+            implementation(libs.cmp.material.icons.extended)
 
             // Graphics shapes (KMP — needed for MaterialShapes compat)
             implementation(libs.androidx.graphics.shapes)
@@ -82,8 +85,7 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
-            @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
-            implementation(compose.uiTest)
+            implementation(libs.cmp.ui.test)
         }
 
         androidMain.dependencies {
@@ -93,8 +95,8 @@ kotlin {
             // Lifecycle-aware Flow collection (collectAsStateWithLifecycle)
             implementation(libs.androidx.lifecycle.runtime.compose)
 
-            // M3 Expressive (upgrades CMP's bundled M3 to enable Expressive APIs)
-            implementation(libs.androidx.material3.expressive)
+            // Newer than the Material 3 that JetBrains maps to. Gradle resolves the higher version.
+            implementation(libs.androidx.material3)
         }
     }
 }

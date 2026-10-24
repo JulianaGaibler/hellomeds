@@ -1052,6 +1052,7 @@ private fun ActionsSection(
 @Composable
 private fun doseStatusText(dose: TodayDoseInfo): String {
     return when {
+        dose.event.historyRecord?.status == MedicationHistory.STATUS_AUTO_TAKEN -> "AUTO_TAKEN"
         dose.event.isTaken -> {
             val takenTime = dose.event.historyRecord?.takenTime
             if (takenTime != null) "TAKEN ${formatTime(takenTime)}" else "TAKEN"

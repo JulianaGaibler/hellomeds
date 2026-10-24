@@ -4,9 +4,13 @@ plugins {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "me.juliana.hellomeds.core.domain"
-        compileSdk = libs.versions.compileSdk.get().toInt()
+        compileSdk {
+            version = release(libs.versions.compileSdk.get().toInt()) {
+                minorApiLevel = libs.versions.compileSdkMinor.get().toInt()
+            }
+        }
         minSdk = libs.versions.minSdk.get().toInt()
     }
 
@@ -15,7 +19,6 @@ kotlin {
         freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
     }
 
-    iosX64()
     iosArm64()
     iosSimulatorArm64()
 

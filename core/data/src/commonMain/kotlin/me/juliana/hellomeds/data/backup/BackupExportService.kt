@@ -147,6 +147,7 @@ private fun Medication.toBackup(
     cycleHasPlacebos = cycleHasPlacebos,
     cycleStartDate = cycleStartDate?.toString(),
     timeZoneMode = timeZoneMode.name,
+    unloggedDoseAction = unloggedDoseAction.name,
     stock = stock,
     schedules = schedules,
     history = history,

@@ -44,7 +44,11 @@ plugins {
 
 android {
     namespace = "me.juliana.hellomeds"
-    compileSdk = libs.versions.compileSdk.get().toInt()
+    compileSdk {
+        version = release(libs.versions.compileSdk.get().toInt()) {
+            minorApiLevel = libs.versions.compileSdkMinor.get().toInt()
+        }
+    }
 
     defaultConfig {
         applicationId = "me.juliana.hellomeds"
@@ -119,12 +123,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-        freeCompilerArgs += listOf(
-            "-opt-in=kotlin.time.ExperimentalTime",
-        )
-    }
     testOptions {
         unitTests.isReturnDefaultValues = true
     }
@@ -155,7 +153,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.material3.expressive)
+    implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.adaptive)
     implementation(libs.androidx.graphics.shapes)
     implementation(libs.androidx.material.icons.core)
@@ -217,4 +215,11 @@ dependencies {
     "androidTestScreenshotDebugImplementation"(libs.androidx.test.uiautomator)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
+    }
 }

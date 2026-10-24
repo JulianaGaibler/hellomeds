@@ -38,6 +38,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import me.juliana.hellomeds.data.database.entities.MedicationHistory
 import me.juliana.hellomeds.data.crypto.DatabaseKeyManager
 import me.juliana.hellomeds.designsystem.component.AppSnackbarHost
 import me.juliana.hellomeds.data.preferences.AutoBackupPreferences
@@ -448,6 +449,7 @@ private fun TodayDosesSection(todayOverview: TodayOverview) {
                             "${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}"
 
                         val status = when {
+                            dose.event.historyRecord?.status == MedicationHistory.STATUS_AUTO_TAKEN -> "AUTO_TAKEN"
                             dose.event.isTaken -> "TAKEN"
                             dose.event.isSkipped -> "SKIPPED"
                             dose.isOverdue -> "OVERDUE"
@@ -463,7 +465,7 @@ private fun TodayDosesSection(todayOverview: TodayOverview) {
                                 Text(
                                     text = status,
                                     color = when (status) {
-                                        "TAKEN" -> MaterialTheme.colorScheme.primary
+                                        "TAKEN", "AUTO_TAKEN" -> MaterialTheme.colorScheme.primary
                                         "OVERDUE" -> MaterialTheme.colorScheme.error
                                         "SKIPPED" -> MaterialTheme.colorScheme.outline
                                         else -> MaterialTheme.colorScheme.tertiary

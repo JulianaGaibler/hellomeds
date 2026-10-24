@@ -21,6 +21,7 @@ import me.juliana.hellomeds.data.di.dataModule
 import me.juliana.hellomeds.data.interfaces.ScheduleReconciler
 import me.juliana.hellomeds.data.repository.MedicationHistoryRepository
 import me.juliana.hellomeds.data.service.ScheduleProjector
+import me.juliana.hellomeds.data.service.UnloggedDoseResolver
 import me.juliana.hellomeds.data.util.DiagnosticLog
 import me.juliana.hellomeds.notifications.IOSNotificationSessionManager
 import me.juliana.hellomeds.notifications.NotificationActionStrings
@@ -122,12 +123,23 @@ fun MainViewController(): UIViewController {
             val resumeScope = rememberCoroutineScope()
             DisposableEffect(Unit) {
                 val reconciler = KoinPlatform.getKoin().get<ScheduleReconciler>()
+                val resolver = KoinPlatform.getKoin().get<UnloggedDoseResolver>()
+                // Resolving reconciles itself when it writes rows; reconciling again would
+                // wipe and re-add every pending notification a second time.
+                val resolveThenReconcile: () -> Unit = {
+                    resumeScope.launch {
+                        if (!resolver.resolve().wroteRows) reconciler.reconcile()
+                    }
+                }
+                // The observer is registered after composition, so it can miss the cold
+                // launch's first DidBecomeActive, so run once explicitly.
+                resolveThenReconcile()
                 val observer = NSNotificationCenter.defaultCenter.addObserverForName(
                     name = UIApplicationDidBecomeActiveNotification,
                     `object` = null,
                     queue = NSOperationQueue.mainQueue,
                 ) { _ ->
-                    resumeScope.launch { reconciler.reconcile() }
+                    resolveThenReconcile()
                 }
                 onDispose {
                     observer?.let { NSNotificationCenter.defaultCenter.removeObserver(it) }
@@ -307,11 +319,11 @@ private suspend fun handleAlarmAction(
     val sessionManager = koin.get<IOSNotificationSessionManager>()
     val reconciler = koin.get<ScheduleReconciler>()
 
-    val events = projector.getPendingEventsAtTime(scheduledTime)
+    val events = projector.getActionableEventsAtTime(scheduledTime)
     val now = me.juliana.hellomeds.data.util.currentTimeMillis()
 
     for (event in events) {
-        if (event.scheduleId in scheduleIds && event.isPending) {
+        if (event.scheduleId in scheduleIds) {
             if (isTaken) {
                 historyRepo.markAsTaken(event, event.dose, now)
             } else {

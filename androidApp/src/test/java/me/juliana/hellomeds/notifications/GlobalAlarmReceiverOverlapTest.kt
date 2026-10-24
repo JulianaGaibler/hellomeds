@@ -153,6 +153,7 @@ class GlobalAlarmReceiverOverlapTest {
                 single<MedicationDao> { medicationDao }
                 single<ImportanceLabelDao> { importanceLabelDao }
                 single<MissedDoseProcessor> { missedDoseProcessor }
+                single<me.juliana.hellomeds.data.service.UnloggedDoseResolver> { mockk(relaxed = true) }
             }
             org.koin.core.context.startKoin { modules(testModule) }
             try {

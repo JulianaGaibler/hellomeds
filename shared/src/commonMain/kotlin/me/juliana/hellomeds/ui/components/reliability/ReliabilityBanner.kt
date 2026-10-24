@@ -3,12 +3,19 @@
 
 package me.juliana.hellomeds.ui.components.reliability
 
+import org.jetbrains.compose.resources.pluralStringResource
+import me.juliana.hellomeds.shared.reliability_banner_away_action
+import me.juliana.hellomeds.shared.reliability_banner_away_message
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
@@ -37,8 +44,9 @@ import org.jetbrains.compose.resources.stringResource
 /**
  * Persistent reliability banner that surfaces system-level reminder pipeline
  * degradations: revoked exact-alarm permission (Android), notification budget
- * exhaustion (iOS), and destructive database recovery (cross-platform — fired
- * after a Keychain/MasterKey invalidation forced a wipe).
+ * exhaustion (iOS), destructive database recovery (cross-platform — fired
+ * after a Keychain/MasterKey invalidation forced a wipe), and the summary of doses
+ * logged automatically after a long absence.
  *
  * Renders nothing on [ReliabilityState.Healthy]. Renders nothing for the
  * `missedDoses`-only Degraded case — those surface in the Tracking screen's
@@ -56,17 +64,24 @@ fun ReliabilityBanner(
     state: ReliabilityState,
     onFixExactAlarms: () -> Unit,
     onDismissDatabaseRecovered: () -> Unit,
+    onDismissAwaySummary: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val degraded = state as? ReliabilityState.Degraded ?: return
-    if (!degraded.exactAlarmsDisabled &&
-        !degraded.iosNotificationBudgetExhausted &&
-        !degraded.databaseRecovered
-    ) {
-        return
-    }
+    if (!state.showsBanner()) return
+    val degraded = state as ReliabilityState.Degraded
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    // The first row sits under the status bar, so the column paints that row's color behind it.
+    val topColor = when {
+        degraded.databaseRecovered || degraded.exactAlarmsDisabled -> MaterialTheme.colorScheme.errorContainer
+        degraded.awaySummary != null -> MaterialTheme.colorScheme.secondaryContainer
+        else -> MaterialTheme.colorScheme.tertiaryContainer
+    }
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(topColor)
+            .windowInsetsPadding(WindowInsets.statusBars),
+    ) {
         // Render the data-loss banner first — it is the most severe of the three
         // (user data was actually wiped) and may need re-import action before the
         // other banners are even meaningful.
@@ -116,6 +131,33 @@ fun ReliabilityBanner(
                 },
             )
         }
+        degraded.awaySummary?.let { summary ->
+            BannerRow(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                icon = { tint ->
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(20.dp),
+                    )
+                },
+                message = pluralStringResource(
+                    Res.plurals.reliability_banner_away_message,
+                    summary.total,
+                    summary.total,
+                ),
+                action = {
+                    TextButton(onClick = onDismissAwaySummary) {
+                        Text(
+                            text = stringResource(Res.string.reliability_banner_away_action),
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        )
+                    }
+                },
+            )
+        }
         if (degraded.iosNotificationBudgetExhausted) {
             BannerRow(
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
@@ -133,6 +175,15 @@ fun ReliabilityBanner(
             )
         }
     }
+}
+
+/** True when [ReliabilityBanner] renders at least one row for this state. */
+fun ReliabilityState.showsBanner(): Boolean {
+    val degraded = this as? ReliabilityState.Degraded ?: return false
+    return degraded.exactAlarmsDisabled ||
+        degraded.iosNotificationBudgetExhausted ||
+        degraded.databaseRecovered ||
+        degraded.awaySummary != null
 }
 
 @Composable

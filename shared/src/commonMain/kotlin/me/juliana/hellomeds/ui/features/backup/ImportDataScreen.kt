@@ -95,9 +95,9 @@ import me.juliana.hellomeds.shared.import_warning_unknown_frequency_type
 import me.juliana.hellomeds.shared.import_warning_unknown_med_type
 import me.juliana.hellomeds.shared.import_warning_unknown_strength_unit
 import me.juliana.hellomeds.shared.import_warning_unknown_tracking_precision
-import me.juliana.hellomeds.ui.compat.ButtonGroupDefaults
+import androidx.compose.material3.ButtonGroupDefaults
 import me.juliana.hellomeds.ui.compat.ListItemShapes
-import me.juliana.hellomeds.ui.compat.ToggleButton
+import androidx.compose.material3.ToggleButton
 import me.juliana.hellomeds.ui.compat.collectAsStateWithLifecycle
 import me.juliana.hellomeds.ui.components.common.AppScaffold
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
