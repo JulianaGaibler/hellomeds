@@ -53,7 +53,7 @@ import me.juliana.hellomeds.shared.log_medication_scheduled
 import me.juliana.hellomeds.shared.log_medication_status_taken
 import me.juliana.hellomeds.shared.log_medication_time
 import me.juliana.hellomeds.shared.log_medication_title
-import me.juliana.hellomeds.ui.compat.ToggleButton
+import androidx.compose.material3.ToggleButton
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.common.EmptyState
 import me.juliana.hellomeds.ui.components.list.AutoSmartList

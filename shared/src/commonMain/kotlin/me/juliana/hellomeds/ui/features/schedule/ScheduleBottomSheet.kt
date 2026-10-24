@@ -87,8 +87,8 @@ import me.juliana.hellomeds.shared.schedule_new
 import me.juliana.hellomeds.shared.schedule_select_days
 import me.juliana.hellomeds.shared.schedule_start_date
 import me.juliana.hellomeds.shared.schedule_time
-import me.juliana.hellomeds.ui.compat.ButtonGroupDefaults
-import me.juliana.hellomeds.ui.compat.ToggleButton
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ToggleButton
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.DecimalInputTransformation

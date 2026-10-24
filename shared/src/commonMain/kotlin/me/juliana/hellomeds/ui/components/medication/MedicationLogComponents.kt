@@ -33,9 +33,9 @@ import me.juliana.hellomeds.shared.accessibility_not_selected
 import me.juliana.hellomeds.shared.accessibility_selected
 import me.juliana.hellomeds.shared.log_medication_status_skipped
 import me.juliana.hellomeds.shared.log_medication_status_taken
-import me.juliana.hellomeds.ui.compat.ButtonGroupDefaults
+import androidx.compose.material3.ButtonGroupDefaults
 import me.juliana.hellomeds.ui.compat.ListItemShapes
-import me.juliana.hellomeds.ui.compat.ToggleButton
+import androidx.compose.material3.ToggleButton
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.list.DecimalInputTransformation
 import me.juliana.hellomeds.ui.components.list.SmartListItem

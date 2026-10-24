@@ -92,8 +92,8 @@ import me.juliana.hellomeds.shared.importance_preview_follow_up
 import me.juliana.hellomeds.shared.importance_preview_initial
 import me.juliana.hellomeds.shared.importance_preview_title
 import me.juliana.hellomeds.shared.time_unit_minutes
-import me.juliana.hellomeds.ui.compat.ButtonGroupDefaults
-import me.juliana.hellomeds.ui.compat.ToggleButton
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ToggleButton
 import me.juliana.hellomeds.ui.compat.platformContext
 import me.juliana.hellomeds.ui.components.list.AutoSmartList
 import me.juliana.hellomeds.ui.components.list.IntegerInputTransformation
