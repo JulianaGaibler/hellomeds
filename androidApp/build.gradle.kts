@@ -72,7 +72,15 @@ android {
         }
         create("fdroid") {
             dimension = "distribution"
+            // Open-source distribution keeps readable stack traces in user-submitted logs.
+            proguardFiles("proguard-fdroid.pro")
         }
+    }
+
+    // The encrypted dependency blob is only readable by Google and F-Droid flags it.
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
 
     signingConfigs {

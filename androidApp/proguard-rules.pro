@@ -5,29 +5,13 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# Open-source app: keep source names in stack traces (Play Console pre-review reports,
-# user-submitted logs, third-party crash tools). R8 still shrinks and optimizes.
--dontobfuscate
+# Keep line numbers so Play can deobfuscate crashes with the mapping file in the bundle.
+-keepattributes SourceFile, LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# Keep ML Kit classes (on-device object detection and text recognition)
--keep class com.google.mlkit.** { *; }
--dontwarn com.google.mlkit.**
-
-# Keep ML Kit GenAI classes (on-device generative AI with Gemini Nano)
--keep class com.google.mlkit.genai.** { *; }
--dontwarn com.google.mlkit.genai.**
-
-# Keep CameraX classes
--keep class androidx.camera.** { *; }
--dontwarn androidx.camera.**
-
-# Room KMP — entities, DAOs, and database
--keep class me.juliana.hellomeds.data.database.** { *; }
--keep class me.juliana.hellomeds.data.dao.** { *; }
-
-# Koin
--keep class org.koin.** { *; }
--dontwarn org.koin.**
+# Room KMP instantiates the generated database through its constructor lookup
+-keep class * extends androidx.room.RoomDatabase { <init>(...); }
+-keep class * implements androidx.room.RoomDatabaseConstructor { *; }
 
 # kotlinx.serialization (Navigation 3 routes)
 -keepattributes *Annotation*, InnerClasses
@@ -40,14 +24,10 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
-# kotlinx.datetime
--keep class kotlinx.datetime.** { *; }
--dontwarn kotlinx.datetime.**
-
 # SQLCipher
 -keep class net.zetetic.database.** { *; }
 -dontwarn net.zetetic.database.**
 
-# Tink (used by EncryptedSharedPreferences for database key storage)
--keep class com.google.crypto.tink.** { *; }
--dontwarn com.google.crypto.tink.**
+# Tink references annotation-only classes that are not on the classpath
+-dontwarn com.google.errorprone.annotations.**
+-dontwarn javax.annotation.**

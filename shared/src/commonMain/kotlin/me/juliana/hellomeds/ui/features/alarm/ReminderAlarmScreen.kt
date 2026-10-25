@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
@@ -69,6 +70,7 @@ fun ReminderAlarmScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .onboardingBackgroundShapes(tertiary, primary)
+            .safeDrawingPadding()
             .padding(32.dp),
     ) {
         Column(
