@@ -1,0 +1,8 @@
+- Clear a medication's logged doses and stock changes
+- Reminders to turn on automatic backups
+- Offers a restore if your data can't be opened
+- Older app versions no longer wipe newer data
+- Backup imports are all or nothing, and saving or reading backups shows errors
+- Missed doses settle in the right time zone, with a prompt after 30+ days away
+- Fixed stock showing zero after an import and edits overwriting stock
+- Schedule dates no longer shift across time zones
