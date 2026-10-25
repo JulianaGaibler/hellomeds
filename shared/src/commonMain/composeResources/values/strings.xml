@@ -553,10 +553,13 @@
     <string name="auto_backup_passphrase_not_set">No passphrase set</string>
     <string name="settings_auto_backup_enabled">Enabled</string>
     <string name="settings_auto_backup_disabled">Not configured</string>
-    <string name="backup_nudge_title">Protect your data</string>
-    <string name="backup_nudge_body">Set up automatic backups to keep your medication data safe. If you ever lose access to this device, you can restore everything with your passphrase.</string>
-    <string name="backup_nudge_setup">Set up</string>
+    <string name="backup_nudge_title">Protect your medication data</string>
+    <string name="backup_nudge_setup">Set up backups</string>
     <string name="backup_nudge_dismiss">Not now</string>
+    <string name="backup_nudge_never">Don't ask again</string>
+    <string name="backup_nudge_body_risk">Everything in HelloMeds, including your medications, schedules, history and stock, is stored only on this device. There is no account and no server, so nobody can recover it for you. If your phone is lost, broken or reset, or the app hits a serious error, that data is gone for good.</string>
+    <string name="backup_nudge_risk_after_import">You just brought your data into HelloMeds, and it now lives only on this device. There is no account and no server, so nobody can recover it for you. If your phone is lost, broken or reset, or the app hits a serious error, it is gone for good.</string>
+    <string name="backup_nudge_body_solution">Automatic backups save an encrypted copy every day to a place you choose, protected by a passphrase only you know. Setup takes about a minute, and restoring on a new phone takes a few taps. Keep the passphrase somewhere safe, because we cannot reset it for you.</string>
 
     <!-- Export Screen -->
     <string name="backup_export_title">Export data</string>
@@ -1237,7 +1240,7 @@
     <string name="reliability_banner_exact_alarms_message">Reminders may be delayed.</string>
     <string name="reliability_banner_exact_alarms_action">Fix</string>
     <string name="reliability_banner_ios_budget_message">Too many reminders scheduled. Open the app every 2 days to keep them active.</string>
-    <string name="reliability_banner_database_recovered_message">A system error caused your local database to be wiped to prevent a fatal crash. Please restore your medications from a backup or re-enter them.</string>
+    <string name="reliability_banner_database_recovered_message">Your data could not be opened. Restore your medications from a backup or add them again.</string>
     <string name="reliability_banner_database_recovered_action">Dismiss</string>
     <plurals name="reliability_banner_away_message">
         <item quantity="one">While you were away, %1$d unlogged dose was logged automatically.</item>
@@ -1290,4 +1293,11 @@
     <string name="downgrade_erased">Your data was erased. Close HelloMeds and open it again.</string>
 
     <string name="medication_error_save">Couldn't save your changes</string>
+
+    <string name="recovered_title">Your data could not be opened</string>
+    <string name="recovered_message_cause">The secure key that protects your data stopped being available on this device, for example after a lock screen or security change. HelloMeds tried again several times and then started with an empty database so the app keeps working. Nothing else on your device was touched.</string>
+    <string name="recovered_message_next">You can bring your medications back from a backup. If you have none, you will need to add them again. HelloMeds also keeps the unreadable copy for a short while in case the key comes back, and moves it back automatically if the new database is still empty.</string>
+    <string name="recovered_restore_latest">Restore backup from %1$s</string>
+    <string name="recovered_choose_file">Choose a backup file</string>
+    <string name="recovered_start_fresh">Start fresh</string>
 </resources>

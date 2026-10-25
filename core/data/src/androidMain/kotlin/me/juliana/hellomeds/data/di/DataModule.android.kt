@@ -6,6 +6,7 @@ package me.juliana.hellomeds.data.di
 import android.content.Context
 import me.juliana.hellomeds.data.backup.AutoBackupStorageProvider
 import me.juliana.hellomeds.data.crypto.DatabaseKeyManager
+import me.juliana.hellomeds.data.crypto.KeyLossCleanup
 import me.juliana.hellomeds.data.crypto.PassphraseManager
 import me.juliana.hellomeds.data.database.DatabaseSchemaGuard
 import me.juliana.hellomeds.data.database.getDatabaseBuilder
@@ -29,6 +30,7 @@ actual val platformDataModule: Module = module {
     single { getDatabaseBuilder(get<Context>()) }
     single { DatabaseKeyManager(get<Context>()) }
     single { DatabaseSchemaGuard(get<Context>()) }
+    single<KeyLossCleanup> { get<DatabaseKeyManager>() }
 
     // Preferences — each wraps a platform-specific DataStore instance
     single { NotificationPreferences(createNotificationDataStore(get<Context>())) }

@@ -6,6 +6,7 @@ package me.juliana.hellomeds.workers
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import me.juliana.hellomeds.data.crypto.KeyLossCleanup
 import me.juliana.hellomeds.data.util.AppLogger
 import me.juliana.hellomeds.notifications.AlarmReconciler
 import me.juliana.hellomeds.notifications.NotificationSessionManager
@@ -30,6 +31,9 @@ class CleanupWorker(
 
             // Clean up stale sessions
             sessionManager.clearStaleSessions()
+
+            // Drop a set-aside database once it is too old to be worth keeping
+            get<KeyLossCleanup>().deleteExpiredQuarantine()
 
             // Ensure alarm is set
             reconciler.reconcile()

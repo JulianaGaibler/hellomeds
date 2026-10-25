@@ -71,6 +71,17 @@ actual class AutoBackupStorageProvider(
         }
     }
 
+    actual suspend fun readBackup(fileName: String): ByteArray? = withContext(Dispatchers.IO) {
+        try {
+            val uri = getValidatedUri() ?: return@withContext null
+            val treeDoc = DocumentFile.fromTreeUri(context, uri) ?: return@withContext null
+            val file = treeDoc.listFiles().find { it.name == fileName } ?: return@withContext null
+            context.contentResolver.openInputStream(file.uri)?.use { it.readBytes() }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     actual suspend fun deleteBackup(fileName: String): Boolean = withContext(Dispatchers.IO) {
         try {
             val uri = getValidatedUri() ?: return@withContext false

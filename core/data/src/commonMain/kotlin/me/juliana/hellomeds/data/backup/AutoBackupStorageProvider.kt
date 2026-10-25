@@ -9,6 +9,9 @@ expect class AutoBackupStorageProvider {
     /** Sorted newest-first; only files matching the hellomeds-auto-* pattern. */
     suspend fun listBackups(): List<String>
 
+    /** The raw bytes of a file returned by [listBackups], or null when it cannot be read. */
+    suspend fun readBackup(fileName: String): ByteArray?
+
     suspend fun deleteBackup(fileName: String): Boolean
 
     suspend fun destinationAvailability(): DestinationAvailability

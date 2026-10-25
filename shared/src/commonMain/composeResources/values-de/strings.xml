@@ -545,10 +545,13 @@
 	<string name="auto_backup_passphrase_not_set">Kein Passwort gesetzt</string>
 	<string name="settings_auto_backup_enabled">Aktiviert</string>
 	<string name="settings_auto_backup_disabled">Nicht eingerichtet</string>
-	<string name="backup_nudge_title">Sichern Sie Ihre Daten</string>
-	<string name="backup_nudge_body">Automatische Sicherungen einrichten, um Medikamentendaten zu schützen. Wenn App-Daten gelöscht werden, kann alles mit dem Passwort wiederhergestellt werden.</string>
-	<string name="backup_nudge_setup">Einrichten</string>
+	<string name="backup_nudge_title">Schützen Sie Ihre Medikamentendaten</string>
+	<string name="backup_nudge_setup">Sicherung einrichten</string>
 	<string name="backup_nudge_dismiss">Nicht jetzt</string>
+	<string name="backup_nudge_never">Nicht mehr fragen</string>
+	<string name="backup_nudge_body_risk">Alles in HelloMeds, also Medikamente, Zeitpläne, Verlauf und Bestand, wird nur auf diesem Gerät gespeichert. Es gibt kein Konto und keinen Server, daher kann niemand es für Sie wiederherstellen. Geht das Handy verloren, ist defekt oder wird zurückgesetzt, oder tritt ein schwerer App-Fehler auf, sind die Daten endgültig weg.</string>
+	<string name="backup_nudge_risk_after_import">Sie haben gerade Ihre Daten in HelloMeds importiert, und sie liegen jetzt nur auf diesem Gerät. Es gibt kein Konto und keinen Server, daher kann niemand sie für Sie wiederherstellen. Geht das Handy verloren, ist defekt oder wird zurückgesetzt, oder tritt ein schwerer App-Fehler auf, sind sie endgültig weg.</string>
+	<string name="backup_nudge_body_solution">Automatische Sicherungen speichern täglich eine verschlüsselte Kopie an einem Ort Ihrer Wahl, geschützt durch ein Passwort, das nur Sie kennen. Die Einrichtung dauert etwa eine Minute, und die Wiederherstellung auf einem neuen Handy erfordert nur wenige Schritte. Bewahren Sie das Passwort sicher auf, denn wir können es nicht zurücksetzen.</string>
 
 	<!-- Export Screen -->
 	<string name="backup_export_title">Daten exportieren</string>
@@ -1234,4 +1237,11 @@
 	<string name="downgrade_erased">Deine Daten wurden gelöscht. Schließe HelloMeds und öffne es erneut.</string>
 
 	<string name="medication_error_save">Deine Änderungen konnten nicht gespeichert werden</string>
+
+	<string name="recovered_title">Ihre Daten konnten nicht geöffnet werden</string>
+	<string name="recovered_message_cause">Der sichere Schlüssel, der Ihre Daten schützt, ist auf diesem Gerät nicht mehr verfügbar, zum Beispiel nach einer Änderung der Displaysperre oder der Sicherheitseinstellungen. HelloMeds hat es mehrmals erneut versucht und danach mit einer leeren Datenbank gestartet, damit die App weiter funktioniert. Andere Daten auf Ihrem Gerät wurden nicht verändert.</string>
+	<string name="recovered_message_next">Sie können Ihre Medikamente aus einer Sicherung wiederherstellen. Ohne Sicherung müssen Sie sie neu eingeben. HelloMeds behält die unlesbare Kopie noch eine Weile, falls der Schlüssel zurückkehrt, und stellt sie automatisch wieder her, solange die neue Datenbank leer ist.</string>
+	<string name="recovered_restore_latest">Sicherung vom %1$s wiederherstellen</string>
+	<string name="recovered_choose_file">Sicherungsdatei auswählen</string>
+	<string name="recovered_start_fresh">Neu beginnen</string>
 </resources>

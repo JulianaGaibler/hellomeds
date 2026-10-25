@@ -25,16 +25,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.produceState
+import me.juliana.hellomeds.ui.features.backup.autoBackupDateLabel
+import me.juliana.hellomeds.ui.features.backup.DatabaseRecoveredDialog
+import me.juliana.hellomeds.data.preferences.ReliabilityPreferences
+import me.juliana.hellomeds.data.backup.AutoBackupStorageProvider
+import kotlinx.coroutines.flow.map
+import me.juliana.hellomeds.ui.features.backup.BackupNudgeDialog
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import me.juliana.hellomeds.data.backup.BackupNudgePolicy
+import me.juliana.hellomeds.data.dao.MedicationDao
 import me.juliana.hellomeds.data.preferences.AutoBackupPreferences
 import me.juliana.hellomeds.data.preferences.OnboardingPreferences
 import me.juliana.hellomeds.shared.Res
-import me.juliana.hellomeds.shared.backup_nudge_body
-import me.juliana.hellomeds.shared.backup_nudge_dismiss
-import me.juliana.hellomeds.shared.backup_nudge_setup
-import me.juliana.hellomeds.shared.backup_nudge_title
 import me.juliana.hellomeds.shared.closed_beta_survey_nudge_body
 import me.juliana.hellomeds.shared.closed_beta_survey_nudge_cta
 import me.juliana.hellomeds.shared.closed_beta_survey_nudge_dismiss
@@ -119,6 +125,9 @@ fun HelloMedsNavigation3(
     val navigator = remember { Navigator(appNavState) }
 
     val onboardingPrefs = koinInject<OnboardingPreferences>()
+    val nudgeScope = rememberCoroutineScope()
+    val autoBackupPrefs = koinInject<AutoBackupPreferences>()
+    val medicationDao = koinInject<MedicationDao>()
     var hasCheckedOnboarding by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -360,6 +369,11 @@ fun HelloMedsNavigation3(
                         navigator.closeOverlay()
                     },
                     onMedicationAdded = { medicationId, medicationName, state ->
+                        nudgeScope.launch {
+                            autoBackupPrefs.scheduleNudgeAfterMedicationAdded(
+                                kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                            )
+                        }
                         // Store completion data to show dialog after screen closes
                         appNavState.completionDialogData = MedicationCompletionData(
                             medicationId = medicationId,
@@ -558,47 +572,67 @@ fun HelloMedsNavigation3(
             )
         }
 
-        // Auto-backup nudge dialog — shown 2 days after onboarding if backups not enabled
-        val nudgeScope = rememberCoroutineScope()
-        val autoBackupPrefs = koinInject<AutoBackupPreferences>()
-        val autoBackupEnabled by autoBackupPrefs.autoBackupEnabled.collectAsStateWithLifecycle(false)
-        val nudgeDismissed by autoBackupPrefs.backupNudgeDismissed.collectAsStateWithLifecycle(false)
-        val onboardingTimestamp by autoBackupPrefs.onboardingCompletedTimestamp.collectAsStateWithLifecycle(0L)
+        // Offer a restore when the database could not be opened and a fresh one was created
+        val reliabilityPrefs = koinInject<ReliabilityPreferences>()
+        val databaseRecovered by reliabilityPrefs.databaseRecovered.collectAsStateWithLifecycle(false)
+        var recoveryDialogHidden by rememberSaveable { mutableStateOf(false) }
+        if (databaseRecovered && !recoveryDialogHidden) {
+            val storageProvider = koinInject<AutoBackupStorageProvider>()
+            val latestBackup by produceState<String?>(null) { value = storageProvider.listBackups().firstOrNull() }
+            DatabaseRecoveredDialog(
+                latestBackupLabel = latestBackup?.let(::autoBackupDateLabel),
+                onRestoreLatest = {
+                    latestBackup?.let { name ->
+                        IncomingBackupHandler.setPendingImportReader { storageProvider.readBackup(name) }
+                        navigator.openOverlay(ImportDataRoute)
+                    }
+                    recoveryDialogHidden = true
+                },
+                onChooseFile = {
+                    navigator.openOverlay(ImportDataRoute)
+                    recoveryDialogHidden = true
+                },
+                onStartFresh = { nudgeScope.launch { reliabilityPrefs.setDatabaseRecovered(false) } },
+                onLater = { recoveryDialogHidden = true },
+            )
+        }
 
-        val twoDaysMs = 2 * 24 * 60 * 60 * 1000L
-        val showNudge = onboardingTimestamp > 0L &&
-            (kotlin.time.Clock.System.now().toEpochMilliseconds() - onboardingTimestamp) >= twoDaysMs &&
-            !autoBackupEnabled &&
-            !nudgeDismissed
+        // Auto-backup nudge dialog. See BackupNudgePolicy for when it is due.
+        val autoBackupEnabled by autoBackupPrefs.autoBackupEnabled.collectAsStateWithLifecycle(false)
+        val nudgeNextAt by autoBackupPrefs.backupNudgeNextAt.collectAsStateWithLifecycle(0L)
+        val nudgeOptOut by autoBackupPrefs.backupNudgeOptOut.collectAsStateWithLifecycle(false)
+        val nudgeAfterImport by autoBackupPrefs.backupNudgeAfterImport.collectAsStateWithLifecycle(false)
+        val onboardingTimestamp by autoBackupPrefs.onboardingCompletedTimestamp.collectAsStateWithLifecycle(0L)
+        val hasMedications by medicationDao.getAll().map { it.isNotEmpty() }.collectAsStateWithLifecycle(false)
+
+        LaunchedEffect(Unit) {
+            autoBackupPrefs.migrateLegacyBackupNudge(kotlin.time.Clock.System.now().toEpochMilliseconds())
+        }
+
+        val showNudge = BackupNudgePolicy.shouldShow(
+            now = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+            nextAt = nudgeNextAt,
+            onboardingCompletedAt = onboardingTimestamp,
+            backupsEnabled = autoBackupEnabled,
+            optedOut = nudgeOptOut,
+            hasMedications = hasMedications,
+        )
 
         if (showNudge) {
-            AlertDialog(
-                onDismissRequest = {
+            BackupNudgeDialog(
+                afterImport = nudgeAfterImport,
+                onSetUp = {
                     nudgeScope.launch {
-                        autoBackupPrefs.setBackupNudgeDismissed(true)
+                        autoBackupPrefs.snoozeBackupNudge(kotlin.time.Clock.System.now().toEpochMilliseconds())
+                    }
+                    navigator.openOverlay(AutoBackupSettingsRoute)
+                },
+                onNotNow = {
+                    nudgeScope.launch {
+                        autoBackupPrefs.snoozeBackupNudge(kotlin.time.Clock.System.now().toEpochMilliseconds())
                     }
                 },
-                title = { Text(stringResource(Res.string.backup_nudge_title)) },
-                text = { Text(stringResource(Res.string.backup_nudge_body)) },
-                confirmButton = {
-                    Button(onClick = {
-                        nudgeScope.launch {
-                            autoBackupPrefs.setBackupNudgeDismissed(true)
-                        }
-                        navigator.openOverlay(AutoBackupSettingsRoute)
-                    }) {
-                        Text(stringResource(Res.string.backup_nudge_setup))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        nudgeScope.launch {
-                            autoBackupPrefs.setBackupNudgeDismissed(true)
-                        }
-                    }) {
-                        Text(stringResource(Res.string.backup_nudge_dismiss))
-                    }
-                },
+                onNeverAsk = { nudgeScope.launch { autoBackupPrefs.optOutOfBackupNudge() } },
             )
         }
 

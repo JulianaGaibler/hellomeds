@@ -5,6 +5,8 @@ package me.juliana.hellomeds.data.di
 
 import me.juliana.hellomeds.data.backup.AutoBackupStorageProvider
 import me.juliana.hellomeds.data.crypto.DatabaseKeyManager
+import me.juliana.hellomeds.data.crypto.KeyLossCleanup
+import me.juliana.hellomeds.data.crypto.NoKeyLossCleanup
 import me.juliana.hellomeds.data.crypto.PassphraseManager
 import me.juliana.hellomeds.data.database.DatabaseSchemaGuard
 import me.juliana.hellomeds.data.database.getDatabaseBuilder
@@ -28,6 +30,7 @@ actual val platformDataModule: Module = module {
     single { getDatabaseBuilder() }
     single { DatabaseKeyManager() }
     single { DatabaseSchemaGuard() }
+    single<KeyLossCleanup> { NoKeyLossCleanup }
 
     // Preferences — each wraps a platform-specific DataStore instance
     single { NotificationPreferences(createNotificationDataStore()) }

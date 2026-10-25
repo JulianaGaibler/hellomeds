@@ -26,6 +26,7 @@ import platform.Foundation.NSURL
 import platform.Foundation.NSURLBookmarkCreationWithSecurityScope
 import platform.Foundation.NSURLBookmarkResolutionWithSecurityScope
 import platform.Foundation.base64EncodedStringWithOptions
+import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.create
 import platform.Foundation.writeToURL
 import kotlin.io.encoding.Base64
@@ -60,6 +61,40 @@ actual class AutoBackupStorageProvider(
             }
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    actual suspend fun readBackup(fileName: String): ByteArray? = withContext(Dispatchers.Default) {
+        val dir = resolveDirectory() ?: return@withContext null
+        val (url, isScoped) = dir
+        if (isScoped) url.startAccessingSecurityScopedResource()
+        try {
+            val target = url.URLByAppendingPathComponent(fileName) ?: return@withContext null
+            readCoordinated(target)
+        } catch (e: Exception) {
+            null
+        } finally {
+            if (isScoped) url.stopAccessingSecurityScopedResource()
+        }
+    }
+
+    /** Coordinated so an iCloud file that is not downloaded yet is fetched first. */
+    private fun readCoordinated(target: NSURL): ByteArray? {
+        val coordinator = NSFileCoordinator(filePresenter = null)
+        return memScoped {
+            val errPtr = alloc<ObjCObjectVar<NSError?>>()
+            var result: ByteArray? = null
+            coordinator.coordinateReadingItemAtURL(
+                url = target,
+                options = 0uL,
+                error = errPtr.ptr,
+                byAccessor = { coordinatedUrl ->
+                    if (coordinatedUrl != null) {
+                        result = NSData.dataWithContentsOfURL(coordinatedUrl)?.toByteArray()
+                    }
+                },
+            )
+            result
         }
     }
 
@@ -292,4 +327,15 @@ actual class AutoBackupStorageProvider(
             }
         }
     }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private fun NSData.toByteArray(): ByteArray {
+    val length = this.length.toInt()
+    if (length == 0) return ByteArray(0)
+    val bytes = ByteArray(length)
+    bytes.usePinned { pinned ->
+        platform.posix.memcpy(pinned.addressOf(0), this@toByteArray.bytes, length.toULong())
+    }
+    return bytes
 }

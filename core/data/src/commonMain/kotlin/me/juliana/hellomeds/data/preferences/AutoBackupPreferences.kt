@@ -13,6 +13,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import me.juliana.hellomeds.data.backup.BackupDestinationMode
+import me.juliana.hellomeds.data.backup.BackupNudgePolicy
 
 class AutoBackupPreferences(private val dataStore: DataStore<Preferences>) {
 
@@ -31,6 +32,9 @@ class AutoBackupPreferences(private val dataStore: DataStore<Preferences>) {
         private val ONBOARDING_COMPLETED_TIMESTAMP =
             longPreferencesKey("onboarding_completed_timestamp")
         private val BACKUP_NUDGE_DISMISSED = booleanPreferencesKey("backup_nudge_dismissed")
+        private val BACKUP_NUDGE_NEXT_AT = longPreferencesKey("backup_nudge_next_at")
+        private val BACKUP_NUDGE_OPT_OUT = booleanPreferencesKey("backup_nudge_opt_out")
+        private val BACKUP_NUDGE_AFTER_IMPORT = booleanPreferencesKey("backup_nudge_after_import")
 
         // TODO(BETA_ROLLBACK): closed-beta survey nudge
         private val CLOSED_BETA_SURVEY_NUDGE_DISMISSED =
@@ -57,6 +61,10 @@ class AutoBackupPreferences(private val dataStore: DataStore<Preferences>) {
         dataStore.data.map { it[ONBOARDING_COMPLETED_TIMESTAMP] ?: 0L }
     val backupNudgeDismissed: Flow<Boolean> =
         dataStore.data.map { it[BACKUP_NUDGE_DISMISSED] ?: false }
+
+    val backupNudgeNextAt: Flow<Long> = dataStore.data.map { it[BACKUP_NUDGE_NEXT_AT] ?: 0L }
+    val backupNudgeOptOut: Flow<Boolean> = dataStore.data.map { it[BACKUP_NUDGE_OPT_OUT] ?: false }
+    val backupNudgeAfterImport: Flow<Boolean> = dataStore.data.map { it[BACKUP_NUDGE_AFTER_IMPORT] ?: false }
 
     // TODO(BETA_ROLLBACK): closed-beta survey nudge
     val closedBetaSurveyNudgeDismissed: Flow<Boolean> =
@@ -159,6 +167,47 @@ class AutoBackupPreferences(private val dataStore: DataStore<Preferences>) {
 
     suspend fun setBackupNudgeDismissed(dismissed: Boolean) {
         dataStore.edit { it[BACKUP_NUDGE_DISMISSED] = dismissed }
+    }
+
+    /** Carries the old one-time dismissal over to the repeating schedule. */
+    suspend fun migrateLegacyBackupNudge(now: Long) {
+        dataStore.edit {
+            if (it[BACKUP_NUDGE_DISMISSED] == true && (it[BACKUP_NUDGE_NEXT_AT] ?: 0L) == 0L) {
+                it[BACKUP_NUDGE_NEXT_AT] = BackupNudgePolicy.afterSnooze(now)
+            }
+            it.remove(BACKUP_NUDGE_DISMISSED)
+        }
+    }
+
+    suspend fun scheduleNudgeAfterMedicationAdded(now: Long) {
+        dataStore.edit {
+            it[BACKUP_NUDGE_NEXT_AT] = BackupNudgePolicy.afterMedicationAdded(
+                now,
+                it[BACKUP_NUDGE_NEXT_AT] ?: 0L,
+                it[ONBOARDING_COMPLETED_TIMESTAMP] ?: 0L,
+            )
+        }
+    }
+
+    suspend fun scheduleNudgeAfterImport(now: Long) {
+        dataStore.edit {
+            it[BACKUP_NUDGE_NEXT_AT] = now
+            it[BACKUP_NUDGE_AFTER_IMPORT] = true
+        }
+    }
+
+    suspend fun snoozeBackupNudge(now: Long) {
+        dataStore.edit {
+            it[BACKUP_NUDGE_NEXT_AT] = BackupNudgePolicy.afterSnooze(now)
+            it.remove(BACKUP_NUDGE_AFTER_IMPORT)
+        }
+    }
+
+    suspend fun optOutOfBackupNudge() {
+        dataStore.edit {
+            it[BACKUP_NUDGE_OPT_OUT] = true
+            it.remove(BACKUP_NUDGE_AFTER_IMPORT)
+        }
     }
 
     // TODO(BETA_ROLLBACK): closed-beta survey nudge

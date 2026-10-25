@@ -32,12 +32,19 @@ import me.juliana.hellomeds.data.backup.model.ImportResult
 import me.juliana.hellomeds.ui.util.SavedFile
 import me.juliana.hellomeds.data.backup.stripMetadata
 import me.juliana.hellomeds.data.dao.MedicationDao
+import me.juliana.hellomeds.data.crypto.KeyLossCleanup
+import me.juliana.hellomeds.data.preferences.AutoBackupPreferences
+import me.juliana.hellomeds.data.preferences.ReliabilityPreferences
 import me.juliana.hellomeds.ui.util.PlatformCapabilities
+import kotlin.time.Clock
 
 class BackupViewModel(
     private val exportService: BackupExportService,
     private val importService: BackupImportService,
     private val medicationDao: MedicationDao,
+    private val autoBackupPrefs: AutoBackupPreferences,
+    private val reliabilityPrefs: ReliabilityPreferences,
+    private val keyLossCleanup: KeyLossCleanup,
 ) : ViewModel() {
 
     // === Export State ===
@@ -310,6 +317,11 @@ class BackupViewModel(
                     decisions = current.decisions,
                 )
                 _importState.value = ImportUiState.Success(result)
+                autoBackupPrefs.scheduleNudgeAfterImport(Clock.System.now().toEpochMilliseconds())
+                if (reliabilityPrefs.databaseRecovered.first()) {
+                    reliabilityPrefs.setDatabaseRecovered(false)
+                    keyLossCleanup.deleteQuarantine()
+                }
             } catch (e: Exception) {
                 _importState.value = ImportUiState.Error(getString(Res.string.backup_error_import_failed))
             }
