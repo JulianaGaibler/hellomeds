@@ -1,0 +1,1 @@
+- Fixed the alarm screen sitting under the status and navigation bars

@@ -33,8 +33,15 @@ Builds:
     gradle:
       - fdroid
 
+  - versionName: 0.1.9
+    versionCode: 18
+    commit: v0.1.9
+    subdir: androidApp
+    gradle:
+      - fdroid
+
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 UpdateCheckData: 'version.properties|APP_VERSION_NAME=(.+)|.|APP_VERSION_CODE=(.+)'
-CurrentVersion: 0.1.4
-CurrentVersionCode: 12
+CurrentVersion: 0.1.9
+CurrentVersionCode: 18

@@ -1,6 +1,11 @@
 unreleased:
   notes: []
 releases:
+- version: 0.1.9
+  versionCode: 18
+  date: '2026-10-25'
+  notes:
+  - Fixed the alarm screen sitting under the status and navigation bars
 - version: 0.1.8
   versionCode: 17
   date: '2026-10-25'

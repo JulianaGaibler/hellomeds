@@ -1,0 +1,1 @@
+- Der Alarmbildschirm liegt nicht mehr unter Status- und Navigationsleiste
