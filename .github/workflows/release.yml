@@ -47,21 +47,14 @@ jobs:
           distribution: zulu
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v5
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-      - run: pip install pyyaml
 
       - name: Decode upload keystore
         env:
           KEYSTORE_B64: ${{ secrets.HM_KEYSTORE_BASE64 }}
         run: echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.keystore"
 
-      - name: Validate F-Droid changelog
-        run: python3 scripts/release.py validate ${{ needs.check-version.outputs.version_code }}
-
-      - name: Render release body
-        run: python3 scripts/release.py body ${{ needs.check-version.outputs.version }} > "$RUNNER_TEMP/release-body.md"
+      - name: Validate F-Droid changelog and render release body
+        run: ./gradlew validateReleaseNotes releaseBody
 
       - name: Build signed release artifacts
         env:
@@ -87,7 +80,7 @@ jobs:
         with:
           tag_name: v${{ needs.check-version.outputs.version }}
           name: v${{ needs.check-version.outputs.version }}
-          body_path: ${{ runner.temp }}/release-body.md
+          body_path: build/release/release-body.md
           files: |
             androidApp/build/outputs/bundle/googleRelease/*.aab
             androidApp/build/outputs/apk/fdroid/release/*.apk

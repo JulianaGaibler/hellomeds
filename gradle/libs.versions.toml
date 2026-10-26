@@ -76,6 +76,9 @@ turbine = "1.2.1"
 testRunner = "1.7.0"
 screengrab = "2.1.1"
 uiautomator = "2.4.0"
+
+# Build tooling
+snakeyaml = "2.5"
 [libraries]
 # Core Android
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -171,6 +174,9 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "testRunner" }
 fastlane-screengrab = { module = "tools.fastlane:screengrab", version.ref = "screengrab" }
 androidx-test-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
+
+# Build tooling
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }

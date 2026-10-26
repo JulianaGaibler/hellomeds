@@ -568,8 +568,9 @@ EOF
 }
 
 cmd_prepare_release() {
+    detect_java
     header "Preparing release"
-    python3 "$PROJECT_ROOT/scripts/release.py" prepare
+    ./gradlew prepareRelease || exit 1
     echo ""
     info "Review the diff, then commit the version bump + changelog files together."
 }
@@ -602,7 +603,7 @@ cmd_help() {
     echo -e "  ${CYAN}lint${RESET}                Check formatting (no changes)"
     echo -e "  ${CYAN}clean${RESET}               Clean Gradle + Xcode DerivedData"
     echo -e "  ${CYAN}screenshots${RESET} [args]   Capture store screenshots ${DIM}([android|ios|all] [phone|tablet|all])${RESET}"
-    echo -e "  ${CYAN}prepare-release${RESET}     Roll unreleased changelog into a versioned block + write F-Droid notes"
+    echo -e "  ${CYAN}prepare-release${RESET}     Roll unreleased changelog into a versioned block + write store notes and F-Droid metadata"
     echo -e "  ${CYAN}release-local${RESET}       Build signed release AAB + F-Droid APK (requires keystore.properties)"
     echo -e "  ${CYAN}help${RESET}                Show this help"
     echo ""

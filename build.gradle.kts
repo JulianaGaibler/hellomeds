@@ -13,6 +13,8 @@ plugins {
     alias(libs.plugins.spotless)
 }
 
+registerReleaseTasks()
+
 spotless {
     kotlin {
         target("**/*.kt")
