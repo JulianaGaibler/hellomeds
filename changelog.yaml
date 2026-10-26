@@ -1,6 +1,11 @@
 unreleased:
   notes: []
 releases:
+- version: 0.1.10
+  versionCode: 19
+  date: '2026-10-26'
+  notes:
+  - The alarm sound now fades in gently over 30 seconds
 - version: 0.1.9
   versionCode: 18
   date: '2026-10-25'
