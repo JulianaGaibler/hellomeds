@@ -58,16 +58,6 @@ class AlarmActivity : ComponentActivity() {
     private var vibrator: Vibrator? = null
     private var volumeRampJob: Job? = null
 
-    private companion object {
-        // Start very quiet and ramp to full over a few seconds so the alarm doesn't
-        // jolt the user. The MediaPlayer scalar (0.0–1.0) multiplies whatever the
-        // user's system alarm volume is set to.
-        const val RAMP_START_VOLUME = 0.05f
-        const val RAMP_TARGET_VOLUME = 1.0f
-        const val RAMP_DURATION_MS = 10_000L
-        const val RAMP_TICK_MS = 100L
-    }
-
     private val appearancePrefs: AppearancePreferences by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -175,10 +165,11 @@ class AlarmActivity : ComponentActivity() {
                         .build(),
                 )
                 isLooping = true
-                setVolume(RAMP_START_VOLUME, RAMP_START_VOLUME)
+                // The MediaPlayer scalar multiplies the user's system alarm volume.
+                setVolume(AlarmVolumeRamp.START_VOLUME, AlarmVolumeRamp.START_VOLUME)
                 setOnPreparedListener { mp ->
                     try {
-                        mp.setVolume(RAMP_START_VOLUME, RAMP_START_VOLUME)
+                        mp.setVolume(AlarmVolumeRamp.START_VOLUME, AlarmVolumeRamp.START_VOLUME)
                         mp.start()
                         startVolumeRamp(mp)
                     } catch (e: Exception) {
@@ -209,13 +200,11 @@ class AlarmActivity : ComponentActivity() {
     private fun startVolumeRamp(player: MediaPlayer) {
         volumeRampJob?.cancel()
         volumeRampJob = lifecycleScope.launch {
-            val start = RAMP_START_VOLUME
-            val target = RAMP_TARGET_VOLUME
-            val totalSteps = (RAMP_DURATION_MS / RAMP_TICK_MS).toInt()
+            val totalSteps = (AlarmVolumeRamp.DURATION_MS / AlarmVolumeRamp.TICK_MS).toInt()
             for (step in 1..totalSteps) {
-                delay(RAMP_TICK_MS)
+                delay(AlarmVolumeRamp.TICK_MS)
                 if (!isActive) return@launch
-                val volume = start + (target - start) * (step.toFloat() / totalSteps)
+                val volume = AlarmVolumeRamp.volumeAt(step * AlarmVolumeRamp.TICK_MS)
                 try {
                     player.setVolume(volume, volume)
                 } catch (e: IllegalStateException) {
