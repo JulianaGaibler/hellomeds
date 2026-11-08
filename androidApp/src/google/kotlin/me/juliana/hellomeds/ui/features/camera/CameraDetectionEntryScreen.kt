@@ -18,8 +18,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import android.util.Log
 import com.google.mlkit.genai.common.DownloadStatus
 import com.google.mlkit.genai.common.FeatureStatus
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import me.juliana.hellomeds.data.model.enums.DetectionMethod
 import me.juliana.hellomeds.data.preferences.CameraPreferences
@@ -29,6 +31,10 @@ import me.juliana.hellomeds.ui.components.CameraConsentDialog
 import me.juliana.hellomeds.ui.components.GeminiDownloadDialog
 import me.juliana.hellomeds.ui.components.GeminiDownloadErrorDialog
 import org.koin.compose.koinInject
+
+private const val TAG = "CameraDetectionEntry"
+
+private fun bytesToMB(bytes: Long): Int = (bytes / (1024 * 1024)).toInt()
 
 private enum class CameraEntryState {
     LOADING,
@@ -67,7 +73,47 @@ fun CameraDetectionEntryScreen(
 
     var downloadProgress by remember { mutableFloatStateOf(0f) }
     var downloadedMB by remember { mutableIntStateOf(0) }
-    var totalMB by remember { mutableIntStateOf(60) }
+    // Zero until the download reports its size, which shows an indeterminate indicator
+    var totalMB by remember { mutableIntStateOf(0) }
+    var downloadJob by remember { mutableStateOf<Job?>(null) }
+
+    fun startDownload() {
+        if (downloadJob?.isActive == true) return
+        flowState = CameraEntryState.SHOW_DOWNLOAD_DIALOG
+        downloadJob = scope.launch {
+            var totalBytes = 0L
+            medicationDetector.downloadGemini().collect { status ->
+                Log.d(TAG, "Gemini download status: $status")
+                when (status) {
+                    is DownloadStatus.DownloadStarted -> {
+                        totalBytes = status.bytesToDownload
+                        totalMB = bytesToMB(totalBytes)
+                        downloadedMB = 0
+                        downloadProgress = 0f
+                    }
+
+                    is DownloadStatus.DownloadProgress -> {
+                        downloadedMB = bytesToMB(status.totalBytesDownloaded)
+                        if (totalBytes > 0) {
+                            downloadProgress =
+                                (status.totalBytesDownloaded.toFloat() / totalBytes).coerceIn(0f, 1f)
+                        }
+                    }
+
+                    is DownloadStatus.DownloadCompleted -> {
+                        downloadProgress = 1f
+                        geminiStatus = FeatureStatus.AVAILABLE
+                        flowState = CameraEntryState.READY
+                    }
+
+                    is DownloadStatus.DownloadFailed -> {
+                        downloadErrorMessage = status.e.message ?: "Unknown error"
+                        flowState = CameraEntryState.SHOW_ERROR_DIALOG
+                    }
+                }
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         geminiStatus = medicationDetector.checkGeminiStatus()
@@ -75,6 +121,9 @@ fun CameraDetectionEntryScreen(
     }
 
     LaunchedEffect(hasConsented, hasShownDialog, geminiStatus, geminiStatusLoaded, detectionMethod) {
+        // Saving consent changes these keys while a download runs, so leave the flow alone
+        if (downloadJob?.isActive == true) return@LaunchedEffect
+
         if (!geminiStatusLoaded || geminiStatus == null || hasConsented == null || hasShownDialog == null) {
             flowState = CameraEntryState.LOADING
             return@LaunchedEffect
@@ -85,36 +134,9 @@ fun CameraDetectionEntryScreen(
                 flowState = CameraEntryState.SHOW_CONSENT_DIALOG
             }
 
-            hasConsented == true &&
-                hasShownDialog == true &&
-                detectionMethod == DetectionMethod.GEMINI &&
-                geminiStatus == FeatureStatus.DOWNLOADABLE -> {
-                flowState = CameraEntryState.SHOW_DOWNLOAD_DIALOG
-                scope.launch {
-                    medicationDetector.downloadGemini().collect { status ->
-                        when (status) {
-                            is DownloadStatus.DownloadStarted -> {
-                                downloadProgress = 0f
-                            }
-
-                            is DownloadStatus.DownloadProgress -> {
-                                downloadedMB = (status.totalBytesDownloaded / (1024 * 1024)).toInt()
-                                downloadProgress = downloadedMB.toFloat() / totalMB.toFloat()
-                            }
-
-                            is DownloadStatus.DownloadCompleted -> {
-                                downloadProgress = 1f
-                                geminiStatus = FeatureStatus.AVAILABLE
-                                flowState = CameraEntryState.READY
-                            }
-
-                            is DownloadStatus.DownloadFailed -> {
-                                downloadErrorMessage = status.e.message ?: "Unknown error"
-                                flowState = CameraEntryState.SHOW_ERROR_DIALOG
-                            }
-                        }
-                    }
-                }
+            detectionMethod == DetectionMethod.GEMINI &&
+                (geminiStatus == FeatureStatus.DOWNLOADABLE || geminiStatus == FeatureStatus.DOWNLOADING) -> {
+                startDownload()
             }
 
             else -> {
@@ -152,32 +174,9 @@ fun CameraDetectionEntryScreen(
                         cameraPreferences.markDialogShown()
 
                         if (method == DetectionMethod.GEMINI &&
-                            geminiStatus == FeatureStatus.DOWNLOADABLE
+                            (geminiStatus == FeatureStatus.DOWNLOADABLE || geminiStatus == FeatureStatus.DOWNLOADING)
                         ) {
-                            flowState = CameraEntryState.SHOW_DOWNLOAD_DIALOG
-                            medicationDetector.downloadGemini().collect { status ->
-                                when (status) {
-                                    is DownloadStatus.DownloadStarted -> {
-                                        downloadProgress = 0f
-                                    }
-
-                                    is DownloadStatus.DownloadProgress -> {
-                                        downloadedMB = (status.totalBytesDownloaded / (1024 * 1024)).toInt()
-                                        downloadProgress = downloadedMB.toFloat() / totalMB.toFloat()
-                                    }
-
-                                    is DownloadStatus.DownloadCompleted -> {
-                                        downloadProgress = 1f
-                                        geminiStatus = FeatureStatus.AVAILABLE
-                                        flowState = CameraEntryState.READY
-                                    }
-
-                                    is DownloadStatus.DownloadFailed -> {
-                                        downloadErrorMessage = status.e.message ?: "Unknown error"
-                                        flowState = CameraEntryState.SHOW_ERROR_DIALOG
-                                    }
-                                }
-                            }
+                            startDownload()
                         } else {
                             flowState = CameraEntryState.READY
                         }
@@ -200,7 +199,8 @@ fun CameraDetectionEntryScreen(
                 downloadedMB = downloadedMB,
                 totalMB = totalMB,
                 onCancel = {
-                    // Fall back to heuristic.
+                    // Fall back to heuristic. AICore keeps downloading in the background.
+                    downloadJob?.cancel()
                     scope.launch {
                         cameraPreferences.setDetectionMethod(DetectionMethod.HEURISTIC)
                         flowState = CameraEntryState.READY
@@ -217,34 +217,7 @@ fun CameraDetectionEntryScreen(
 
             GeminiDownloadErrorDialog(
                 errorMessage = downloadErrorMessage,
-                onRetry = {
-                    flowState = CameraEntryState.SHOW_DOWNLOAD_DIALOG
-                    scope.launch {
-                        medicationDetector.downloadGemini().collect { status ->
-                            when (status) {
-                                is DownloadStatus.DownloadStarted -> {
-                                    downloadProgress = 0f
-                                }
-
-                                is DownloadStatus.DownloadProgress -> {
-                                    downloadedMB = (status.totalBytesDownloaded / (1024 * 1024)).toInt()
-                                    downloadProgress = downloadedMB.toFloat() / totalMB.toFloat()
-                                }
-
-                                is DownloadStatus.DownloadCompleted -> {
-                                    downloadProgress = 1f
-                                    geminiStatus = FeatureStatus.AVAILABLE
-                                    flowState = CameraEntryState.READY
-                                }
-
-                                is DownloadStatus.DownloadFailed -> {
-                                    downloadErrorMessage = status.e.message ?: "Unknown error"
-                                    flowState = CameraEntryState.SHOW_ERROR_DIALOG
-                                }
-                            }
-                        }
-                    }
-                },
+                onRetry = { startDownload() },
                 onDismiss = {
                     // Fall back to heuristic.
                     scope.launch {

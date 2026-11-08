@@ -1,6 +1,11 @@
 unreleased:
   notes: []
 releases:
+- version: 0.1.11
+  versionCode: 20
+  date: '2026-11-08'
+  notes:
+  - Fixed the Gemini Nano download progress staying at 0%
 - version: 0.1.10
   versionCode: 19
   date: '2026-10-26'

@@ -367,17 +367,26 @@ fun GeminiDownloadDialog(
                     fontWeight = FontWeight.Bold,
                 )
 
-                LinearProgressIndicator(
-                    progress = { downloadProgress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp),
-                )
+                // The total is unknown until the download reports it
+                if (totalMB > 0) {
+                    LinearProgressIndicator(
+                        progress = { downloadProgress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp),
+                    )
 
-                Text(
-                    text = stringResource(Res.string.gemini_download_progress, downloadedMB, totalMB),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+                    Text(
+                        text = stringResource(Res.string.gemini_download_progress, downloadedMB, totalMB),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                } else {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp),
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
