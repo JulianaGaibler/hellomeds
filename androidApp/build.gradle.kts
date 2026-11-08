@@ -24,9 +24,8 @@ val releaseSigningConfigured = releaseStoreFilePath != null &&
 // Refuse to silently fall back to the debug key in CI — a typo in a secret
 // name would otherwise ship a "release" build signed with the debug keystore,
 // which Play Console accepts once and locks updates to forever after.
-val buildingRelease = gradle.startParameter.taskNames.any {
-    it.contains("Release") && !it.contains("UnitTest")
-}
+// Variant tasks end in the build type, so helpers like validateReleaseNotes don't trip this.
+val buildingRelease = gradle.startParameter.taskNames.any { it.endsWith("Release") }
 if (System.getenv("CI") == "true" && buildingRelease && !releaseSigningConfigured) {
     throw GradleException(
         "Release signing is incomplete. Required env vars in CI: " +
